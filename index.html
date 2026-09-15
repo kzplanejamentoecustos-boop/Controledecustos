@@ -319,6 +319,7 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
         <button class="btn b-outline b-sm" onclick="recolherColunasMoiMat()">&#8863; Recolher Colunas</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="moiOcultarPrevisto()">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="moiReexibirPrevisto()">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarMoiExcel()">&#128190; Exportar Excel</button>
         <span style="font-size:11px;color:#64748b">Digite a quantidade de pessoas por mes em cada linha (ex: 3 apontadores)</span>
       </div>
     </div>
@@ -348,6 +349,7 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
         <button class="btn b-green b-sm" onclick="novaFuncaoMod()">&#10133; Nova Funcao</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="modOcultarPrevisto()">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="modReexibirPrevisto()">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarModExcel()">&#128190; Exportar Excel</button>
         <span style="font-size:11px;color:#64748b">Digite a quantidade de pessoas por mes em cada linha</span>
       </div>
     </div>
@@ -2848,6 +2850,286 @@ function abrirComposicaoReal(itemCode){
   }
   document.getElementById("composicao-body").innerHTML=h;
   document.getElementById("modal-composicao-real").classList.add("on");
+}
+// ===== Exportar Excel (Custo M.O.D / Custo M.O.I) - mesmo layout, cores e informacoes da tela =====
+// Carrega o ExcelJS sob demanda (a lib ja usada no site, xlsx.js, nao grava cores de celula - so o ExcelJS grava)
+var _exceljsLoadPromise=null;
+function carregarExcelJS(){
+  if(window.ExcelJS)return Promise.resolve();
+  if(_exceljsLoadPromise)return _exceljsLoadPromise;
+  _exceljsLoadPromise=new Promise(function(resolve,reject){
+    var s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
+    s.onload=function(){resolve();};
+    s.onerror=function(){reject(new Error("Nao foi possivel carregar a biblioteca de exportacao Excel. Verifique sua conexao."));};
+    document.head.appendChild(s);
+  });
+  return _exceljsLoadPromise;
+}
+function pintarLinha(ws,rowIdx,totalColIdx,fillArgb,fontArgb,bold){
+  for(var c=1;c<=totalColIdx;c++){
+    var cell=ws.getCell(rowIdx,c);
+    cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:fillArgb}};
+    if(fontArgb||bold)cell.font=Object.assign({},cell.font,fontArgb?{color:{argb:fontArgb}}:{},bold?{bold:true}:{});
+  }
+}
+async function exportarModExcel(){
+  var btn=event&&event.target;var txtOrig=btn?btn.innerHTML:null;if(btn){btn.disabled=true;btn.innerHTML="Gerando...";}
+  try{
+    await carregarExcelJS();
+    var meses=mesesObra();
+    var wb=new ExcelJS.Workbook();
+    var ws=wb.addWorksheet("Custo MOD");
+    var diasHE=["semana","fimSemana"];
+    var labelHE=diasHE.map(function(d){var adc=(S.he.mod[d]&&S.he.mod[d].adicional)||0;return "Hora Extra "+adc+"%";});
+    var fixedHeaders=["Funcao","Salario","Regime","Encargos","Insalub.","Noturno","VA/VR",labelHE[0],labelHE[1]];
+    var colAfterFixed=fixedHeaders.length;
+    var totalColIdx=colAfterFixed+meses.length*2+1;
+
+    ws.mergeCells(1,1,1,totalColIdx);
+    var title=ws.getCell(1,1);
+    title.value="Planilha Detalhada Custo M.O.D - "+(S.projNome||"Obra")+" - "+new Date().toLocaleDateString("pt-BR");
+    title.font={bold:true,size:13};
+
+    var r1=3,r2=4;
+    fixedHeaders.forEach(function(h,ci){
+      ws.mergeCells(r1,ci+1,r2,ci+1);
+      var c=ws.getCell(r1,ci+1);
+      c.value=h;c.font={bold:true,color:{argb:"FFFFFFFF"}};
+      c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF475569"}};
+      c.alignment={vertical:"middle",horizontal:"center",wrapText:true};
+    });
+    meses.forEach(function(m,mi){
+      var baseCol=colAfterFixed+1+mi*2;
+      ws.mergeCells(r1,baseCol,r1,baseCol+1);
+      var mc=ws.getCell(r1,baseCol);
+      mc.value=mlbl(m);mc.font={bold:true,color:{argb:"FFFFFFFF"}};mc.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF1E3A8A"}};mc.alignment={horizontal:"center"};
+      [["Qtd",baseCol],["Valor (R$)",baseCol+1]].forEach(function(p){
+        var qc=ws.getCell(r2,p[1]);qc.value=p[0];qc.font={bold:true,color:{argb:"FFFFFFFF"}};qc.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF1E3A8A"}};qc.alignment={horizontal:"center"};
+      });
+    });
+    ws.mergeCells(r1,totalColIdx,r2,totalColIdx);
+    var tc=ws.getCell(r1,totalColIdx);tc.value="Total";tc.font={bold:true,color:{argb:"FFFFFFFF"}};tc.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF1E3A8A"}};tc.alignment={horizontal:"center",vertical:"middle"};
+
+    var rowIdx=5,totMesPrevisto={},totMesReal={};meses.forEach(function(m){totMesPrevisto[m]=0;totMesReal[m]=0;});
+    var totGeralPrevisto=0,totGeralReal=0;
+    S.modData.forEach(function(fn){
+      normMod(fn);
+      var cu=custoUnitMOD(fn),custoUn=cu.base+cu.alojVal+cu.vavrVal;
+      if(fn.custoUnPrevisto===undefined||fn.custoUnPrevisto===null)fn.custoUnPrevisto=custoUn;
+      var desmob=!!fn.desmobilizado;
+      var encPct=fn.regime==="CLT"?((getFENCAtual()-1)*100).toFixed(1)+"%":"-";
+      var ehHorista=(fn.regime==="CLT"&&fn.tipoHora==="horista");
+      var h1=ehHorista?(parseFloat(S.he.mod.semana&&S.he.mod.semana.horas)||0):0;
+      var h2=ehHorista?(parseFloat(S.he.mod.fimSemana&&S.he.mod.fimSemana.horas)||0):0;
+      if(!desmob){
+        var snapFn=snapshotPrevistoDoItem("mod",fn.id);
+        var rowP=ws.getRow(rowIdx);
+        rowP.getCell(1).value="PREVISTO - "+fn.funcao;
+        rowP.getCell(2).value=snapFn?snapFn.custoUnPrevisto:fn.custoUnPrevisto;rowP.getCell(2).numFmt='"R$" #,##0.00';
+        var totRowP=0;
+        meses.forEach(function(m,mi){
+          var qP,cuP;
+          if(snapFn){qP=snapFn.qtdPrevistoPorMes[m]||0;cuP=snapFn.custoUnPrevisto||0;}else{qP=fn.qtdPrevistoPorMes[m]||0;cuP=fn.custoUnPrevisto;}
+          var vP=qP*cuP;totMesPrevisto[m]+=vP;totRowP+=vP;
+          var baseCol=colAfterFixed+1+mi*2;
+          rowP.getCell(baseCol).value=qP||null;
+          rowP.getCell(baseCol+1).value=vP||null;rowP.getCell(baseCol+1).numFmt='"R$" #,##0.00';
+        });
+        totGeralPrevisto+=totRowP;
+        rowP.getCell(totalColIdx).value=totRowP;rowP.getCell(totalColIdx).numFmt='"R$" #,##0.00';
+        pintarLinha(ws,rowIdx,totalColIdx,"FFFFFBEB","FFB45309",true);
+        rowIdx++;
+      }
+      var rowR=ws.getRow(rowIdx);
+      rowR.getCell(1).value=fn.funcao+(desmob?" (DESMOBILIZADO)":"");
+      rowR.getCell(2).value=fn.salario;rowR.getCell(2).numFmt='"R$" #,##0.00';
+      rowR.getCell(3).value=fn.regime;
+      rowR.getCell(4).value=encPct;
+      rowR.getCell(5).value=fn.insalubridade.ativo?(fn.insalubridade.percentual+"%"):"-";
+      rowR.getCell(6).value=fn.noturno.ativo?(fn.noturno.percentual+"%"):"-";
+      rowR.getCell(7).value=cu.vavrVal||0;rowR.getCell(7).numFmt='"R$" #,##0.00';
+      rowR.getCell(8).value=h1>0?h1:null;
+      rowR.getCell(9).value=h2>0?h2:null;
+      var totRow=0;
+      meses.forEach(function(m,mi){
+        var q=fn.qtdPorMes[m]||0,v=q*custoUn;
+        totMesReal[m]+=v;totRow+=v;
+        var baseCol=colAfterFixed+1+mi*2;
+        rowR.getCell(baseCol).value=q||null;
+        rowR.getCell(baseCol+1).value=v||null;rowR.getCell(baseCol+1).numFmt='"R$" #,##0.00';
+      });
+      totGeralReal+=totRow;
+      rowR.getCell(totalColIdx).value=totRow;rowR.getCell(totalColIdx).numFmt='"R$" #,##0.00';
+      if(desmob)pintarLinha(ws,rowIdx,totalColIdx,"FFE2E8F0","FF64748B",false);
+      rowIdx++;
+    });
+    var rowTP=ws.getRow(rowIdx);
+    rowTP.getCell(1).value="TOTAL PREVISTO";
+    meses.forEach(function(m,mi){var baseCol=colAfterFixed+1+mi*2;var c=rowTP.getCell(baseCol+1);c.value=totMesPrevisto[m]||null;c.numFmt='"R$" #,##0.00';});
+    rowTP.getCell(totalColIdx).value=totGeralPrevisto;rowTP.getCell(totalColIdx).numFmt='"R$" #,##0.00';
+    pintarLinha(ws,rowIdx,totalColIdx,"FFFFFBEB","FFB45309",true);
+    rowIdx++;
+    var rowTR=ws.getRow(rowIdx);
+    rowTR.getCell(1).value="TOTAL REAL";
+    meses.forEach(function(m,mi){var baseCol=colAfterFixed+1+mi*2;var c=rowTR.getCell(baseCol+1);c.value=totMesReal[m]||null;c.numFmt='"R$" #,##0.00';});
+    rowTR.getCell(totalColIdx).value=totGeralReal;rowTR.getCell(totalColIdx).numFmt='"R$" #,##0.00';
+    pintarLinha(ws,rowIdx,totalColIdx,"FFF1F5F9","FF1E3A8A",true);
+
+    ws.getColumn(1).width=28;
+    for(var c=2;c<=totalColIdx;c++)ws.getColumn(c).width=13;
+    ws.views=[{state:"frozen",xSplit:1,ySplit:4}];
+
+    var buf=await wb.xlsx.writeBuffer();
+    var blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    var url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="Custo_MOD_"+(S.projNome||"obra").replace(/\s+/g,"_")+".xlsx";a.click();URL.revokeObjectURL(url);
+  }catch(ex){alert("Erro ao exportar: "+ex.message);}
+  finally{if(btn){btn.disabled=false;btn.innerHTML=txtOrig;}}
+}
+async function exportarMoiExcel(){
+  var btn=event&&event.target;var txtOrig=btn?btn.innerHTML:null;if(btn){btn.disabled=true;btn.innerHTML="Gerando...";}
+  try{
+    await carregarExcelJS();
+    var meses=mesesObra();
+    var wb=new ExcelJS.Workbook();
+    var ws=wb.addWorksheet("Custo MOI");
+    var diasHE=["semana","fimSemana"];
+    var labelHE=diasHE.map(function(d){var adc=(S.he.moi[d]&&S.he.moi[d].adicional)||0;return "Hora Extra "+adc+"%";});
+    var fixedHeaders=["Nome","Cargo","Salario","Regime","Encargos","Insalub.","Transf.","Noturno","Alojamento","Moradia","Alimentacao Alojado","VA/VR",labelHE[0],labelHE[1]];
+    var colAfterFixed=fixedHeaders.length;
+    var totalColIdx=colAfterFixed+meses.length*2+1;
+
+    ws.mergeCells(1,1,1,totalColIdx);
+    var title=ws.getCell(1,1);
+    title.value="Planilha Detalhada Custo M.O.I - "+(S.projNome||"Obra")+" - "+new Date().toLocaleDateString("pt-BR");
+    title.font={bold:true,size:13};
+
+    var r1=3,r2=4;
+    fixedHeaders.forEach(function(h,ci){
+      ws.mergeCells(r1,ci+1,r2,ci+1);
+      var c=ws.getCell(r1,ci+1);
+      c.value=h;c.font={bold:true,color:{argb:"FFFFFFFF"}};
+      c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF334155"}};
+      c.alignment={vertical:"middle",horizontal:"center",wrapText:true};
+    });
+    meses.forEach(function(m,mi){
+      var baseCol=colAfterFixed+1+mi*2;
+      ws.mergeCells(r1,baseCol,r1,baseCol+1);
+      var mc=ws.getCell(r1,baseCol);
+      mc.value=mlbl(m);mc.font={bold:true,color:{argb:"FFFFFFFF"}};mc.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF581C87"}};mc.alignment={horizontal:"center"};
+      [["Qtd",baseCol],["Valor (R$)",baseCol+1]].forEach(function(p){
+        var qc=ws.getCell(r2,p[1]);qc.value=p[0];qc.font={bold:true,color:{argb:"FFFFFFFF"}};qc.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF581C87"}};qc.alignment={horizontal:"center"};
+      });
+    });
+    ws.mergeCells(r1,totalColIdx,r2,totalColIdx);
+    var tc=ws.getCell(r1,totalColIdx);tc.value="Total";tc.font={bold:true,color:{argb:"FFFFFFFF"}};tc.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF581C87"}};tc.alignment={horizontal:"center",vertical:"middle"};
+
+    // Agrupa por Area/Setor, na mesma ordem usada na tela
+    var gruposArea=[],mapArea={};
+    for(var idx=0;idx<S.moiData.length;idx++){
+      var p=S.moiData[idx];normMoi(p);
+      var area=(p.area||"").trim()||"SEM AREA",setor=(p.setor||"").trim();
+      if(!mapArea[area]){mapArea[area]={nome:area,setores:[],mapSetor:{}};gruposArea.push(mapArea[area]);}
+      var ga=mapArea[area],sk=setor||"__none__";
+      if(!ga.mapSetor[sk]){ga.mapSetor[sk]={nome:setor,pessoas:[]};ga.setores.push(ga.mapSetor[sk]);}
+      ga.mapSetor[sk].pessoas.push({p:p,idx:idx});
+    }
+
+    var rowIdx=5,totMesPrevisto={},totMesReal={};meses.forEach(function(m){totMesPrevisto[m]=0;totMesReal[m]=0;});
+    var totGeralPrevisto=0,totGeralReal=0;
+    gruposArea.forEach(function(ga){
+      if(ga.nome!=="SEM AREA"){
+        ws.mergeCells(rowIdx,1,rowIdx,totalColIdx);
+        var ca=ws.getCell(rowIdx,1);ca.value=ga.nome;ca.font={bold:true,color:{argb:"FFFFFFFF"}};ca.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF475569"}};
+        rowIdx++;
+      }
+      ga.setores.forEach(function(gs){
+        if(gs.nome){
+          ws.mergeCells(rowIdx,1,rowIdx,totalColIdx);
+          var cs=ws.getCell(rowIdx,1);cs.value=gs.nome;cs.font={bold:true,color:{argb:"FF1E293B"}};cs.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFCBD5E1"}};
+          rowIdx++;
+        }
+        gs.pessoas.forEach(function(item){
+          var p=item.p,idx=item.idx;
+          var cu=custoUnitMOI(p),custoUn=cu.base+cu.alojVal+cu.vavrVal;
+          if(p.custoUnPrevisto===undefined||p.custoUnPrevisto===null)p.custoUnPrevisto=custoUn;
+          var desmob=!!p.desmobilizado;
+          var encPct=p.regime==="CLT"?((getFENCAtual()-1)*100).toFixed(1)+"%":"-";
+          var ehHorista=(p.regime==="CLT"&&p.tipoHora==="horista");
+          var h1=ehHorista?(parseFloat(S.he.moi.semana&&S.he.moi.semana.horas)||0):0;
+          var h2=ehHorista?(parseFloat(S.he.moi.fimSemana&&S.he.moi.fimSemana.horas)||0):0;
+          if(!desmob){
+            var snapP=snapshotPrevistoDoItem("moi",p.id);
+            var rowP=ws.getRow(rowIdx);
+            rowP.getCell(1).value="PREVISTO - "+p.nome;
+            rowP.getCell(3).value=snapP?snapP.custoUnPrevisto:p.custoUnPrevisto;rowP.getCell(3).numFmt='"R$" #,##0.00';
+            var totRowP=0;
+            meses.forEach(function(m,mi){
+              var qP,cuP;
+              if(snapP){qP=snapP.qtdPrevistoPorMes[m]||0;cuP=snapP.custoUnPrevisto||0;}else{qP=p.qtdPrevistoPorMes[m]||0;cuP=p.custoUnPrevisto;}
+              var vP=qP*cuP;totMesPrevisto[m]+=vP;totRowP+=vP;
+              var baseCol=colAfterFixed+1+mi*2;
+              rowP.getCell(baseCol).value=qP||null;
+              rowP.getCell(baseCol+1).value=vP||null;rowP.getCell(baseCol+1).numFmt='"R$" #,##0.00';
+            });
+            totGeralPrevisto+=totRowP;
+            rowP.getCell(totalColIdx).value=totRowP;rowP.getCell(totalColIdx).numFmt='"R$" #,##0.00';
+            pintarLinha(ws,rowIdx,totalColIdx,"FFFFFBEB","FFB45309",true);
+            rowIdx++;
+          }
+          var rowR=ws.getRow(rowIdx);
+          rowR.getCell(1).value=p.nome+(desmob?" (DESMOBILIZADO)":"");
+          rowR.getCell(2).value=p.cargo;
+          rowR.getCell(3).value=p.salario;rowR.getCell(3).numFmt='"R$" #,##0.00';
+          rowR.getCell(4).value=p.regime;
+          rowR.getCell(5).value=encPct;
+          rowR.getCell(6).value=p.insalubridade.ativo?(p.insalubridade.percentual+"%"):"-";
+          rowR.getCell(7).value=p.transferencia.ativo?(p.transferencia.percentual+"%"):"-";
+          rowR.getCell(8).value=p.noturno.ativo?(p.noturno.percentual+"%"):"-";
+          rowR.getCell(9).value=p.alojamento&&p.alojamento!=="N/A"?p.alojamento:"N/A";
+          rowR.getCell(10).value=cu.moradiaVal||0;rowR.getCell(10).numFmt='"R$" #,##0.00';
+          rowR.getCell(11).value=cu.alimAlojVal||0;rowR.getCell(11).numFmt='"R$" #,##0.00';
+          rowR.getCell(12).value=cu.vavrVal||0;rowR.getCell(12).numFmt='"R$" #,##0.00';
+          rowR.getCell(13).value=h1>0?h1:null;
+          rowR.getCell(14).value=h2>0?h2:null;
+          var totRow=0;
+          meses.forEach(function(m,mi){
+            var q=p.qtdPorMes[m]||0,v=q*custoUn;
+            totMesReal[m]+=v;totRow+=v;
+            var baseCol=colAfterFixed+1+mi*2;
+            rowR.getCell(baseCol).value=q||null;
+            rowR.getCell(baseCol+1).value=v||null;rowR.getCell(baseCol+1).numFmt='"R$" #,##0.00';
+          });
+          totGeralReal+=totRow;
+          rowR.getCell(totalColIdx).value=totRow;rowR.getCell(totalColIdx).numFmt='"R$" #,##0.00';
+          if(desmob)pintarLinha(ws,rowIdx,totalColIdx,"FFE2E8F0","FF64748B",false);
+          rowIdx++;
+        });
+      });
+    });
+    var rowTP=ws.getRow(rowIdx);
+    rowTP.getCell(1).value="TOTAL PREVISTO";
+    meses.forEach(function(m,mi){var baseCol=colAfterFixed+1+mi*2;var c=rowTP.getCell(baseCol+1);c.value=totMesPrevisto[m]||null;c.numFmt='"R$" #,##0.00';});
+    rowTP.getCell(totalColIdx).value=totGeralPrevisto;rowTP.getCell(totalColIdx).numFmt='"R$" #,##0.00';
+    pintarLinha(ws,rowIdx,totalColIdx,"FFFFFBEB","FFB45309",true);
+    rowIdx++;
+    var rowTR=ws.getRow(rowIdx);
+    rowTR.getCell(1).value="TOTAL REAL";
+    meses.forEach(function(m,mi){var baseCol=colAfterFixed+1+mi*2;var c=rowTR.getCell(baseCol+1);c.value=totMesReal[m]||null;c.numFmt='"R$" #,##0.00';});
+    rowTR.getCell(totalColIdx).value=totGeralReal;rowTR.getCell(totalColIdx).numFmt='"R$" #,##0.00';
+    pintarLinha(ws,rowIdx,totalColIdx,"FFF1F5F9","FF581C87",true);
+
+    ws.getColumn(1).width=26;ws.getColumn(2).width=22;
+    for(var c=3;c<=totalColIdx;c++)ws.getColumn(c).width=13;
+    ws.views=[{state:"frozen",xSplit:2,ySplit:4}];
+
+    var buf=await wb.xlsx.writeBuffer();
+    var blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    var url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="Custo_MOI_"+(S.projNome||"obra").replace(/\s+/g,"_")+".xlsx";a.click();URL.revokeObjectURL(url);
+  }catch(ex){alert("Erro ao exportar: "+ex.message);}
+  finally{if(btn){btn.disabled=false;btn.innerHTML=txtOrig;}}
 }
 function exportarComposicaoExcel(){
   var itemCode=S.composicaoAtualItem;if(!itemCode)return;
