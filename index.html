@@ -237,6 +237,8 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
         <span>Visao Geral do Sistema</span><span>&#9656;</span>
         <div class="ctl-sub">
           <div class="ctl-item" data-idx="8" onclick="setTabAndClose(8)">Coletor Total</div>
+          <div class="ctl-item" data-idx="16" onclick="setTabAndClose(16)">Prev x Real</div>
+          <div class="ctl-item" data-idx="17" onclick="setTabAndClose(17)">Classificacao</div>
           <div class="ctl-item" data-idx="7" onclick="setTabAndClose(7)">Importar</div>
           <div class="ctl-item" data-idx="4" onclick="setTabAndClose(4)">Dashboard</div>
         </div>
@@ -605,6 +607,38 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
     </table></div>
   </div>
 </div>
+<!-- ===== SEC 16: PREV X REAL ===== -->
+<div class="sec wrap" id="sec16">
+  <div class="ibox">Prev x Real — copia do Coletor Total comparando, em cada item de nivel 4 da EAP, o Real com o Previsto (o atual ao vivo, ou o previsto salvo escolhido no Dashboard em "Ver Previsto Salvo"). Somente leitura - para editar Orcado/RAO/Real, use a aba Coletor Total.</div>
+  <div class="cards c4" id="prevreal-cards"></div>
+  <div class="box">
+    <div class="bh"><h3>EAP &mdash; Previsto x Real</h3><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="flt-busca-prevreal" class="view-ok" placeholder="Buscar item ou descricao..." oninput="S.prevRealBusca=this.value;renderPrevReal()" style="border:1.5px solid #e2e8f0;border-radius:7px;padding:5px 8px;font-size:12px;outline:none;width:220px"><button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="expandirPrevistosPrevReal()" title="Mostra o Previsto e o Desvio de todos os itens">&#43; Expandir Previstos/Desvios</button><button class="btn b-outline b-sm" onclick="recolherPrevistosPrevReal()" title="Esconde o Previsto e o Desvio de todos os itens">&#8722; Recolher Previstos/Desvios</button><button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="ocultarMesesPrevReal()" title="Oculta as colunas mes a mes">&#128065; Ocultar Meses</button><button class="btn b-sm" id="btn-filtro-desvio-pr" style="background:#dc2626;color:#fff;border:none" onclick="toggleFiltroDesvioPrevReal()" title="Mostra apenas os itens onde o Real difere do Previsto">&#128269; Filtrar Desvios</button><button class="btn b-sm" style="background:#334155;color:#fff;border:none" onclick="reexibirMesesPrevReal()" title="Mostra Previsto e Real detalhados mes a mes">&#128197; Reexibir Meses</button><span id="prevreal-cnt" style="font-size:11px;color:#64748b"></span></div></div>
+    <div class="tw" style="max-height:75vh"><table>
+      <thead class="th-dk" id="thead-prevreal"></thead>
+      <tbody id="tb-prevreal"></tbody>
+      <tfoot id="tfoot-prevreal"></tfoot>
+    </table></div>
+  </div>
+</div>
+<!-- ===== SEC 17: CLASSIFICACAO ===== -->
+<div class="sec wrap" id="sec17">
+  <div class="ibox">Classificacao — importe um relatorio (ex: Notas Fiscais/Razao Contabil) e vincule cada linha a um item existente de Custo Indireto, Servico, Material ou Equipamento. O "Mes do Custo Vigente" abaixo define ate qual mes esse custo classificado ja deve estar apropriado.</div>
+  <div class="box">
+    <div class="bh"><h3>Mes do Custo Vigente</h3></div>
+    <div class="bp" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="fg" style="margin:0"><label>Mes do Custo Vigente</label><input type="month" id="mes-custo-vigente" onchange="S.mesCustoVigente=this.value;registrarHistoricoEngCustos('Definiu o mes do custo vigente: '+this.value);renderClassificacao();"></div>
+      <p style="font-size:11.5px;color:#64748b;max-width:420px">Tudo o que estiver classificado ate esse mes e considerado ja apropriado. Sem classificacao, o valor previsto para aquele mes e zerado (na Etapa 2 deste recurso).</p>
+    </div>
+  </div>
+  <input type="file" id="inp-classificacao" accept=".xlsx,.xls,.csv" style="display:none">
+  <div class="box">
+    <div class="bh"><h3>Relatorio Importado</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn b-green b-sm" onclick="document.getElementById('inp-classificacao').click()">&#10133; Importar Relatorio</button><span id="classificacao-mes-vigente" style="font-size:11px;color:#64748b"></span><span id="classificacao-cnt" style="font-size:11px;color:#64748b"></span></div></div>
+    <div class="tw" style="max-height:70vh"><table>
+      <thead class="th-dk" id="thead-classificacao"></thead>
+      <tbody id="tb-classificacao"></tbody>
+    </table></div>
+  </div>
+</div>
 <!-- ===== SEC 9: DADOS DA OBRA ===== -->
 <div class="sec wrap" id="sec9">
   <div class="ibox">Defina aqui os dados gerais da obra. As datas de inicio e fim do contrato controlam automaticamente quantos meses aparecem em todas as tabelas e graficos do sistema (Custo MO, Pedidos de Compra, Fluxo de Materiais, DRE, etc).</div>
@@ -913,6 +947,13 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
         </label>
         <p style="font-size:11px;color:#b91c1c;margin-top:6px;margin-left:26px">A linha ficara cinza e bloqueada para edicao de quantidade. Desmarque aqui para liberar novamente.</p>
       </div>
+      <div style="border:2px solid #bbf7d0;border-radius:10px;padding:12px;background:#f0fdf4;margin-top:14px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="em2-validado">
+          <span style="font-weight:700;color:#15803d;font-size:13px">&#9989; Informacao Validada</span>
+        </label>
+        <p style="font-size:11px;color:#166534;margin-top:6px;margin-left:26px">Marque quando conferir esta informacao (ex: com o contrato). A linha fica verde clara na tabela.</p>
+      </div>
       <div style="display:flex;gap:8px;margin-top:14px">
         <button class="btn b-outline" style="flex:1" onclick="document.getElementById('modal-edit-mod').classList.remove('on')">Cancelar</button>
         <button class="btn b-blue"    style="flex:1" onclick="salvarEditMod()">Salvar</button>
@@ -929,12 +970,31 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
       <div class="fg"><label>Numero do Pedido</label><input type="text" id="em3-pedido"></div>
       <div class="fg"><label>Fornecedor</label><input type="text" id="em3-fornecedor"></div>
       <div class="fg"><label>Descricao do Custo</label><input type="text" id="em3-descricao"></div>
-      <div class="fg"><label>Valor Unitario (R$)</label><input type="text" inputmode="decimal" id="em3-valorunit" placeholder="Ex: 8.112.689,00" onblur="this.value=this.value?fmtNumBR(parseValorIndiretoBR(this.value)):''"></div>
+      <div class="fg"><label>Valor Unitario (R$)<span id="em3-valorunit-label-suffix" style="font-weight:400;color:#92400e"></span></label><input type="text" inputmode="decimal" id="em3-valorunit" placeholder="Ex: 8.112.689,00" onblur="this.value=this.value?fmtNumBR(parseValorIndiretoBR(this.value)):'';atualizarValorUnitFinalIndireto();"></div>
+      <div id="em3-he-wrap" style="display:none;border:2px solid #fde68a;border-radius:10px;padding:12px;background:#fffbeb;margin-top:4px;margin-bottom:14px">
+        <p style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px">&#9201; Horas Extras (somadas ao Valor Unitario acima)</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div class="fg" style="flex:1;margin:0"><label style="font-size:11px">Valor Hora 50% (R$)</label><input type="text" inputmode="decimal" id="em3-he50-valor" placeholder="0,00" oninput="atualizarValorUnitFinalIndireto()" onblur="this.value=this.value?fmtNumBR(parseValorIndiretoBR(this.value)):'';atualizarValorUnitFinalIndireto();"></div>
+          <div class="fg" style="flex:1;margin:0"><label style="font-size:11px">Qtd Horas 50%</label><input type="text" inputmode="decimal" id="em3-he50-qtd" placeholder="0" oninput="atualizarValorUnitFinalIndireto()"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div class="fg" style="flex:1;margin:0"><label style="font-size:11px">Valor Hora 100% (R$)</label><input type="text" inputmode="decimal" id="em3-he100-valor" placeholder="0,00" oninput="atualizarValorUnitFinalIndireto()" onblur="this.value=this.value?fmtNumBR(parseValorIndiretoBR(this.value)):'';atualizarValorUnitFinalIndireto();"></div>
+          <div class="fg" style="flex:1;margin:0"><label style="font-size:11px">Qtd Horas 100%</label><input type="text" inputmode="decimal" id="em3-he100-qtd" placeholder="0" oninput="atualizarValorUnitFinalIndireto()"></div>
+        </div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #fde68a;font-size:12.5px;color:#92400e"><b>Valor Unitario Final (base + horas extras):</b> <span id="em3-valorunit-final">R$ 0,00</span></div>
+      </div>
       <div class="fg">
         <label>Item EAP (Coletor Total) - opcional</label>
         <input type="text" id="em3-item-eap" list="em3-item-eap-list" placeholder="Ex: 001.003.006">
         <datalist id="em3-item-eap-list"></datalist>
         <p style="font-size:11px;color:#64748b;margin-top:4px">Lista mostra apenas itens ate o nivel 4 do Coletor Total. Se preenchido, o total deste item (e de todos os outros com a mesma numeracao) sera somado automaticamente no campo Real do Coletor Total.</p>
+      </div>
+      <div style="border:2px solid #bbf7d0;border-radius:10px;padding:12px;background:#f0fdf4;margin-top:14px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="em3-validado">
+          <span style="font-weight:700;color:#15803d;font-size:13px">&#9989; Informacao Validada</span>
+        </label>
+        <p style="font-size:11px;color:#166534;margin-top:6px;margin-left:26px">Marque quando conferir esta informacao (ex: com o contrato). A linha fica verde clara na tabela.</p>
       </div>
       <div style="display:flex;gap:8px;margin-top:14px">
         <button class="btn b-outline" style="flex:1" onclick="document.getElementById('modal-edit-indireto').classList.remove('on')">Cancelar</button>
@@ -961,6 +1021,24 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
       <div style="display:flex;gap:8px;margin-top:14px">
         <button class="btn b-outline" style="flex:1" onclick="document.getElementById('modal-contratos').classList.remove('on')">Cancelar</button>
         <button class="btn b-blue"    style="flex:1" onclick="salvarContratos()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="modal-filtro-periodo-desvio">
+  <div class="modal" style="max-width:440px">
+    <div class="mh"><h3>Filtrar Desvios</h3><button class="mc" onclick="document.getElementById('modal-filtro-periodo-desvio').classList.remove('on')">X</button></div>
+    <div class="mb">
+      <p style="font-size:12.5px;color:#64748b;margin-bottom:14px">Escolha se quer ver o desvio de todos os meses do projeto, ou so de um periodo especifico. O valor de Total de cada linha nao muda - so o mes a mes mostrado na tabela.</p>
+      <button class="btn b-blue" style="width:100%;margin-bottom:14px" onclick="aplicarFiltroDesvioTodosMeses()">&#128197; Todos os meses</button>
+      <div style="border-top:1px dashed #e2e8f0;padding-top:14px">
+        <p style="font-size:12px;font-weight:700;color:#334155;margin-bottom:8px">Ou escolha um periodo:</p>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <input type="month" id="modal-periodo-ini" style="flex:1;border:2px solid #e2e8f0;border-radius:8px;padding:7px 9px;font-size:13px">
+          <span style="font-size:12px;color:#94a3b8">ate</span>
+          <input type="month" id="modal-periodo-fim" style="flex:1;border:2px solid #e2e8f0;border-radius:8px;padding:7px 9px;font-size:13px">
+        </div>
+        <button class="btn b-outline" style="width:100%" onclick="aplicarFiltroDesvioPeriodo()">Aplicar periodo escolhido</button>
       </div>
     </div>
   </div>
@@ -1036,6 +1114,13 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
           <label style="font-size:12px">Hora Adicional (100%)</label>
           <input type="number" step="0.01" id="em-hora100" placeholder="Qtd de horas/mes" style="width:100%">
         </div>
+      </div>
+      <div style="border:2px solid #bbf7d0;border-radius:10px;padding:12px;background:#f0fdf4;margin-top:14px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="em-validado">
+          <span style="font-weight:700;color:#15803d;font-size:13px">&#9989; Informacao Validada</span>
+        </label>
+        <p style="font-size:11px;color:#166534;margin-top:6px;margin-left:26px">Marque quando conferir esta informacao (ex: com o contrato). A linha fica verde clara na tabela.</p>
       </div>
       <div style="display:flex;gap:8px;margin-top:14px">
         <button class="btn b-outline" style="flex:1" onclick="document.getElementById('modal-edit-moi').classList.remove('on')">Cancelar</button>
@@ -1361,6 +1446,10 @@ function normMoi(p){
   if(!p.tipoHora)p.tipoHora="horista";
   if(!p.qtdPrevistoPorMes)p.qtdPrevistoPorMes={};
   if(p.previstoFixado===undefined)p.previstoFixado=false;
+  if(p.validado===undefined)p.validado=false;
+  if(p.custoUnPrevistoMO===undefined)p.custoUnPrevistoMO=(p.custoUnPrevisto||0);
+  if(p.custoUnPrevistoAlim===undefined)p.custoUnPrevistoAlim=0;
+  if(p.custoUnPrevistoMoradia===undefined)p.custoUnPrevistoMoradia=0;
   return p;
 }
 function calcAlimMensal(){return(S.aloj.diasMes||26)*(S.aloj.vlrAlimentacao||0);}
@@ -1383,6 +1472,10 @@ function normMod(fn){
   if(!fn.tipoHora)fn.tipoHora="horista";
   if(!fn.qtdPrevistoPorMes)fn.qtdPrevistoPorMes={};
   if(fn.previstoFixado===undefined)fn.previstoFixado=false;
+  if(fn.validado===undefined)fn.validado=false;
+  if(fn.custoUnPrevistoMO===undefined)fn.custoUnPrevistoMO=(fn.custoUnPrevisto||0); // migracao: dado antigo (lump unico) vai todo para "Mao de Obra"
+  if(fn.custoUnPrevistoAlim===undefined)fn.custoUnPrevistoAlim=0;
+  if(fn.custoUnPrevistoMoradia===undefined)fn.custoUnPrevistoMoradia=0;
   return fn;
 }
 // Custo unitario MOD com adicionais (Insalubridade/Noturno)
@@ -1657,7 +1750,7 @@ document.getElementById("logo-wrap").onclick=function(){document.getElementById(
 document.getElementById("inp-logo").onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){S.logoB64=ev.target.result;renderHeader();};r.readAsDataURL(f);};
 document.getElementById("proj-name").onclick=function(){document.getElementById("inp-nome").value=S.projNome;document.getElementById("inp-sub").value=S.projSub;document.getElementById("modal-nome").classList.add("on");};
 function salvarNome(){S.projNome=document.getElementById("inp-nome").value||"Controle de Custos";S.projSub=document.getElementById("inp-sub").value||"";renderHeader();document.getElementById("modal-nome").classList.remove("on");}
-var CTL_LABELS={0:"Resumo M.O.",1:"Custo M.O.I",2:"Planejamento",3:"DRE / Curva",4:"Dashboard",5:"Sistema de Compras",6:"Fluxo Materiais",7:"Importar",8:"Coletor Total",9:"Dados da Obra",10:"Custo M.O.D",11:"Custo Indireto",12:"Servico",13:"Material",14:"Equipamento",15:"Receita"};
+var CTL_LABELS={0:"Resumo M.O.",1:"Custo M.O.I",2:"Planejamento",3:"DRE / Curva",4:"Dashboard",5:"Sistema de Compras",6:"Fluxo Materiais",7:"Importar",8:"Coletor Total",9:"Dados da Obra",10:"Custo M.O.D",11:"Custo Indireto",12:"Servico",13:"Material",14:"Equipamento",15:"Receita",16:"Prev x Real",17:"Classificacao"};
 function toggleControlesMenu(){document.getElementById("ctl-dropdown").classList.toggle("on");}
 function fecharControlesMenu(){document.getElementById("ctl-dropdown").classList.remove("on");}
 function setTabAndClose(i){setTab(i);fecharControlesMenu();}
@@ -1665,7 +1758,7 @@ document.addEventListener("click",function(e){
   var wrap=document.getElementById("ctl-wrap");
   if(wrap&&!wrap.contains(e.target))fecharControlesMenu();
 });
-function setTab(i){document.querySelectorAll(".ctl-item[data-idx]").forEach(function(t){t.classList.toggle("active",t.getAttribute("data-idx")===String(i));});var lbl=document.getElementById("ctl-atual");if(lbl)lbl.textContent="\u2014 "+(CTL_LABELS[i]||"");for(var j=0;j<16;j++){var s=document.getElementById("sec"+j);if(s)s.className="sec wrap"+(i===j?" on":"");}if(i===5)renderPedCompraMatrix();if(i===6)renderFluxoMateriais();if(i===7)renderImportStatus();if(i===8)renderColetorTotal();if(i===9)popularDadosObra();if(i===10)renderCustoModTab();if(i===3)renderDRE();if(i===15)renderReceitaTab();if(i===11)renderIndiretoTab("Indireto");if(i===12)renderIndiretoTab("Servico");if(i===13)renderIndiretoTab("Material");if(i===14)renderIndiretoTab("Equipamento");}
+function setTab(i){document.querySelectorAll(".ctl-item[data-idx]").forEach(function(t){t.classList.toggle("active",t.getAttribute("data-idx")===String(i));});var lbl=document.getElementById("ctl-atual");if(lbl)lbl.textContent="\u2014 "+(CTL_LABELS[i]||"");for(var j=0;j<18;j++){var s=document.getElementById("sec"+j);if(s)s.className="sec wrap"+(i===j?" on":"");}if(i===5)renderPedCompraMatrix();if(i===6)renderFluxoMateriais();if(i===7)renderImportStatus();if(i===8)renderColetorTotal();if(i===9)popularDadosObra();if(i===10)renderCustoModTab();if(i===3)renderDRE();if(i===15)renderReceitaTab();if(i===11)renderIndiretoTab("Indireto");if(i===12)renderIndiretoTab("Servico");if(i===13)renderIndiretoTab("Material");if(i===14)renderIndiretoTab("Equipamento");if(i===16){aplicarNivelColetor(4);renderPrevReal();}if(i===17)renderClassificacao();}
 function popularDadosObra(){
   document.getElementById("obra2-nome").value=S.projNome||"";
   document.getElementById("obra2-local").value=S.projLocal||"";
@@ -1837,6 +1930,68 @@ function computeColetorRealPorMes(mes,dados){
   }
   var k=0;while(k<n)k=rec(k);
   return{real:realArr,temDado:temDadoArr};
+}
+// ===== Versoes "Previsto" das funcoes acima, para o detalhamento mes a mes da aba Prev x Real =====
+// Pre-calcula, de uma unica vez, o Previsto mensal de M.O.D+M.O.I (item 001.003.001) e de cada codigo EAP vinculado
+// (Indireto/Servico/Material/Equipamento). Respeita o previsto salvo em visualizacao (snapshotPrevistoDoItem).
+function prepararPrevistoMensalColetor(){
+  var meses=mesesObra();
+  var geralMO={},alim={},moradia={};meses.forEach(function(m){geralMO[m]=0;alim[m]=0;moradia[m]=0;});
+  S.modData.forEach(function(fn){
+    normMod(fn);var snap=snapshotPrevistoDoItem("mod",fn.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(fn.qtdPrevistoPorMes[m]||0);
+      geralMO[m]+=q*(snap?(snap.custoUnPrevistoMO||0):(fn.custoUnPrevistoMO||0));
+      alim[m]+=q*(snap?(snap.custoUnPrevistoAlim||0):(fn.custoUnPrevistoAlim||0));
+      moradia[m]+=q*(snap?(snap.custoUnPrevistoMoradia||0):(fn.custoUnPrevistoMoradia||0));
+    });
+  });
+  S.moiData.forEach(function(p){
+    normMoi(p);var snap=snapshotPrevistoDoItem("moi",p.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(p.qtdPrevistoPorMes[m]||0);
+      geralMO[m]+=q*(snap?(snap.custoUnPrevistoMO||0):(p.custoUnPrevistoMO||0));
+      alim[m]+=q*(snap?(snap.custoUnPrevistoAlim||0):(p.custoUnPrevistoAlim||0));
+      moradia[m]+=q*(snap?(snap.custoUnPrevistoMoradia||0):(p.custoUnPrevistoMoradia||0));
+    });
+  });
+  var indireto={};
+  S.indiretoData.forEach(function(it){
+    normIndireto(it);
+    if(it.composicaoPai)return;
+    if(!it.itemEAP)return;
+    if(!indireto[it.itemEAP])indireto[it.itemEAP]={};
+    var snap=snapshotPrevistoDoItem("indireto",it.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(it.qtdPrevistoPorMes[m]||0);
+      var vu=snap?(snap.valorUnitPrevisto||0):(it.valorUnitPrevisto!==undefined?it.valorUnitPrevisto:it.valorUnit);
+      indireto[it.itemEAP][m]=(indireto[it.itemEAP][m]||0)+q*vu;
+      if(it.itemEAP==="001.003.002"&&(it.categoria==="Servico"||it.categoria==="Material"||it.categoria==="Indireto")){
+        alim[m]=(alim[m]||0)+q*vu;
+      }
+    });
+  });
+  return{geralMO:geralMO,alim:alim,moradia:moradia,indireto:indireto};
+}
+// Valor "proprio" (nao agregado dos filhos) de Previsto para um item da EAP, num mes especifico.
+function calcPrevistoPorMesItemProprioRapido(itemCode,mes,dados){
+  if(itemCode==="001.003.001")return dados.geralMO[mes]||0;
+  if(itemCode==="001.003.002")return dados.alim[mes]||0;
+  if(itemCode==="001.003.006")return dados.moradia[mes]||0;
+  if(dados.indireto[itemCode]!==undefined)return dados.indireto[itemCode][mes]||0;
+  return null;
+}
+function computeColetorPrevistoPorMes(mes,dados){
+  var arr=S.coletorEAP,n=arr.length,prevArr=new Array(n).fill(0);
+  function rec(i){
+    var nv=arr[i].nivel,j=i+1,soma=0;
+    while(j<n&&arr[j].nivel>nv){var childIdx=j;j=rec(childIdx);soma+=prevArr[childIdx];}
+    var proprio=calcPrevistoPorMesItemProprioRapido(arr[i].item,mes,dados);
+    prevArr[i]=soma+(proprio!==null?proprio:0);
+    return j;
+  }
+  var k=0;while(k<n)k=rec(k);
+  return prevArr;
 }
 function renderResumoMOCards(){
   var el=document.getElementById("resumo-mo-cards");if(!el)return;
@@ -2027,6 +2182,7 @@ function novoColaboradorMoi(){
   document.getElementById("em-razao").value="";
   document.getElementById("em-alojamento").value="N/A";
   document.getElementById("em-desmobilizado").checked=false;
+  document.getElementById("em-validado").checked=false;
   document.getElementById("em-insal-ativo").checked=false;
   document.getElementById("em-insal-perc").value=0;
   document.getElementById("em-transf-ativo").checked=false;
@@ -2070,6 +2226,7 @@ function abrirEditMoi(idx){
   document.getElementById("em-razao").value=p.razaoSocial||"";
   document.getElementById("em-alojamento").value=p.alojamento;
   document.getElementById("em-desmobilizado").checked=!!p.desmobilizado;
+  document.getElementById("em-validado").checked=!!p.validado;
   document.getElementById("em-insal-ativo").checked=p.insalubridade.ativo;
   document.getElementById("em-insal-perc").value=p.insalubridade.percentual||0;
   document.getElementById("em-transf-ativo").checked=p.transferencia.ativo;
@@ -2099,6 +2256,7 @@ function salvarEditMoi(){
   p.razaoSocial=document.getElementById("em-razao").value.trim();
   p.alojamento=document.getElementById("em-alojamento").value;
   p.desmobilizado=document.getElementById("em-desmobilizado").checked;
+  p.validado=document.getElementById("em-validado").checked;
   p.insalubridade={ativo:document.getElementById("em-insal-ativo").checked,percentual:parseFloat(document.getElementById("em-insal-perc").value)||0};
   p.transferencia={ativo:document.getElementById("em-transf-ativo").checked,percentual:parseFloat(document.getElementById("em-transf-perc").value)||0};
   p.noturno={ativo:document.getElementById("em-noturno-ativo").checked,percentual:parseFloat(document.getElementById("em-noturno-perc").value)||0};
@@ -2197,6 +2355,7 @@ function novaFuncaoMod(){
   document.getElementById("em2-hora70").value=0;
   document.getElementById("em2-hora100").value=0;
   document.getElementById("em2-desmobilizado").checked=false;
+  document.getElementById("em2-validado").checked=false;
   document.getElementById("modal-edit-mod").classList.add("on");
 }
 // Exclui uma funcao MOD por completo (diferente de "Desmobilizar", que so a marca como inativa mantendo a linha)
@@ -2205,6 +2364,20 @@ function excluirFuncaoMod(idx){
   if(!confirm("Excluir a funcao \""+fn.funcao+"\"? Essa acao nao pode ser desfeita."))return;
   S.modData.splice(idx,1);
   renderCustoMO();renderEfetivo();renderCustoModTab();renderImportStatus();
+}
+// ===== Arrastar para reordenar linhas na aba Custo M.O.D =====
+var dragModIdx=null;
+function dragModStart(ev,idx){dragModIdx=idx;ev.dataTransfer.effectAllowed="move";try{ev.dataTransfer.setData("text/plain",String(idx));}catch(e){}}
+function allowDropMod(ev){ev.preventDefault();ev.currentTarget.style.outline="2px dashed #1e40af";}
+function dragLeaveMod(ev){ev.currentTarget.style.outline="";}
+function dropModPessoa(ev,targetIdx){
+  ev.preventDefault();ev.currentTarget.style.outline="";
+  var origIdx=dragModIdx;dragModIdx=null;
+  if(origIdx===null||origIdx===undefined||origIdx===targetIdx)return;
+  var item=S.modData.splice(origIdx,1)[0];
+  var destino=origIdx<targetIdx?targetIdx-1:targetIdx;
+  S.modData.splice(destino,0,item);
+  renderCustoModMatrix();
 }
 function abrirEditMod(idx){
   var fn=S.modData[idx];if(!fn)return;normMod(fn);
@@ -2222,6 +2395,7 @@ function abrirEditMod(idx){
   document.getElementById("em2-hora70").value=fn.horaAdc70||0;
   document.getElementById("em2-hora100").value=fn.horaAdc100||0;
   document.getElementById("em2-desmobilizado").checked=!!fn.desmobilizado;
+  document.getElementById("em2-validado").checked=!!fn.validado;
   document.getElementById("modal-edit-mod").classList.add("on");
 }
 function salvarEditMod(){
@@ -2238,6 +2412,7 @@ function salvarEditMod(){
   fn.horaAdc70=parseFloat(document.getElementById("em2-hora70").value)||0;
   fn.horaAdc100=parseFloat(document.getElementById("em2-hora100").value)||0;
   fn.desmobilizado=document.getElementById("em2-desmobilizado").checked;
+  fn.validado=document.getElementById("em2-validado").checked;
   if(criandoNovo)S.modData.push(fn);
   document.getElementById("modal-edit-mod").classList.remove("on");
   renderCustoMO();renderEfetivo();renderCustoModTab();renderImportStatus();
@@ -2327,7 +2502,7 @@ function renderCustoModMatrix(){
     var fn=S.modData[idx];normMod(fn);var cu=custoUnitMOD(fn),custoUn=cu.base+cu.alojVal+cu.vavrVal;
     if(fn.custoUnPrevisto===undefined||fn.custoUnPrevisto===null)fn.custoUnPrevisto=custoUn;
     var desmob=!!fn.desmobilizado;
-    var rowBg=desmob?"#e2e8f0":(idx%2===0?"#fff":"#fafbfc");
+    var rowBg=desmob?"#e2e8f0":(fn.validado?"#f0fdf4":(idx%2===0?"#fff":"#fafbfc"));
     // Previsto: calculado SEMPRE (independente de a linha estar expandida na tela), para os totais baterem certo
     var snapFn=desmob?null:snapshotPrevistoDoItem("mod",fn.id);
     var previstoEditavelMod=!snapFn;
@@ -2354,8 +2529,8 @@ function renderCustoModMatrix(){
     totGeral+=totRow;
     var encPct=fn.regime==="CLT"?((getFENCAtual()-1)*100).toFixed(1)+"%":"-";
     var iconVerPrevistoMod=desmob?"":("<span onclick=\"modToggleMostrarPrevisto("+idx+")\" style='cursor:pointer;margin-right:4px;color:#64748b;font-weight:900' title='"+(fn.mostrarPrevisto?"Recolher Previsto":"Mostrar Previsto")+"'>"+(fn.mostrarPrevisto?"&#8722;":"&#43;")+"</span>");
-    tb+="<tr"+(desmob?" style='opacity:.75'":"")+">";
-    tb+="<td style='"+sC(0,rowBg)+"font-weight:600;font-size:12px'>"+iconVerPrevistoMod+"<span onclick=\"abrirEditMod("+idx+")\" title='Editar funcao' style='cursor:pointer;margin-right:5px;color:#1e40af'>&#9998;</span><span onclick=\"excluirFuncaoMod("+idx+")\" title='Excluir funcao' style='cursor:pointer;margin-right:5px;color:#dc2626'>&#128465;</span>"+(engDesbloqueado?"<span onclick=\"abrirCalcMod("+idx+")\" title='Ver memoria de calculo' style='cursor:pointer;margin-right:5px;color:#059669'>&#128202;</span>":"")+fn.funcao+(desmob?" "+bdg("re","DESMOBILIZADO"):"")+"</td>";
+    tb+="<tr"+(desmob?" style='opacity:.75'":" draggable='true' ondragstart=\"dragModStart(event,"+idx+")\" ondragover=\"allowDropMod(event)\" ondragleave=\"dragLeaveMod(event)\" ondrop=\"dropModPessoa(event,"+idx+")\" style='cursor:grab'")+">";
+    tb+="<td style='"+sC(0,rowBg)+"font-weight:600;font-size:12px'>"+(desmob?"":"<span title='Arraste para reordenar' style='cursor:grab;margin-right:3px;color:#94a3b8'>&#8942;&#8942;</span>")+iconVerPrevistoMod+"<span onclick=\"abrirEditMod("+idx+")\" title='Editar funcao' style='cursor:pointer;margin-right:5px;color:#1e40af'>&#9998;</span><span onclick=\"excluirFuncaoMod("+idx+")\" title='Excluir funcao' style='cursor:pointer;margin-right:5px;color:#dc2626'>&#128465;</span>"+(engDesbloqueado?"<span onclick=\"abrirCalcMod("+idx+")\" title='Ver memoria de calculo' style='cursor:pointer;margin-right:5px;color:#059669'>&#128202;</span>":"")+fn.funcao+(desmob?" "+bdg("re","DESMOBILIZADO"):"")+"</td>";
     tb+="<td style='"+sC(1,rowBg)+"font-family:monospace;text-align:right'>"+fmt(fn.salario)+"</td>";
     var ehHoristaMod=(fn.regime==="CLT"&&fn.tipoHora==="horista");
     var horasHEMod=["semana","fimSemana"].map(function(dia,di){var h=ehHoristaMod?(parseFloat(S.he.mod[dia]&&S.he.mod[dia].horas)||0):0;return "<td class='mono tr'"+(di===1?" style='border-right:2px solid #e2e8f0'":"")+">"+(h>0?h+"h":"-")+"</td>";}).join("");
@@ -2420,14 +2595,21 @@ function modOcultarPrevisto(){S.modData.forEach(function(fn){normMod(fn);fn.most
 function modReexibirPrevisto(){S.modData.forEach(function(fn){normMod(fn);fn.mostrarPrevisto=true;});renderCustoModMatrix();}
 function modIgualarComReal(idx){
   var fn=S.modData[idx];if(!fn||fn.previstoFixado)return;normMod(fn);
-  var cu=custoUnitMOD(fn);fn.custoUnPrevisto=cu.base+cu.alojVal+cu.vavrVal;
+  var cu=custoUnitMOD(fn);
+  fn.custoUnPrevistoMO=cu.base;
+  fn.custoUnPrevistoAlim=cu.alimAlojVal+cu.vavrVal;
+  fn.custoUnPrevistoMoradia=(fn.alojado?(S.aloj.vlrMoradia||0):0);
+  fn.custoUnPrevisto=fn.custoUnPrevistoMO+fn.custoUnPrevistoAlim+fn.custoUnPrevistoMoradia;
   var meses=mesesObra();
   meses.forEach(function(m){var q=fn.qtdPorMes[m]||0;if(q>0)fn.qtdPrevistoPorMes[m]=q;else delete fn.qtdPrevistoPorMes[m];});
   renderCustoModMatrix();
 }
 function updModCustoUnitPrevisto(idx,val){
   var fn=S.modData[idx];if(!fn||fn.previstoFixado)return;normMod(fn);
-  fn.custoUnPrevisto=parseValorIndiretoBR(val)||0;
+  var novoTotal=parseValorIndiretoBR(val)||0;
+  // Preserva o que ja estava dividido em Alimentacao/Moradia; o ajuste manual entra todo na parte de Mao de Obra
+  fn.custoUnPrevistoMO=novoTotal-fn.custoUnPrevistoAlim-fn.custoUnPrevistoMoradia;
+  fn.custoUnPrevisto=novoTotal;
   renderCustoModMatrix();
 }
 function updModMatQtdPrevisto(idx,mes,val){
@@ -2458,14 +2640,20 @@ function moiOcultarPrevisto(){S.moiData.forEach(function(p){normMoi(p);p.mostrar
 function moiReexibirPrevisto(){S.moiData.forEach(function(p){normMoi(p);p.mostrarPrevisto=true;});renderCustoMOMatrix();}
 function moiIgualarComReal(idx){
   var p=S.moiData[idx];if(!p||p.previstoFixado)return;normMoi(p);
-  var cu=custoUnitMOI(p);p.custoUnPrevisto=cu.base+cu.alojVal+cu.vavrVal;
+  var cu=custoUnitMOI(p);
+  p.custoUnPrevistoMO=cu.base;
+  p.custoUnPrevistoAlim=cu.alimAlojVal+cu.vavrVal;
+  p.custoUnPrevistoMoradia=cu.moradiaVal;
+  p.custoUnPrevisto=p.custoUnPrevistoMO+p.custoUnPrevistoAlim+p.custoUnPrevistoMoradia;
   var meses=mesesObra();
   meses.forEach(function(m){var q=p.qtdPorMes[m]||0;if(q>0)p.qtdPrevistoPorMes[m]=q;else delete p.qtdPrevistoPorMes[m];});
   renderCustoMOMatrix();
 }
 function updMoiCustoUnitPrevisto(idx,val){
   var p=S.moiData[idx];if(!p||p.previstoFixado)return;normMoi(p);
-  p.custoUnPrevisto=parseValorIndiretoBR(val)||0;
+  var novoTotal=parseValorIndiretoBR(val)||0;
+  p.custoUnPrevistoMO=novoTotal-p.custoUnPrevistoAlim-p.custoUnPrevistoMoradia;
+  p.custoUnPrevisto=novoTotal;
   renderCustoMOMatrix();
 }
 function updMoiMatQtdPrevisto(idx,mes,val){
@@ -2496,6 +2684,7 @@ function normIndireto(it){
   if(!it.qtdPrevistoPorMes)it.qtdPrevistoPorMes={};
   if(!it.contratos)it.contratos=[];
   if(it.contratoDistratado===undefined)it.contratoDistratado=false;
+  if(it.validado===undefined)it.validado=false;
   if(!it.pedido)it.pedido="";
   if(!it.fornecedor)it.fornecedor="";
   if(!it.descricao)it.descricao="";
@@ -2559,7 +2748,14 @@ function novoItemIndireto(categoria){
   document.getElementById("em3-descricao").value="";
   var elValorUnitNovo=document.getElementById("em3-valorunit");
   elValorUnitNovo.value="";elValorUnitNovo.disabled=false;elValorUnitNovo.title="";
+  document.getElementById("em3-he50-valor").value="";
+  document.getElementById("em3-he50-qtd").value="";
+  document.getElementById("em3-he100-valor").value="";
+  document.getElementById("em3-he100-qtd").value="";
+  mostrarCamposHEIndireto(categoria);
+  atualizarValorUnitFinalIndireto();
   document.getElementById("em3-item-eap").value="";
+  document.getElementById("em3-validado").checked=false;
   popularListaItemEAP();
   document.getElementById("modal-edit-indireto").classList.add("on");
 }
@@ -2568,6 +2764,23 @@ function popularListaItemEAP(){
   var h="";
   for(var i=0;i<S.coletorEAP.length;i++){var it=S.coletorEAP[i];if((it.nivel||1)>4)continue;h+="<option value='"+it.item+"'>"+it.item+" - "+it.descricao+"</option>";}
   dl.innerHTML=h;
+}
+// Mostra o bloco de Horas Extras (50%/100%) so quando a categoria do item for Equipamento
+function mostrarCamposHEIndireto(categoria){
+  var wrap=document.getElementById("em3-he-wrap"),sufixo=document.getElementById("em3-valorunit-label-suffix");
+  var ehEquip=(categoria==="Equipamento");
+  if(wrap)wrap.style.display=ehEquip?"block":"none";
+  if(sufixo)sufixo.textContent=ehEquip?" (base, sem horas extras)":"";
+}
+// Recalcula e mostra o Valor Unitario Final = Valor Unitario (base) + Qtd50*Valor50 + Qtd100*Valor100
+function atualizarValorUnitFinalIndireto(){
+  var el=document.getElementById("em3-valorunit-final");if(!el)return;
+  var base=parseValorIndiretoBR(document.getElementById("em3-valorunit").value)||0;
+  var v50=parseValorIndiretoBR(document.getElementById("em3-he50-valor").value)||0;
+  var q50=parseFloat((document.getElementById("em3-he50-qtd").value||"0").toString().replace(",","."))||0;
+  var v100=parseValorIndiretoBR(document.getElementById("em3-he100-valor").value)||0;
+  var q100=parseFloat((document.getElementById("em3-he100-qtd").value||"0").toString().replace(",","."))||0;
+  el.textContent=fmt(base+(q50*v50)+(q100*v100));
 }
 function abrirEditIndireto(idx){
   var it=S.indiretoData[idx];if(!it)return;normIndireto(it);
@@ -2578,10 +2791,19 @@ function abrirEditIndireto(idx){
   document.getElementById("em3-fornecedor").value=it.fornecedor;
   document.getElementById("em3-descricao").value=it.descricao;
   var elValorUnit=document.getElementById("em3-valorunit");
-  elValorUnit.value=fmtNumBR(it.valorUnit);
+  // Se o item ja tem a base separada das horas extras, mostra so a base; senao (dado antigo) o valor todo vira base, com HE=0
+  var baseParaExibir=(it.valorUnitBase!==undefined)?it.valorUnitBase:it.valorUnit;
+  elValorUnit.value=fmtNumBR(baseParaExibir);
   elValorUnit.disabled=!!(it.isComposicao&&!it.desbloqueada);
   elValorUnit.title=(it.isComposicao&&!it.desbloqueada)?"Fixo em 1 para composicoes - o valor mensal e digitado direto na coluna Valor. Use o botao (chave de fenda) na linha para desbloquear.":"";
+  document.getElementById("em3-he50-valor").value=it.horaExtra50Valor?fmtNumBR(it.horaExtra50Valor):"";
+  document.getElementById("em3-he50-qtd").value=it.horaExtra50Qtd?it.horaExtra50Qtd:"";
+  document.getElementById("em3-he100-valor").value=it.horaExtra100Valor?fmtNumBR(it.horaExtra100Valor):"";
+  document.getElementById("em3-he100-qtd").value=it.horaExtra100Qtd?it.horaExtra100Qtd:"";
+  mostrarCamposHEIndireto(it.categoria);
+  atualizarValorUnitFinalIndireto();
   document.getElementById("em3-item-eap").value=it.itemEAP||"";
+  document.getElementById("em3-validado").checked=!!it.validado;
   popularListaItemEAP();
   document.getElementById("modal-edit-indireto").classList.add("on");
 }
@@ -2599,8 +2821,19 @@ function salvarEditIndireto(){
   it.pedido=document.getElementById("em3-pedido").value.trim();
   it.fornecedor=document.getElementById("em3-fornecedor").value.trim();
   it.descricao=document.getElementById("em3-descricao").value.trim()||"Item de "+CAT_CFG[it.categoria].label.toLowerCase();
-  it.valorUnit=(it.isComposicao&&!it.desbloqueada)?1:(parseValorIndiretoBR(document.getElementById("em3-valorunit").value)||0);
+  var baseDigitada=(it.isComposicao&&!it.desbloqueada)?1:(parseValorIndiretoBR(document.getElementById("em3-valorunit").value)||0);
+  if(it.categoria==="Equipamento"&&!(it.isComposicao&&!it.desbloqueada)){
+    it.valorUnitBase=baseDigitada;
+    it.horaExtra50Valor=parseValorIndiretoBR(document.getElementById("em3-he50-valor").value)||0;
+    it.horaExtra50Qtd=parseFloat((document.getElementById("em3-he50-qtd").value||"0").toString().replace(",","."))||0;
+    it.horaExtra100Valor=parseValorIndiretoBR(document.getElementById("em3-he100-valor").value)||0;
+    it.horaExtra100Qtd=parseFloat((document.getElementById("em3-he100-qtd").value||"0").toString().replace(",","."))||0;
+    it.valorUnit=it.valorUnitBase+(it.horaExtra50Qtd*it.horaExtra50Valor)+(it.horaExtra100Qtd*it.horaExtra100Valor);
+  }else{
+    it.valorUnit=baseDigitada;
+  }
   it.itemEAP=itemEapDigitado;
+  it.validado=document.getElementById("em3-validado").checked;
   if(criandoNovo)S.indiretoData.push(it);
   document.getElementById("modal-edit-indireto").classList.remove("on");
   renderTodasCategoriasIndireto();
@@ -3321,7 +3554,7 @@ function renderIndiretoMatrix(categoria){
     }
     grupos[chave].forEach(function(idx){
       var it=S.indiretoData[idx];normIndireto(it);
-      var rowBg=idx%2===0?"#fff":"#fafbfc";
+      var rowBg=it.validado?"#f0fdf4":(idx%2===0?"#fff":"#fafbfc");
       var f=(it.fornecedor||"").trim();
       // Banner "Compilar em uma composicao" - aparece uma unica vez, antes do primeiro item de um fornecedor com 2+ itens ainda separados
       if(ehEquip&&!it.isComposicao&&f&&fornecedorCount[f]>=2&&!fornecedorBannerFeito[f]){
@@ -3355,7 +3588,7 @@ function renderIndiretoMatrix(categoria){
             ];
             // "+"/"-" 2o nivel: mostra/esconde a linha PREVISTO deste equipamento especifico
             var togglePrevisto={expandido:!!child.mostrarPrevisto,onclick:"equipToggleChildPrevisto("+ci+")"};
-            var res=linhaPR(ci,child,"#f8fafc",true,true,"",menuFilho,false,"",togglePrevisto);
+            var res=linhaPR(ci,child,child.validado?"#f0fdf4":"#f8fafc",true,true,"",menuFilho,false,"",togglePrevisto);
             tb+=res.html;
           });
         }
@@ -3526,6 +3759,8 @@ function renderTudoPrevistoAfetado(){
   renderCustoMOMatrix();
   renderTodasCategoriasIndireto();
   renderDash();
+  renderColetorTotal();
+  renderPrevReal();
 }
 function abrirSalvarPrevistoModal(){
   document.getElementById("svp-nome").value="";
@@ -3536,12 +3771,12 @@ function criarSnapshotPrevisto(nome){
   var dados={mod:{},moi:{},indireto:{}};
   S.modData.forEach(function(fn){
     normMod(fn);
-    dados.mod[fn.id]={qtdPrevistoPorMes:JSON.parse(JSON.stringify(fn.qtdPrevistoPorMes)),custoUnPrevisto:fn.custoUnPrevisto||0,nome:fn.funcao};
+    dados.mod[fn.id]={qtdPrevistoPorMes:JSON.parse(JSON.stringify(fn.qtdPrevistoPorMes)),custoUnPrevisto:fn.custoUnPrevisto||0,custoUnPrevistoMO:fn.custoUnPrevistoMO||0,custoUnPrevistoAlim:fn.custoUnPrevistoAlim||0,custoUnPrevistoMoradia:fn.custoUnPrevistoMoradia||0,nome:fn.funcao};
     fn.previstoFixado=true;
   });
   S.moiData.forEach(function(p){
     normMoi(p);
-    dados.moi[p.id]={qtdPrevistoPorMes:JSON.parse(JSON.stringify(p.qtdPrevistoPorMes)),custoUnPrevisto:p.custoUnPrevisto||0,nome:p.nome};
+    dados.moi[p.id]={qtdPrevistoPorMes:JSON.parse(JSON.stringify(p.qtdPrevistoPorMes)),custoUnPrevisto:p.custoUnPrevisto||0,custoUnPrevistoMO:p.custoUnPrevistoMO||0,custoUnPrevistoAlim:p.custoUnPrevistoAlim||0,custoUnPrevistoMoradia:p.custoUnPrevistoMoradia||0,nome:p.nome};
     p.previstoFixado=true;
   });
   S.indiretoData.forEach(function(it){
@@ -3557,12 +3792,20 @@ function igualarTudoComReal(){
   var meses=mesesObra();
   S.modData.forEach(function(fn){
     normMod(fn);
-    var cu=custoUnitMOD(fn);fn.custoUnPrevisto=cu.base+cu.alojVal+cu.vavrVal;
+    var cu=custoUnitMOD(fn);
+    fn.custoUnPrevistoMO=cu.base;
+    fn.custoUnPrevistoAlim=cu.alimAlojVal+cu.vavrVal;
+    fn.custoUnPrevistoMoradia=(fn.alojado?(S.aloj.vlrMoradia||0):0);
+    fn.custoUnPrevisto=fn.custoUnPrevistoMO+fn.custoUnPrevistoAlim+fn.custoUnPrevistoMoradia;
     fn.qtdPrevistoPorMes=JSON.parse(JSON.stringify(fn.qtdPorMes));
   });
   S.moiData.forEach(function(p){
     normMoi(p);
-    var cu=custoUnitMOI(p);p.custoUnPrevisto=cu.base+cu.alojVal+cu.vavrVal;
+    var cu=custoUnitMOI(p);
+    p.custoUnPrevistoMO=cu.base;
+    p.custoUnPrevistoAlim=cu.alimAlojVal+cu.vavrVal;
+    p.custoUnPrevistoMoradia=cu.moradiaVal;
+    p.custoUnPrevisto=p.custoUnPrevistoMO+p.custoUnPrevistoAlim+p.custoUnPrevistoMoradia;
     p.qtdPrevistoPorMes=JSON.parse(JSON.stringify(p.qtdPorMes));
   });
   S.indiretoData.forEach(function(it){
@@ -3788,7 +4031,7 @@ function renderCustoMOMatrix(){
         var idx=gs.pessoas[pi].idx,p=gs.pessoas[pi].p;
         var cc=custoCache[idx],cu=cc.cu,custoUn=cc.custoUn,totRow=cc.totRow;
         var desmob=!!p.desmobilizado;
-        var rowBg=desmob?"#e2e8f0":(idx%2===0?"#fff":"#fafbfc");
+        var rowBg=desmob?"#e2e8f0":(p.validado?"#f0fdf4":(idx%2===0?"#fff":"#fafbfc"));
         // ---- Linha REAL (existente) ----
         var linhaMeses="";
         for(var mi=0;mi<meses.length;mi++){
@@ -4054,6 +4297,96 @@ function calcTotalRealGeral(){
 }
 // Soma o custo PREVISTO de toda a obra (M.O.D, M.O.I, Custo Indireto, Servico, Material, Equipamento).
 // Usa o previsto salvo que estiver sendo visualizado (S.previstoVisualizandoId); se nenhum estiver selecionado, usa o previsto atual (ao vivo).
+// Previsto de M.O.D+M.O.I (usado no item 001.003.001 do Coletor Total) - respeita o previsto salvo em visualizacao.
+// Usa so a parte de Mao de Obra (custoUnPrevistoMO), igual o Real so usa "base" (sem Alimentacao/Moradia) neste item.
+function calcTotalGeralMOPrevisto(){
+  var meses=mesesObra(),total=0;
+  S.modData.forEach(function(fn){
+    normMod(fn);var snap=snapshotPrevistoDoItem("mod",fn.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(fn.qtdPrevistoPorMes[m]||0);
+      var cu=snap?(snap.custoUnPrevistoMO||0):(fn.custoUnPrevistoMO||0);
+      total+=q*cu;
+    });
+  });
+  S.moiData.forEach(function(p){
+    normMoi(p);var snap=snapshotPrevistoDoItem("moi",p.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(p.qtdPrevistoPorMes[m]||0);
+      var cu=snap?(snap.custoUnPrevistoMO||0):(p.custoUnPrevistoMO||0);
+      total+=q*cu;
+    });
+  });
+  return total;
+}
+// Previsto de Alimentacao (usado no item 001.003.002 do Coletor Total) - usa a parte custoUnPrevistoAlim
+function calcTotalAlimentacaoPrevisto(){
+  var meses=mesesObra(),total=0;
+  S.modData.forEach(function(fn){
+    normMod(fn);var snap=snapshotPrevistoDoItem("mod",fn.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(fn.qtdPrevistoPorMes[m]||0);
+      var cu=snap?(snap.custoUnPrevistoAlim||0):(fn.custoUnPrevistoAlim||0);
+      total+=q*cu;
+    });
+  });
+  S.moiData.forEach(function(p){
+    normMoi(p);var snap=snapshotPrevistoDoItem("moi",p.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(p.qtdPrevistoPorMes[m]||0);
+      var cu=snap?(snap.custoUnPrevistoAlim||0):(p.custoUnPrevistoAlim||0);
+      total+=q*cu;
+    });
+  });
+  return total;
+}
+// Previsto de Moradia/Alojamento (usado no item 001.003.006 do Coletor Total) - usa a parte custoUnPrevistoMoradia
+function calcTotalMoradiaPrevisto(){
+  var meses=mesesObra(),total=0;
+  S.modData.forEach(function(fn){
+    normMod(fn);var snap=snapshotPrevistoDoItem("mod",fn.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(fn.qtdPrevistoPorMes[m]||0);
+      var cu=snap?(snap.custoUnPrevistoMoradia||0):(fn.custoUnPrevistoMoradia||0);
+      total+=q*cu;
+    });
+  });
+  S.moiData.forEach(function(p){
+    normMoi(p);var snap=snapshotPrevistoDoItem("moi",p.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(p.qtdPrevistoPorMes[m]||0);
+      var cu=snap?(snap.custoUnPrevistoMoradia||0):(p.custoUnPrevistoMoradia||0);
+      total+=q*cu;
+    });
+  });
+  return total;
+}
+// Previsto acumulado dos itens de Indireto/Servico/Material/Equipamento vinculados a um codigo EAP - respeita o previsto salvo em visualizacao
+function calcTotalPrevistoPorItemEAP(itemEAP){
+  var meses=mesesObra(),total=0;
+  S.indiretoData.forEach(function(it){
+    normIndireto(it);
+    if(it.composicaoPai)return;
+    if(it.itemEAP!==itemEAP)return;
+    var snap=snapshotPrevistoDoItem("indireto",it.id);
+    meses.forEach(function(m){
+      var q=snap?(snap.qtdPrevistoPorMes[m]||0):(it.qtdPrevistoPorMes[m]||0);
+      var vu=snap?(snap.valorUnitPrevisto||0):(it.valorUnitPrevisto!==undefined?it.valorUnitPrevisto:it.valorUnit);
+      total+=q*vu;
+    });
+  });
+  return total;
+}
+// Previsto "proprio" de um item da EAP (nivel 4), usando o mesmo criterio de vinculo automatico do Real.
+// Alimentacao (001.003.002) e Alojamento (001.003.006) nao tem Previsto proprio: no M.O.D/M.O.I o Previsto e um valor unico por
+// pessoa/funcao (nao quebrado em base/alimentacao/moradia como o Real), entao nao da para separar so essa parcela.
+function calcPrevistoItemProprio(itemCode){
+  if(itemCode==="001.003.001")return calcTotalGeralMOPrevisto();
+  if(itemCode==="001.003.002")return calcTotalAlimentacaoPrevisto()+calcTotalPrevistoPorItemEAP("001.003.002");
+  if(itemCode==="001.003.006")return calcTotalMoradiaPrevisto();
+  if(indiretoQtdVinculos(itemCode)>0)return calcTotalPrevistoPorItemEAP(itemCode);
+  return null;
+}
 function calcTotalPrevistoGeral(){
   var meses=mesesObra(),total=0;
   S.modData.forEach(function(fn){
@@ -4631,6 +4964,314 @@ function buildColetorLegenda(){
   for(var n=1;n<=mx;n++){var cor=coletorCorNivel(n);h+="<span style='display:flex;align-items:center;gap:4px'><span style='width:10px;height:10px;border-radius:3px;background:"+cor.bg+";border:1px solid "+cor.border+";display:inline-block'></span>Nivel "+n+"</span>";}
   el.innerHTML=h;
 }
+// ===== Prev x Real (mesma arvore do Coletor Total; PREVISTO/REAL/DESVIO em 3 linhas nos itens de nivel 4) =====
+// Mesma logica de agregacao bottom-up do Real (computeColetorAgregados), mas para o Previsto:
+// folhas de nivel 4 usam calcPrevistoItemProprio (respeita o previsto salvo em visualizacao); niveis acima somam os filhos (+ proprio, quando aplicavel)
+function computeColetorAgregadosPrevisto(){
+  var arr=S.coletorEAP,n=arr.length,prevArr=new Array(n).fill(0);
+  function proprioPrevisto(i){
+    var pv=calcPrevistoItemProprio(arr[i].item);
+    return pv===null?0:pv;
+  }
+  function rec(i){
+    var nv=arr[i].nivel,j=i+1,soma=0,temFilho=false;
+    while(j<n&&arr[j].nivel>nv){temFilho=true;var childIdx=j;j=rec(childIdx);soma+=prevArr[childIdx];}
+    if(temFilho){
+      if(nv<=2||ehSubtotalForcado(arr[i].item)){prevArr[i]=soma;}
+      else{prevArr[i]=soma+proprioPrevisto(i);}
+    }else{prevArr[i]=proprioPrevisto(i);}
+    return j;
+  }
+  var k=0;while(k<n)k=rec(k);
+  return prevArr;
+}
+function ocultarMesesPrevReal(){S.prevRealMostrarMeses=false;renderPrevReal();}
+function reexibirMesesPrevReal(){S.prevRealMostrarMeses=true;renderPrevReal();}
+// Mostra/esconde as linhas de Previsto/Desvio de UM item especifico (mantem os outros como estao)
+function togglePrevistoDesvioItem(item){
+  if(!S.prevRealExpandido)S.prevRealExpandido={};
+  S.prevRealExpandido[item]=!S.prevRealExpandido[item];
+  renderPrevReal();
+}
+// Mostra/esconde as linhas de Previsto/Desvio de TODOS os itens de uma vez
+function expandirPrevistosPrevReal(){
+  var novo={};
+  for(var i=0;i<S.coletorEAP.length;i++)novo[S.coletorEAP[i].item]=true;
+  S.prevRealExpandido=novo;renderPrevReal();
+}
+function recolherPrevistosPrevReal(){S.prevRealExpandido={};renderPrevReal();}
+function toggleFiltroDesvioPrevReal(){
+  if(S.prevRealFiltrarDesvio){
+    // Ja esta filtrando - clicar de novo desliga tudo (inclusive o periodo escolhido)
+    S.prevRealFiltrarDesvio=false;
+    S.prevRealFiltroMesIni=null;S.prevRealFiltroMesFim=null;
+    atualizarBotaoFiltroDesvio();
+    renderPrevReal();
+    return;
+  }
+  // Abre o modal perguntando: todos os meses, ou um periodo especifico
+  document.getElementById("modal-periodo-ini").value=S.prevRealFiltroMesIni||"";
+  document.getElementById("modal-periodo-fim").value=S.prevRealFiltroMesFim||"";
+  document.getElementById("modal-filtro-periodo-desvio").classList.add("on");
+}
+function aplicarFiltroDesvioTodosMeses(){
+  S.prevRealFiltrarDesvio=true;
+  S.prevRealFiltroMesIni=null;S.prevRealFiltroMesFim=null;
+  document.getElementById("modal-filtro-periodo-desvio").classList.remove("on");
+  atualizarBotaoFiltroDesvio();
+  renderPrevReal();
+}
+function aplicarFiltroDesvioPeriodo(){
+  S.prevRealFiltrarDesvio=true;
+  S.prevRealFiltroMesIni=document.getElementById("modal-periodo-ini").value||null;
+  S.prevRealFiltroMesFim=document.getElementById("modal-periodo-fim").value||null;
+  document.getElementById("modal-filtro-periodo-desvio").classList.remove("on");
+  atualizarBotaoFiltroDesvio();
+  renderPrevReal();
+}
+function atualizarBotaoFiltroDesvio(){
+  var btn=document.getElementById("btn-filtro-desvio-pr");if(!btn)return;
+  btn.style.background=S.prevRealFiltrarDesvio?"#7f1d1d":"#dc2626";
+  var temPeriodo=!!(S.prevRealFiltroMesIni||S.prevRealFiltroMesFim);
+  btn.innerHTML=S.prevRealFiltrarDesvio?("&#10003; Filtrando Desvios"+(temPeriodo?" (periodo)":" (todos os meses)")):"&#128269; Filtrar Desvios";
+}
+// Usa o MESMO estado de colapso do Coletor Total (S.coletorColapso), para a arvore ficar identica nas duas abas.
+// "Ver Nivel 4" so preenche esse estado com o preset padrao (nivel 4 recolhido) - equivalente a clicar "Analise Custo" no Coletor Total.
+function verNivel4PrevReal(){aplicarNivelColetor(4);renderPrevReal();}
+function expandirTudoPrevReal(){
+  if(!engDesbloqueado){pedirSenhaEngPara(function(){S.coletorColapso={};S.coletorNivelAtivo=null;renderPrevReal();renderColetorTotal();});return;}
+  S.coletorColapso={};S.coletorNivelAtivo=null;renderPrevReal();renderColetorTotal();
+}
+// Linha unica (sem Previsto/Desvio) - usada para niveis 1 a 3, no mesmo padrao visual do Coletor Total
+function prevRealLinhaNormal(it,nv,mostrarToggle,temFilhos,colapsado,realVal,linhaMesesReal){
+  var cor=coletorCorNivel(nv);
+  var toggleHtml=mostrarToggle&&temFilhos?"<span onclick=\"toggleColetorNode('"+it.item.replace(/'/g,"&#39;")+"')\" style='cursor:pointer;display:inline-block;width:14px;color:"+cor.text+";font-weight:700;user-select:none'>"+(colapsado?"&#9656;":"&#9662;")+"</span>":"<span style='display:inline-block;width:14px'></span>";
+  var h="<tr style='background:"+cor.bg+";border-left:3px solid "+cor.border+"'>";
+  h+="<td style='padding-left:"+((nv-1)*12+6)+"px;font-family:monospace;font-size:11px;white-space:nowrap;color:"+cor.text+";font-weight:"+cor.peso+"'>"+toggleHtml+it.item+"</td>";
+  h+="<td style='max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer' onclick=\"abrirDescColetor('"+it.item.replace(/'/g,"&#39;")+"')\">"+it.descricao+"</td>";
+  h+="<td class='mono tr' style='font-weight:"+cor.peso+"'>"+fmt(realVal)+"</td>";
+  if(linhaMesesReal){linhaMesesReal.forEach(function(v){h+="<td class='mono tr' style='font-size:11px;color:"+(v?cor.text:"#cbd5e1")+"'>"+(v?fmt(v):"-")+"</td>";});}
+  h+="</tr>";
+  return h;
+}
+// 3 linhas (PREVISTO acima / REAL no meio / DESVIO abaixo) - usada nos itens de nivel 4 que tem Previsto vinculado
+function prevRealItem3Linhas(it,nv,mostrarToggle,temFilhos,colapsado,realVal,previstoVal,linhaMesesReal,linhaMesesPrevisto,expandidoPD){
+  var cor=coletorCorNivel(nv);
+  var padL=(nv-1)*12+6;
+  var toggleHtml=mostrarToggle&&temFilhos?"<span onclick=\"toggleColetorNode('"+it.item.replace(/'/g,"&#39;")+"')\" style='cursor:pointer;display:inline-block;width:14px;color:"+cor.text+";font-weight:700;user-select:none'>"+(colapsado?"&#9656;":"&#9662;")+"</span>":"<span style='display:inline-block;width:14px'></span>";
+  var togglePD="<span onclick=\"togglePrevistoDesvioItem('"+it.item.replace(/'/g,"&#39;")+"')\" style='cursor:pointer;display:inline-block;width:14px;color:#b45309;font-weight:900;user-select:none' title='"+(expandidoPD?"Recolher Previsto/Desvio":"Mostrar Previsto/Desvio")+"'>"+(expandidoPD?"&#8722;":"&#43;")+"</span>";
+  var h="";
+  h+="<tr style='background:"+cor.bg+";border-left:3px solid "+cor.border+"'>";
+  h+="<td style='padding-left:"+padL+"px;font-family:monospace;font-size:11px;white-space:nowrap;color:"+cor.text+";font-weight:"+cor.peso+"'>"+togglePD+toggleHtml+it.item+"</td>";
+  h+="<td style='max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer' onclick=\"abrirDescColetor('"+it.item.replace(/'/g,"&#39;")+"')\">"+it.descricao+"</td>";
+  h+="<td class='mono tr' style='font-weight:700'>"+fmt(realVal)+"</td>";
+  if(linhaMesesReal){linhaMesesReal.forEach(function(v){h+="<td class='mono tr' style='font-size:11px;color:"+(v?"#334155":"#cbd5e1")+"'>"+(v?fmt(v):"-")+"</td>";});}
+  h+="</tr>";
+  if(expandidoPD){
+    h+="<tr style='background:#fffbeb'>";
+    h+="<td style='padding-left:"+padL+"px;font-size:11px;color:#b45309;font-weight:700'><span style='display:inline-block;width:14px'></span>&#8627; "+it.item+"</td>";
+    h+="<td style='color:#92400e;font-size:11px'>PREVISTO - "+it.descricao+"</td>";
+    h+="<td class='mono tr' style='color:#b45309;font-weight:700'>"+fmt(previstoVal)+"</td>";
+    if(linhaMesesPrevisto){linhaMesesPrevisto.forEach(function(v){h+="<td class='mono tr' style='font-size:11px;color:"+(v?"#b45309":"#fde68a")+"'>"+(v?fmt(v):"-")+"</td>";});}
+    h+="</tr>";
+  }
+  if(expandidoPD){
+    var desvio=previstoVal-realVal;
+    var corDesvio=desvio<0?"#dc2626":(desvio>0?"#15803d":"#64748b");
+    h+="<tr style='background:#fafafa'>";
+    h+="<td style='padding-left:"+padL+"px;font-size:11px;color:"+corDesvio+";font-weight:700'><span style='display:inline-block;width:14px'></span>&#8627; "+it.item+"</td>";
+    h+="<td style='color:#64748b;font-size:11px'>DESVIO (Previsto - Real)"+(desvio<0?" &#9650; real acima":desvio>0?" &#9660; real abaixo":"")+"</td>";
+    h+="<td class='mono tr' style='color:"+corDesvio+";font-weight:700'>"+(desvio!==0?((desvio>0?"+":"")+fmt(desvio)):"-")+"</td>";
+    if(linhaMesesReal&&linhaMesesPrevisto){
+      for(var mi=0;mi<linhaMesesReal.length;mi++){
+        var dv=linhaMesesPrevisto[mi]-linhaMesesReal[mi];
+        var corDv=dv<0?"#dc2626":(dv>0?"#15803d":"#cbd5e1");
+        h+="<td class='mono tr' style='font-size:11px;color:"+corDv+"'>"+(dv?((dv>0?"+":"")+fmt(dv)):"-")+"</td>";
+      }
+    }
+    h+="</tr>";
+  }
+  return h;
+}
+function renderPrevReal(){
+  var tb=document.getElementById("tb-prevreal");if(!tb)return;
+  var meses=mesesObra();
+  // Mantem o Real dos itens auto-vinculados (001.003.001/002/006 e itens com codigo EAP) atualizado, igual ao Coletor Total
+  syncIndiretoNoColetor();
+  var itemMO=S.coletorEAP.find(function(x){return x.item==="001.003.001";});if(itemMO)itemMO.real=calcTotalGeralMO();
+  var itemAlim=S.coletorEAP.find(function(x){return x.item==="001.003.002";});if(itemAlim)itemAlim.real=calcTotalAlimentacaoObra()+calcTotalServMatIndPorItemEAP("001.003.002");
+  var itemAloj=S.coletorEAP.find(function(x){return x.item==="001.003.006";});if(itemAloj)itemAloj.real=calcTotalMoradiaObra();
+
+  // Escolher um periodo so filtra QUAIS MESES aparecem como coluna - nao muda nenhum valor calculado (Total continua sendo sempre o total do projeto inteiro)
+  var temPeriodo=!!(S.prevRealFiltroMesIni||S.prevRealFiltroMesFim);
+  var mesesExibir=temPeriodo?meses.filter(function(m){
+    if(S.prevRealFiltroMesIni&&m<S.prevRealFiltroMesIni)return false;
+    if(S.prevRealFiltroMesFim&&m>S.prevRealFiltroMesFim)return false;
+    return true;
+  }):meses;
+  var mostrarMesesEfetivo=S.prevRealMostrarMeses||temPeriodo;
+
+  var thead=document.getElementById("thead-prevreal");
+  var th="<tr><th>Item</th><th>Descricao</th><th class='tc'>Total</th>";
+  if(mostrarMesesEfetivo){mesesExibir.forEach(function(m){th+="<th class='tc' style='min-width:90px'>"+mlbl(m)+"</th>";});}
+  th+="</tr>";
+  thead.innerHTML=th;
+
+  if(!S.coletorColapso)S.coletorColapso={};
+  var agregReal=computeColetorAgregados();
+  var agregPrevisto=computeColetorAgregadosPrevisto();
+  var realPorMesMatrix=null,previstoPorMesMatrix=null;
+  if(mostrarMesesEfetivo){
+    var dadosReal=prepararRealMensalColetor(),dadosPrevisto=prepararPrevistoMensalColetor();
+    realPorMesMatrix={};previstoPorMesMatrix={};
+    meses.forEach(function(m){
+      realPorMesMatrix[m]=computeColetorRealPorMes(m,dadosReal).real;
+      previstoPorMesMatrix[m]=computeColetorPrevistoPorMes(m,dadosPrevisto);
+    });
+  }
+  function linhaDoItem(i,forcarExpandir){
+    var it=S.coletorEAP[i],nv=it.nivel||1,temFilhos=coletorTemFilhos(i),colapsado=!!S.coletorColapso[it.item];
+    var realVal=agregReal.real[i];
+    var previstoVal=agregPrevisto[i];
+    var linhaMesesReal=mostrarMesesEfetivo?mesesExibir.map(function(m){return realPorMesMatrix[m][i];}):null;
+    var linhaMesesPrevisto=mostrarMesesEfetivo?mesesExibir.map(function(m){return previstoPorMesMatrix[m][i]||0;}):null;
+    var expandidoPD=forcarExpandir||!!(S.prevRealExpandido&&S.prevRealExpandido[it.item]);
+    return prevRealItem3Linhas(it,nv,true,temFilhos,colapsado,realVal,previstoVal,linhaMesesReal,linhaMesesPrevisto,expandidoPD);
+  }
+  var busca=(S.prevRealBusca||"").toLowerCase().trim();
+  var h="",totReal=0,totPrevisto=0;
+  var minNivel=null;
+  for(var i=0;i<S.coletorEAP.length;i++){var nv0=S.coletorEAP[i].nivel;if(nv0!=null&&(minNivel===null||nv0<minNivel))minNivel=nv0;}
+  for(var i=0;i<S.coletorEAP.length;i++){if(S.coletorEAP[i].nivel===minNivel){totReal+=agregReal.real[i];totPrevisto+=agregPrevisto[i];}}
+  if(S.prevRealFiltrarDesvio){
+    // Lista plana (ignora hierarquia) so com itens onde Real difere do Previsto (total do projeto) - ja abertos, sem precisar clicar no "+"
+    // So considera itens com vinculo DIRETO com outra aba (M.O.D/M.O.I ou codigo EAP casado em Indireto/Servico/Material/Equipamento) - subtotais (que so somam os filhos) ficam de fora
+    var achadosDesvio=[];
+    for(var i=0;i<S.coletorEAP.length;i++){
+      var it3=S.coletorEAP[i];
+      if(calcPrevistoItemProprio(it3.item)===null)continue;
+      if(Math.abs(agregReal.real[i]-agregPrevisto[i])<0.01)continue;
+      if(busca&&it3.item.toLowerCase().indexOf(busca)<0&&it3.descricao.toLowerCase().indexOf(busca)<0)continue;
+      achadosDesvio.push(i);
+    }
+    document.getElementById("prevreal-cnt").textContent=achadosDesvio.length+" item(ns) com desvio, de "+S.coletorEAP.length;
+    achadosDesvio.forEach(function(idx){h+=linhaDoItem(idx,true);});
+  }else if(busca){
+    var achados=[];
+    for(var i=0;i<S.coletorEAP.length;i++){var it2=S.coletorEAP[i];if(it2.item.toLowerCase().indexOf(busca)>=0||it2.descricao.toLowerCase().indexOf(busca)>=0)achados.push(i);}
+    document.getElementById("prevreal-cnt").textContent=achados.length+" de "+S.coletorEAP.length+" itens";
+    achados.forEach(function(idx){h+=linhaDoItem(idx);});
+  }else{
+    document.getElementById("prevreal-cnt").textContent=S.coletorEAP.length+" itens";
+    var pilha=[];
+    for(var i=0;i<S.coletorEAP.length;i++){
+      var it=S.coletorEAP[i],nv=it.nivel||1;
+      while(pilha.length&&pilha[pilha.length-1].nivel>=nv)pilha.pop();
+      var ocultoPorAncestral=pilha.some(function(a){return a.colapsado;});
+      var colapsado=!!S.coletorColapso[it.item];
+      pilha.push({nivel:nv,colapsado:colapsado});
+      if(ocultoPorAncestral)continue;
+      h+=linhaDoItem(i);
+    }
+  }
+  tb.innerHTML=h||"<tr><td colspan='"+(3+(mostrarMesesEfetivo?mesesExibir.length:0))+"' style='text-align:center;color:"+(S.prevRealFiltrarDesvio?"#15803d":"#94a3b8")+";padding:20px'>"+(S.prevRealFiltrarDesvio?"&#9989; Nenhum item com desvio entre Previsto e Real":busca?"Nenhum item encontrado":"Importe a EAP na aba Importar")+"</td></tr>";
+
+  var totDesvio=totPrevisto-totReal;
+  var corTotDesvio=totDesvio<0?"#dc2626":(totDesvio>0?"#15803d":"#64748b");
+  var tf="<tr><td colspan='2'>TOTAL REAL</td><td class='mono tr' style='font-weight:700'>"+fmt(totReal)+"</td>";
+  if(mostrarMesesEfetivo){mesesExibir.forEach(function(m){var t=0;for(var i=0;i<S.coletorEAP.length;i++){if(S.coletorEAP[i].nivel===minNivel)t+=realPorMesMatrix[m][i];}tf+="<td class='mono tr' style='font-size:11px'>"+(t?fmt(t):"-")+"</td>";});}
+  tf+="</tr><tr style='background:#fffbeb'><td colspan='2' style='color:#b45309'>TOTAL PREVISTO</td><td class='mono tr' style='color:#b45309;font-weight:700'>"+fmt(totPrevisto)+"</td>";
+  if(mostrarMesesEfetivo){mesesExibir.forEach(function(m){var t=0;for(var i=0;i<S.coletorEAP.length;i++){if(S.coletorEAP[i].nivel===minNivel)t+=previstoPorMesMatrix[m][i]||0;}tf+="<td class='mono tr' style='font-size:11px;color:#b45309'>"+(t?fmt(t):"-")+"</td>";});}
+  tf+="</tr><tr style='background:#f1f5f9'><td colspan='2' style='color:"+corTotDesvio+"'>TOTAL DESVIO (Previsto - Real)</td><td class='mono tr' style='color:"+corTotDesvio+";font-weight:700'>"+(totDesvio>0?"+":"")+fmt(totDesvio)+"</td>";
+  if(mostrarMesesEfetivo){mesesExibir.forEach(function(m){var tr=0,tp=0;for(var i=0;i<S.coletorEAP.length;i++){if(S.coletorEAP[i].nivel===minNivel){tr+=realPorMesMatrix[m][i];tp+=previstoPorMesMatrix[m][i]||0;}}var dv=tp-tr;var cd=dv<0?"#dc2626":(dv>0?"#15803d":"#94a3b8");tf+="<td class='mono tr' style='font-size:11px;color:"+cd+"'>"+(dv?((dv>0?"+":"")+fmt(dv)):"-")+"</td>";});}
+  tf+="</tr>";
+  document.getElementById("tfoot-prevreal").innerHTML=tf;
+
+  var nomePrevistoAtivo="Previsto Atual (ao vivo)";
+  if(S.previstoVisualizandoId){var snapAtivo=(S.previstosSalvos||[]).find(function(s){return s.id===S.previstoVisualizandoId;});if(snapAtivo)nomePrevistoAtivo=snapAtivo.nome;}
+  var subReal=S.coletorEAP.length+" itens na EAP";
+  if(temPeriodo){
+    subReal="Colunas de "+(S.prevRealFiltroMesIni?mlbl(S.prevRealFiltroMesIni):"inicio")+" a "+(S.prevRealFiltroMesFim?mlbl(S.prevRealFiltroMesFim):"fim")+" (Total continua sendo do projeto inteiro)";
+  }
+  document.getElementById("prevreal-cards").innerHTML=
+    card("gr","Total Real",fmt(totReal),subReal)+
+    card("or","Total Previsto",fmt(totPrevisto),nomePrevistoAtivo)+
+    card(totDesvio<0?"re":"gr","Desvio (Previsto-Real)",(totDesvio>0?"+":"")+fmt(totDesvio),totDesvio<0?"Real acima do previsto":totDesvio>0?"Real abaixo do previsto":"Sem desvio")+
+    card("bl","Desvio %",totPrevisto>0?(((totDesvio/totPrevisto)*100).toFixed(1)+"%"):"\u2014","em relacao ao Previsto");
+  buildColetorLegenda2();
+}
+function buildColetorLegenda2(){
+  var el=document.getElementById("prevreal-legenda");if(!el)return;
+  var mx=coletorMaxNivel(),h="";
+  for(var n=1;n<=mx;n++){var cor=coletorCorNivel(n);h+="<span style='display:flex;align-items:center;gap:4px'><span style='width:10px;height:10px;border-radius:3px;background:"+cor.bg+";border:1px solid "+cor.border+";display:inline-block'></span>Nivel "+n+"</span>";}
+  el.innerHTML=h;
+}
+// ===== Classificacao (Etapa 1: importar relatorio + vincular manualmente a um item existente) =====
+document.getElementById("inp-classificacao").onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var data=new Uint8Array(ev.target.result);
+      var wb=XLSX.read(data,{type:"array"});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var linhas=XLSX.utils.sheet_to_json(ws,{defval:""});
+      if(!linhas.length){alert("Planilha vazia ou sem dados reconheciveis.");return;}
+      S.classificacaoColunas=Object.keys(linhas[0]);
+      S.classificacaoLinhas=linhas.map(function(r,i){return{id:gerarId("cls"),dados:r,classificadoIdx:null};});
+      renderClassificacao();
+      registrarHistoricoEngCustos("Importou relatorio de Classificacao (\""+f.name+"\", "+linhas.length+" linhas)");
+    }catch(ex){alert("Erro ao importar o relatorio: "+ex.message);}
+  };
+  reader.readAsArrayBuffer(f);
+  e.target.value="";
+};
+function classificarLinha(li,val){
+  var linha=S.classificacaoLinhas&&S.classificacaoLinhas[li];if(!linha)return;
+  linha.classificadoIdx=(val===""?null:parseInt(val));
+  renderClassificacao();
+}
+function renderClassificacao(){
+  var thead=document.getElementById("thead-classificacao"),tbody=document.getElementById("tb-classificacao");
+  if(!thead||!tbody)return;
+  var elMcvCampo=document.getElementById("mes-custo-vigente");
+  if(elMcvCampo)elMcvCampo.value=S.mesCustoVigente||"";
+  var elMcv=document.getElementById("classificacao-mes-vigente");
+  if(elMcv)elMcv.textContent=S.mesCustoVigente?("Mes do Custo Vigente: "+mlbl(S.mesCustoVigente)):"Mes do Custo Vigente nao definido (configure em Eng. Custos \u2192 Previsto)";
+  var linhas=S.classificacaoLinhas||[];
+  if(!linhas.length){
+    thead.innerHTML="";
+    tbody.innerHTML="<tr><td style='padding:30px;text-align:center;color:#94a3b8'>Nenhum relatorio importado ainda. Clique em \"Importar Relatorio\" para comecar.</td></tr>";
+    var cntEl=document.getElementById("classificacao-cnt");if(cntEl)cntEl.textContent="";
+    return;
+  }
+  var cols=S.classificacaoColunas||[];
+  var th="<tr>";
+  cols.forEach(function(c){th+="<th style='white-space:nowrap'>"+c+"</th>";});
+  th+="<th style='min-width:280px'>Classificar (vincular a um item existente)</th></tr>";
+  thead.innerHTML=th;
+
+  var itensDisponiveis=[];
+  S.indiretoData.forEach(function(it,idx){
+    normIndireto(it);
+    if(it.composicaoPai)return; // filhos de composicao nao recebem classificacao direta
+    itensDisponiveis.push({idx:idx,label:"["+CAT_CFG[it.categoria].label+"] "+(it.descricao||it.pedido||"Item")+(it.fornecedor&&it.fornecedor!=="-"?" - "+it.fornecedor:"")});
+  });
+
+  var h="";
+  linhas.forEach(function(linha,li){
+    h+="<tr>";
+    cols.forEach(function(c){h+="<td style='font-size:12px;white-space:nowrap'>"+(linha.dados[c]!==undefined&&linha.dados[c]!==null?linha.dados[c]:"")+"</td>";});
+    h+="<td><select onchange=\"classificarLinha("+li+",this.value)\" style='width:100%;border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 6px;font-size:12px'>";
+    h+="<option value=''>-- nao classificado --</option>";
+    itensDisponiveis.forEach(function(op){h+="<option value='"+op.idx+"'"+(linha.classificadoIdx===op.idx?" selected":"")+">"+op.label+"</option>";});
+    h+="</select></td>";
+    h+="</tr>";
+  });
+  tbody.innerHTML=h;
+  var classificadas=linhas.filter(function(l){return l.classificadoIdx!==null&&l.classificadoIdx!==undefined;}).length;
+  var cntEl2=document.getElementById("classificacao-cnt");if(cntEl2)cntEl2.textContent=classificadas+" de "+linhas.length+" linhas classificadas";
+}
 // ===== IMPORTAÇÃO RAZÃO CONTÁBIL =====
 document.getElementById("inp-razao").onchange=function(e){
   var f=e.target.files[0];if(!f)return;
@@ -4697,7 +5338,7 @@ document.getElementById("inp-razao").onchange=function(e){
 };
 document.getElementById("inp-crono").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array",cellDates:false}),sn=wb.SheetNames[0];for(var i=0;i<wb.SheetNames.length;i++){var n=wb.SheetNames[i].toLowerCase();if(n.indexOf("task")>=0||n.indexOf("tarefa")>=0){sn=wb.SheetNames[i];break;}}var rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:""}),hi=0;for(var i=0;i<Math.min(8,rows.length);i++){if(rows[i].filter(function(c){return String(c).trim().length>1;}).length>=2){hi=i;break;}}var FMP={nome:["nome","name","task name"],inicio:["inicio","start"],fim:["termino","fim","finish"],pct:["concluido","complete"],nivel:["nivel","level","outline"],duracao:["duracao","duration","dias"],custo:["custo","cost","baseline"],pedido:["pedido","pc","ordem"]},hdrs=rows[hi].map(function(h){return String(h).trim();}),hmap={};for(var h2=0;h2<hdrs.length;h2++){var h=hdrs[h2].toLowerCase(),fks=Object.keys(FMP);for(var fi=0;fi<fks.length;fi++){if(hmap[fks[fi]]===undefined){var ks=FMP[fks[fi]];for(var ki=0;ki<ks.length;ki++){if(h.indexOf(ks[ki])>=0){hmap[fks[fi]]=h2;break;}}}}}var pDate=function(v){if(!v)return null;if(typeof v==="number"){var d=XLSX.SSF.parse_date_code(v);if(d)return new Date(d.y,d.m-1,d.d);}var s=String(v).trim(),m1=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m1)return new Date(+m1[3],+m1[2]-1,+m1[1]);var m2=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m2)return new Date(+m2[1],+m2[2]-1,+m2[3]);return null;},ts=[];for(var ri=hi+1;ri<rows.length;ri++){var row=rows[ri],nm=hmap.nome!==undefined?String(row[hmap.nome]||"").trim():"";if(!nm)continue;var ini=hmap.inicio!==undefined?pDate(row[hmap.inicio]):null,fim=hmap.fim!==undefined?pDate(row[hmap.fim]):null,pct=parseFloat(String(hmap.pct!==undefined?row[hmap.pct]:0).replace("%","").replace(",","."))||0;if(pct>1)pct=pct/100;var nv=hmap.nivel!==undefined?parseInt(row[hmap.nivel])||1:1,dur=parseFloat(String(hmap.duracao!==undefined?row[hmap.duracao]:"").replace(/[^0-9.]/g,""))||0;if(!dur&&ini&&fim)dur=Math.round((fim-ini)/86400000);var custo=hmap.custo!==undefined?parseFloat(row[hmap.custo])||0:0,pedido=hmap.pedido!==undefined?String(row[hmap.pedido]||"").trim():"",mesIni=ini?mkM(ini.getFullYear(),ini.getMonth()+1):null,mesFim=fim?mkM(fim.getFullYear(),fim.getMonth()+1):null,st="Nao Iniciado";if(pct>=1)st="Concluido";else if(pct>0)st="Em Andamento";else if(ini&&ini<=TODAY)st="Atrasado";ts.push({nome:nm,inicio:ini?ini.toLocaleDateString("pt-BR"):"-",fim:fim?fim.toLocaleDateString("pt-BR"):"-",mesIni:mesIni,mesFim:mesFim,duracao:dur,pct:pct,nivel:nv,status:st,custo:custo,pedido:pedido});}S.cronograma=ts;renderCrono();renderDRE();renderDash();renderImportStatus();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
 document.getElementById("inp-pedidos").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array"}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:""}),norm=function(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,"");},get=function(r){var terms=[].slice.call(arguments,1);var k=Object.keys(r).find(function(k){return terms.some(function(t){return norm(k).indexOf(t)>=0;});});return k?r[k]:"";},pd=[];for(var i=0;i<rows.length;i++){var r=rows[i];pd.push({id:i,pedido:String(get(r,"pedido","pc","numero","order")||"").trim(),descricao:String(get(r,"descricao","desc","item","material")||"").trim(),fornecedor:String(get(r,"fornecedor","supplier")||"").trim(),etapa:String(get(r,"etapa","fase","atividade","tarefa","task")||"").trim(),valor:parseFloat(String(get(r,"valor","value","custo","cost","total")||"0").replace(/[^\d.,]/g,"").replace(",","."))||0,status:String(get(r,"status","situacao")||"").trim(),data:String(get(r,"data","date","emissao")||"").trim()});}S.pedidos=pd.filter(function(p){return p.pedido||p.descricao;});renderCrono();renderDRE();renderDash();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
-function montarDadosCompletos(){return {version:21,exportadoEm:new Date().toISOString(),projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[]};}
+function montarDadosCompletos(){return {version:21,exportadoEm:new Date().toISOString(),projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[],mesCustoVigente:S.mesCustoVigente||null,classificacaoColunas:S.classificacaoColunas||[],classificacaoLinhas:S.classificacaoLinhas||[]};}
 function salvarJSON(){var data=montarDadosCompletos();var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="custos_"+S.projNome.replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(url);registrarHistoricoEngCustos("Baixou o arquivo JSON de dados");}
 async function salvarNaNuvem(){
   var btn=document.getElementById("btn-salvar-nuvem"),st=document.getElementById("nuvem-status");
@@ -4747,7 +5388,7 @@ function migrarHEParaFimSemana(he){
   });
   return he;
 }
-function aplicarDadosImportados(d){if(d.projNome)S.projNome=d.projNome;if(d.projSub!==undefined)S.projSub=d.projSub;if(d.projLocal!==undefined)S.projLocal=d.projLocal;if(d.logoB64)S.logoB64=d.logoB64;if(d.obraIni)S.obraIni=d.obraIni;if(d.obraFim)S.obraFim=d.obraFim;if(d.mult)S.mult=d.mult;if(d.he)S.he=migrarHEParaFimSemana(d.he);if(d.aloj)S.aloj=d.aloj;if(d.salMOD)S.salMOD=d.salMOD;if(d.modData)S.modData=d.modData;if(d.moiData)S.moiData=d.moiData;if(d.indiretoData)S.indiretoData=d.indiretoData;if(d.cronograma)S.cronograma=d.cronograma;if(d.pedidos)S.pedidos=d.pedidos;if(d.pedidosCompra){S.pedidosCompra=d.pedidosCompra;var ccoSet={};S.pedidosCompra.forEach(function(p){ccoSet[p.ccoInfo.full]=p.ccoInfo;});S.ccosPed=Object.values(ccoSet);buildFiltroCCOPed();if(S.pedidosCompra.length){document.getElementById("ped-compra-empty").style.display="none";document.getElementById("ped-compra-content").style.display="block";}}if(d.distPedidos)S.distPedidos=d.distPedidos;if(d.distMensal)S.distMensal=d.distMensal;if(d.medicoes)S.medicoes=d.medicoes;if(d.escopos)S.escopos=d.escopos;if(d.razaoMO)S.razaoMO=d.razaoMO;if(d.coletorEAP)S.coletorEAP=d.coletorEAP;if(d.coletorColapso)S.coletorColapso=d.coletorColapso;if(d.coletorNivelAtivo!==undefined)S.coletorNivelAtivo=d.coletorNivelAtivo;if(d.coletorSyncedCodes)S.coletorSyncedCodes=d.coletorSyncedCodes;if(d.encargos)S.encargos=d.encargos;if(d.equipeEng)S.equipeEng=d.equipeEng;if(d.coletorSubtotais)S.coletorSubtotais=d.coletorSubtotais;if(d.dreReceitaData)S.dreReceitaData=d.dreReceitaData;if(d.dreImpostoPct)S.dreImpostoPct=d.dreImpostoPct;if(d.previstosSalvos)S.previstosSalvos=d.previstosSalvos;if(d.previstoVisualizandoId!==undefined)S.previstoVisualizandoId=d.previstoVisualizandoId;if(d.historicoEngCustos)S.historicoEngCustos=d.historicoEngCustos;document.getElementById("obra-ini").value=S.obraIni;document.getElementById("obra-fim").value=S.obraFim;renderHeader();recalc();renderCrono();renderPedCompraMatrix();renderFluxoMateriais();renderImportStatus();renderColetorTotal();popularDadosObra();renderTodasCategoriasIndireto();renderCustoModMatrix();renderCustoMOMatrix();renderDash();}
+function aplicarDadosImportados(d){if(d.projNome)S.projNome=d.projNome;if(d.projSub!==undefined)S.projSub=d.projSub;if(d.projLocal!==undefined)S.projLocal=d.projLocal;if(d.logoB64)S.logoB64=d.logoB64;if(d.obraIni)S.obraIni=d.obraIni;if(d.obraFim)S.obraFim=d.obraFim;if(d.mult)S.mult=d.mult;if(d.he)S.he=migrarHEParaFimSemana(d.he);if(d.aloj)S.aloj=d.aloj;if(d.salMOD)S.salMOD=d.salMOD;if(d.modData)S.modData=d.modData;if(d.moiData)S.moiData=d.moiData;if(d.indiretoData)S.indiretoData=d.indiretoData;if(d.cronograma)S.cronograma=d.cronograma;if(d.pedidos)S.pedidos=d.pedidos;if(d.pedidosCompra){S.pedidosCompra=d.pedidosCompra;var ccoSet={};S.pedidosCompra.forEach(function(p){ccoSet[p.ccoInfo.full]=p.ccoInfo;});S.ccosPed=Object.values(ccoSet);buildFiltroCCOPed();if(S.pedidosCompra.length){document.getElementById("ped-compra-empty").style.display="none";document.getElementById("ped-compra-content").style.display="block";}}if(d.distPedidos)S.distPedidos=d.distPedidos;if(d.distMensal)S.distMensal=d.distMensal;if(d.medicoes)S.medicoes=d.medicoes;if(d.escopos)S.escopos=d.escopos;if(d.razaoMO)S.razaoMO=d.razaoMO;if(d.coletorEAP)S.coletorEAP=d.coletorEAP;if(d.coletorColapso)S.coletorColapso=d.coletorColapso;if(d.coletorNivelAtivo!==undefined)S.coletorNivelAtivo=d.coletorNivelAtivo;if(d.coletorSyncedCodes)S.coletorSyncedCodes=d.coletorSyncedCodes;if(d.encargos)S.encargos=d.encargos;if(d.equipeEng)S.equipeEng=d.equipeEng;if(d.coletorSubtotais)S.coletorSubtotais=d.coletorSubtotais;if(d.dreReceitaData)S.dreReceitaData=d.dreReceitaData;if(d.dreImpostoPct)S.dreImpostoPct=d.dreImpostoPct;if(d.previstosSalvos)S.previstosSalvos=d.previstosSalvos;if(d.previstoVisualizandoId!==undefined)S.previstoVisualizandoId=d.previstoVisualizandoId;if(d.historicoEngCustos)S.historicoEngCustos=d.historicoEngCustos;if(d.mesCustoVigente!==undefined)S.mesCustoVigente=d.mesCustoVigente;if(d.classificacaoColunas)S.classificacaoColunas=d.classificacaoColunas;if(d.classificacaoLinhas)S.classificacaoLinhas=d.classificacaoLinhas;document.getElementById("obra-ini").value=S.obraIni;document.getElementById("obra-fim").value=S.obraFim;renderHeader();recalc();renderCrono();renderPedCompraMatrix();renderFluxoMateriais();renderImportStatus();renderColetorTotal();popularDadosObra();renderTodasCategoriasIndireto();renderCustoModMatrix();renderCustoMOMatrix();renderDash();}
 document.getElementById("inp-json").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var d=JSON.parse(ev.target.result);aplicarDadosImportados(d);registrarHistoricoEngCustos("Carregou o arquivo JSON \""+f.name+"\"");alert("Carregado: "+f.name);}catch(ex){alert("Erro: "+ex.message);}};reader.readAsText(f);e.target.value="";};
 function baixarHTML(){var html=document.documentElement.outerHTML;var blob=new Blob([html],{type:"text/html;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=S.projNome.replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".html";a.click();URL.revokeObjectURL(url);}
 var engDesbloqueado=false; // em memoria apenas - reseta ao fechar/recarregar a pagina, nao e salvo no JSON
