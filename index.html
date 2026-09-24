@@ -373,6 +373,7 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Indireto')">&#10133; Novo Item</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Indireto')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Indireto')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Indireto')" data-categoria="Indireto">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
       </div>
     </div>
@@ -394,6 +395,7 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Servico')">&#10133; Novo Item</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Servico')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Servico')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Servico')" data-categoria="Servico">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
       </div>
     </div>
@@ -415,6 +417,7 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Material')">&#10133; Novo Item</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Material')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Material')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Material')" data-categoria="Material">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
       </div>
     </div>
@@ -436,6 +439,7 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Equipamento')">&#10133; Novo Item</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Equipamento')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Equipamento')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Equipamento')" data-categoria="Equipamento">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
       </div>
     </div>
@@ -756,6 +760,21 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
     </div>
   </div>
 </div>
+<div class="modal-bg" id="modal-salvar-versao-existente">
+  <div class="modal" style="max-width:560px">
+    <div class="mh">
+      <h3>&#9729; Salvar na Base Existente</h3>
+      <button class="mc" onclick="document.getElementById('modal-salvar-versao-existente').classList.remove('on')">&#10005;</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:12px;color:#64748b;margin-bottom:14px">Escolha uma versao ja salva no Firebase para SOBRESCREVER com os dados atuais desta tela. A versao escolhida sera substituida - os dados que ela tinha antes serao perdidos.</p>
+      <div id="salvar-existente-lista" style="max-height:440px;overflow-y:auto">
+        <p style="font-size:12px;color:#94a3b8">Carregando versoes...</p>
+      </div>
+      <div id="salvar-existente-status" style="font-size:11.5px;color:#15803d;margin-top:10px"></div>
+    </div>
+  </div>
+</div>
 <div class="modal-bg" id="modal-eng">
   <div class="modal">
     <div class="mh"><h3>Configuracoes Avancadas</h3><button class="mc" onclick="fecharEng()">X</button></div>
@@ -841,6 +860,7 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
           <div style="border-top:1px dashed #e2e8f0;margin:4px 0"></div>
           <button class="btn b-blue" style="width:100%;text-align:left" id="btn-salvar-nuvem" onclick="salvarNaNuvem()">&#9729; Salvar na Nuvem (Firebase)</button>
           <button class="btn b-outline" style="width:100%;text-align:left" id="btn-nova-versao" onclick="salvarNovaVersaoNuvem()">&#9729; Salvar Nova Versao</button>
+          <button class="btn b-outline" style="width:100%;text-align:left" id="btn-salvar-existente" onclick="fecharEng();abrirModalSalvarVersaoExistente()">&#9729; Salvar na Base Existente</button>
           <div id="nuvem-status" style="font-size:11px;color:#64748b"></div>
         </div>
       </div>
@@ -2705,19 +2725,82 @@ function abrirContratosModal(idx){
   var lista=document.getElementById("ctr-lista");
   lista.innerHTML="";
   var contratos=(it.contratos&&it.contratos.length)?it.contratos:[{numero:"",valor:0}];
-  contratos.forEach(function(c){adicionarContratoRow(c.numero,c.valor);});
+  contratos.forEach(function(c){adicionarContratoRow(c.numero,c.valor,c.anexoNome,c.anexoDataUrl);});
   atualizarCtrTotal();
   document.getElementById("modal-contratos").classList.add("on");
 }
-function adicionarContratoRow(numero,valor){
+function adicionarContratoRow(numero,valor,anexoNome,anexoDataUrl){
   var lista=document.getElementById("ctr-lista");
   var div=document.createElement("div");
   div.className="ctr-row";
-  div.style.cssText="display:flex;gap:8px;margin-bottom:8px;align-items:center";
-  div.innerHTML="<input type='text' placeholder='No do contrato/aditivo' class='ctr-numero' style='flex:1;border:2px solid #e2e8f0;border-radius:8px;padding:7px 9px;font-size:12.5px' value=\""+(numero?String(numero).replace(/"/g,"&quot;"):"")+"\">"+
+  div.style.cssText="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;align-items:center;padding:8px;border:1px solid #f1f5f9;border-radius:8px";
+  div.dataset.anexoNome=anexoNome||"";
+  div.dataset.anexoDataUrl=anexoDataUrl||"";
+  div.innerHTML="<input type='text' placeholder='No do contrato/aditivo' class='ctr-numero' style='flex:1;min-width:140px;border:2px solid #e2e8f0;border-radius:8px;padding:7px 9px;font-size:12.5px' value=\""+(numero?String(numero).replace(/"/g,"&quot;"):"")+"\">"+
     "<input type='text' inputmode='decimal' placeholder='Valor contratado' class='ctr-valor' style='width:150px;border:2px solid #e2e8f0;border-radius:8px;padding:7px 9px;font-size:12.5px;text-align:right' value=\""+(valor?fmtNumBR(valor):"")+"\" onblur=\"this.value=this.value?fmtNumBR(parseValorIndiretoBR(this.value)):'';atualizarCtrTotal();\" oninput=\"atualizarCtrTotal()\">"+
-    "<button type='button' onclick='this.closest(\".ctr-row\").remove();atualizarCtrTotal()' style='color:#dc2626;background:none;border:none;cursor:pointer;font-size:16px' title='Remover'>&#128465;</button>";
+    "<button type='button' onclick='this.closest(\".ctr-row\").remove();atualizarCtrTotal()' style='color:#dc2626;background:none;border:none;cursor:pointer;font-size:16px' title='Remover linha'>&#128465;</button>"+
+    "<input type='file' class='ctr-anexo-input' accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx' style='display:none' onchange='anexarArquivoContrato(this)'>"+
+    "<div class='ctr-anexo-wrap' style='width:100%;display:flex;align-items:center;gap:8px'></div>";
   lista.appendChild(div);
+  atualizarLinhaAnexoContrato(div);
+}
+// Converte a data URL (base64) salva em um Blob e abre numa nova aba - evita o bloqueio que navegadores como Chrome
+// aplicam a links "data:" diretos, que costumam simplesmente nao abrir nada ao clicar.
+function dataUrlParaBlob(dataUrl){
+  var partes=dataUrl.split(","),meta=partes[0],base64=partes[1];
+  var mimeMatch=meta.match(/data:([^;]+);base64/);
+  var mime=mimeMatch?mimeMatch[1]:"application/octet-stream";
+  var binStr=atob(base64),len=binStr.length,bytes=new Uint8Array(len);
+  for(var i=0;i<len;i++)bytes[i]=binStr.charCodeAt(i);
+  return new Blob([bytes],{type:mime});
+}
+function abrirAnexoContratoRow(btn){
+  var row=btn.closest(".ctr-row");
+  var url=row.dataset.anexoDataUrl;if(!url)return;
+  try{
+    var blob=dataUrlParaBlob(url);
+    var blobUrl=URL.createObjectURL(blob);
+    var win=window.open(blobUrl,"_blank");
+    if(!win)alert("O navegador bloqueou a abertura da nova aba. Permita pop-ups para este site e tente novamente.");
+    setTimeout(function(){URL.revokeObjectURL(blobUrl);},60000);
+  }catch(e){
+    alert("Nao foi possivel abrir o anexo: "+e.message);
+  }
+}
+// Reconstroi o pedacinho de "anexo" de uma linha de contrato (botao Anexar/Trocar + nome do arquivo + Abrir/Remover, quando ha algo anexado)
+function atualizarLinhaAnexoContrato(row){
+  var wrap=row.querySelector(".ctr-anexo-wrap");if(!wrap)return;
+  var nome=row.dataset.anexoNome,url=row.dataset.anexoDataUrl;
+  var h="<button type='button' onclick='this.parentElement.parentElement.querySelector(\".ctr-anexo-input\").click()' style='background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:11px;color:#334155'>&#128206; "+(nome?"Trocar arquivo":"Anexar arquivo")+"</button>";
+  if(nome&&!url){
+    h+="<span style='font-size:11px;color:#b45309;flex:1'>&#128196; "+nome+" <i>(anexo nao veio nesta versao da nuvem - anexos so sao salvos no JSON local; anexe de novo se precisar)</i></span>";
+  }else{
+    h+="<span style='font-size:11px;color:#64748b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+(nome?("&#128196; "+nome):"Nenhum arquivo anexado")+"</span>";
+  }
+  if(url){
+    h+="<button type='button' onclick='abrirAnexoContratoRow(this)' style='font-size:11px;color:#1e40af;font-weight:600;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0'>Abrir</button>";
+    h+="<button type='button' onclick='removerAnexoContrato(this)' style='color:#dc2626;background:none;border:none;cursor:pointer;font-size:11px' title='Remover anexo'>&#10060;</button>";
+  }
+  wrap.innerHTML=h;
+}
+function anexarArquivoContrato(inputEl){
+  var f=inputEl.files[0];if(!f)return;
+  if(f.size>8*1024*1024){alert("Arquivo muito grande (maximo 8 MB). Escolha um arquivo menor.");inputEl.value="";return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var row=inputEl.closest(".ctr-row");
+    row.dataset.anexoNome=f.name;
+    row.dataset.anexoDataUrl=e.target.result;
+    atualizarLinhaAnexoContrato(row);
+  };
+  reader.onerror=function(){alert("Erro ao ler o arquivo.");};
+  reader.readAsDataURL(f);
+  inputEl.value="";
+}
+function removerAnexoContrato(btn){
+  var row=btn.closest(".ctr-row");
+  row.dataset.anexoNome="";row.dataset.anexoDataUrl="";
+  atualizarLinhaAnexoContrato(row);
 }
 function atualizarCtrTotal(){
   var total=0;
@@ -2731,7 +2814,9 @@ function salvarContratos(){
   document.querySelectorAll("#ctr-lista .ctr-row").forEach(function(row){
     var numero=row.querySelector(".ctr-numero").value.trim();
     var valor=parseValorIndiretoBR(row.querySelector(".ctr-valor").value)||0;
-    if(numero||valor>0)contratos.push({numero:numero,valor:valor});
+    var anexoNome=row.dataset.anexoNome||"";
+    var anexoDataUrl=row.dataset.anexoDataUrl||"";
+    if(numero||valor>0||anexoNome)contratos.push({numero:numero,valor:valor,anexoNome:anexoNome,anexoDataUrl:anexoDataUrl});
   });
   it.contratos=contratos;
   it.contratoDistratado=document.getElementById("ctr-distratado").checked;
@@ -2835,12 +2920,16 @@ function salvarEditIndireto(){
   it.itemEAP=itemEapDigitado;
   it.validado=document.getElementById("em3-validado").checked;
   if(criandoNovo)S.indiretoData.push(it);
+  if(it.composicaoPai)recalcularComposicaoMacro(it.composicaoPai);
   document.getElementById("modal-edit-indireto").classList.remove("on");
   renderTodasCategoriasIndireto();
 }
 function excluirItemIndireto(idx){
   if(!confirm("Excluir este item?"))return;
+  var it=S.indiretoData[idx];
+  var paiAfetado=it?it.composicaoPai:null;
   S.indiretoData.splice(idx,1);
+  if(paiAfetado)recalcularComposicaoMacro(paiAfetado); // reajusta o total da composicao-mae, senao ela fica com o valor antigo "grudado"
   renderTodasCategoriasIndireto(); // indices da array mudam - precisa atualizar todas as categorias
 }
 // Parser robusto de valores em formato BR (trata separador de milhar "." e decimal ",")
@@ -3395,11 +3484,19 @@ function exportarComposicaoExcel(){
   XLSX.utils.book_append_sheet(wb,ws,"Composicao");
   XLSX.writeFile(wb,"composicao_real_"+itemCode+".xlsx");
 }
-function renderIndiretoTab(categoria){renderIndiretoCards(categoria);renderIndiretoMatrix(categoria);syncIndiretoNoColetor();}
+function renderIndiretoTab(categoria){recalcularTodasComposicoes();renderIndiretoCards(categoria);renderIndiretoMatrix(categoria);syncIndiretoNoColetor();atualizarBarraCompilarSelecionados();}
 // Re-renderiza as 4 categorias de uma vez (usado apos add/editar/excluir item, pois os indices da array mudam)
+// Recalcula TODAS as composicoes existentes (auto-correcao: se alguma ficou "desatualizada" por edicao/exclusao de um item filho, ela se corrige sozinha aqui)
+function recalcularTodasComposicoes(){
+  S.indiretoData.forEach(function(comp){
+    if(comp.isComposicao&&comp.compId)recalcularComposicaoMacro(comp.compId);
+  });
+}
 function renderTodasCategoriasIndireto(){
+  recalcularTodasComposicoes();
   Object.keys(CAT_CFG).forEach(function(cat){renderIndiretoCards(cat);renderIndiretoMatrix(cat);});
   syncIndiretoNoColetor();
+  atualizarBarraCompilarSelecionados();
 }
 function renderIndiretoCards(categoria){
   var cfg=CAT_CFG[categoria];if(!cfg)return;
@@ -3497,7 +3594,8 @@ function renderIndiretoMatrix(categoria){
     var padL=indent?"padding-left:22px":"";
     var nome=it.descricao||it.pedido||"Item sem nome";
     var iconPrevisto=previstoToggle?("<span onclick=\""+previstoToggle.onclick+"\" style='cursor:pointer;margin-right:4px;color:#64748b;font-weight:900' title='"+(mostrarPrevisto?"Recolher Previsto":"Mostrar Previsto")+"'>"+(mostrarPrevisto?"&#8722;":"&#43;")+"</span>"):"";
-    var acoes=(extraIcone||"")+iconPrevisto+(dragHandle?"<span style='cursor:grab;margin-right:4px;color:#cbd5e1' title='Arrastar para reordenar'>&#8942;&#8942;</span>":"")+"<span style='font-weight:600'>"+nome+"</span>"+menuHtml(idx,menuItens);
+    var checkboxComp=(!it.isComposicao&&!it.composicaoPai)?("<input type='checkbox' onclick='event.stopPropagation();toggleSelecaoComp("+idx+")' "+(S.compSelecaoAtiva&&S.compSelecaoAtiva[idx]?"checked":"")+" style='margin-right:6px;cursor:pointer;vertical-align:middle' title='Selecionar para compilar em uma composicao'>"):"";
+    var acoes=checkboxComp+(extraIcone||"")+iconPrevisto+(dragHandle?"<span style='cursor:grab;margin-right:4px;color:#cbd5e1' title='Arrastar para reordenar'>&#8942;&#8942;</span>":"")+"<span style='font-weight:600'>"+nome+"</span>"+menuHtml(idx,menuItens);
     // Cadeado fica na propria linha PREVISTO: clicavel para liberar/travar edicao do Valor Unitario e da Quantidade do Previsto
     var iconLockPrevisto=snapItem?"<span title='Visualizando previsto salvo - somente leitura' style='margin-right:5px'>&#128065;</span>":("<span onclick=\"equipTogglePrevistoFixado("+idx+")\" style='cursor:pointer;margin-right:5px' title='"+(it.previstoFixado?"Liberar Previsto (permite editar Valor Unitario e Quantidade)":"Fixar Previsto (trava edicao)")+"'>"+(it.previstoFixado?"&#128274;":"&#128275;")+"</span>"+(it.previstoFixado?"":"<span onclick=\"equipIgualarComReal("+idx+")\" style='cursor:pointer;margin-right:5px' title='Igualar Previsto com os valores atuais do Real'>&#128257;</span>"));
     var totContrato=0;(it.contratos||[]).forEach(function(c){totContrato+=c.valor||0;});
@@ -3574,7 +3672,7 @@ function renderIndiretoMatrix(categoria){
         ];
         // "+"/"-" 1o nivel: mostra/esconde os equipamentos (itens) que formam esta composicao
         var iconVerItens="<span onclick=\"equipComposicaoToggleEdicao("+idx+")\" style='cursor:pointer;margin-right:4px;color:#1e40af;font-weight:900;font-size:14px' title='"+(it.modoEdicaoItens?"Recolher itens da composicao":"Mostrar itens da composicao (agrupar)")+"'>"+(it.modoEdicaoItens?"&#8722;":"&#43;")+"</span>";
-        var resComp=linhaPR(idx,it,"#eff6ff",false,false,"",menuComp,false,iconVerItens,{expandido:!!it.mostrarPrevisto,onclick:"equipToggleChildPrevisto("+idx+")"});
+        var resComp=linhaPR(idx,it,(it.validado?"#f0fdf4":"#eff6ff"),false,false,"",menuComp,false,iconVerItens,{expandido:!!it.mostrarPrevisto,onclick:"equipToggleChildPrevisto("+idx+")"});
         resComp.html=resComp.html.replace(">"+(it.descricao||"-")+"</td>",">&#128279; "+(it.descricao||"-")+(it.modoEdicaoItens?" <span style=\"font-size:9.5px;color:#b45309\">(itens abaixo)</span>":"")+"</td>");
         tb+=resComp.html;
         // Filhos da composicao (equipamentos originais): so aparecem quando o "+" acima foi clicado (modoEdicaoItens=true)
@@ -3683,6 +3781,40 @@ document.addEventListener("scroll",function(){fecharEquipMenu();},true);
 // Junta 2+ itens de Equipamento do mesmo fornecedor (dentro do mesmo grupo EAP) em uma linha de composicao.
 // Os itens originais CONTINUAM existindo (com Previsto/Real proprios) so que marcados como "filhos" da composicao (composicaoPai);
 // a linha da composicao e sempre a SOMA ao vivo desses filhos - nunca e editada diretamente.
+// Selecao manual de itens (por checkbox) para compilar em uma composicao - nao depende do Fornecedor bater igual entre os itens,
+// diferente do banner automatico (que so aparece quando 2+ itens tem o MESMO Fornecedor escrito identico).
+function toggleSelecaoComp(idx){
+  if(!S.compSelecaoAtiva)S.compSelecaoAtiva={};
+  if(S.compSelecaoAtiva[idx])delete S.compSelecaoAtiva[idx];else S.compSelecaoAtiva[idx]=true;
+  atualizarBarraCompilarSelecionados();
+}
+function atualizarBarraCompilarSelecionados(){
+  var n=S.compSelecaoAtiva?Object.keys(S.compSelecaoAtiva).length:0;
+  document.querySelectorAll(".btn-compilar-selecionados").forEach(function(btn){
+    btn.style.display=n>=2?"inline-block":"none";
+    btn.innerHTML="&#128279; Compilar "+n+" Selecionados em Composicao";
+  });
+}
+function compilarSelecionadosEmComposicao(categoria){
+  var idxs=Object.keys(S.compSelecaoAtiva||{}).map(Number).filter(function(i){
+    var it=S.indiretoData[i];return it&&it.categoria===categoria&&!it.isComposicao&&!it.composicaoPai;
+  });
+  if(idxs.length<2){alert("Selecione pelo menos 2 itens (marcando a caixinha ao lado de cada um) para compilar em uma composicao.");return;}
+  var grupos={};idxs.forEach(function(i){grupos[S.indiretoData[i].itemEAP||""]=true;});
+  if(Object.keys(grupos).length>1){alert("Os itens selecionados precisam estar todos na mesma classificacao EAP (ou todos sem classificacao) para virarem uma composicao junta.");return;}
+  var chave=Object.keys(grupos)[0];
+  var nome=prompt("Nome/descricao para esta composicao:","Composicao");
+  if(nome===null)return;
+  nome=nome.trim()||"Composicao";
+  if(!confirm("Compilar "+idxs.length+" item(ns) selecionados em uma composicao \""+nome+"\"?\n\nA linha da composicao passa a ser a soma automatica dos itens de baixo (Previsto e Real). Os itens continuam existindo e podem ser editados clicando no botao de alterar composicao.\n\nIsso pode ser desfeito depois."))return;
+  var compId="comp-"+Date.now()+"-"+Math.floor(Math.random()*1000);
+  idxs.forEach(function(i){S.indiretoData[i].composicaoPai=compId;});
+  S.indiretoData.push({categoria:categoria,isComposicao:true,compId:compId,pedido:"",fornecedor:"",descricao:nome,valorUnit:1,itemEAP:chave,qtdPorMes:{},qtdPrevistoPorMes:{}});
+  recalcularComposicaoMacro(compId);
+  S.compSelecaoAtiva={};
+  renderTodasCategoriasIndireto();
+  atualizarBarraCompilarSelecionados();
+}
 function equipComposicaoIniciar(fornecedor,chave,categoria){
   var idxs=[];
   for(var i=0;i<S.indiretoData.length;i++){
@@ -5340,14 +5472,45 @@ document.getElementById("inp-crono").onchange=function(e){var f=e.target.files[0
 document.getElementById("inp-pedidos").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array"}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:""}),norm=function(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,"");},get=function(r){var terms=[].slice.call(arguments,1);var k=Object.keys(r).find(function(k){return terms.some(function(t){return norm(k).indexOf(t)>=0;});});return k?r[k]:"";},pd=[];for(var i=0;i<rows.length;i++){var r=rows[i];pd.push({id:i,pedido:String(get(r,"pedido","pc","numero","order")||"").trim(),descricao:String(get(r,"descricao","desc","item","material")||"").trim(),fornecedor:String(get(r,"fornecedor","supplier")||"").trim(),etapa:String(get(r,"etapa","fase","atividade","tarefa","task")||"").trim(),valor:parseFloat(String(get(r,"valor","value","custo","cost","total")||"0").replace(/[^\d.,]/g,"").replace(",","."))||0,status:String(get(r,"status","situacao")||"").trim(),data:String(get(r,"data","date","emissao")||"").trim()});}S.pedidos=pd.filter(function(p){return p.pedido||p.descricao;});renderCrono();renderDRE();renderDash();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
 function montarDadosCompletos(){return {version:21,exportadoEm:new Date().toISOString(),projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[],mesCustoVigente:S.mesCustoVigente||null,classificacaoColunas:S.classificacaoColunas||[],classificacaoLinhas:S.classificacaoLinhas||[]};}
 function salvarJSON(){var data=montarDadosCompletos();var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="custos_"+S.projNome.replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(url);registrarHistoricoEngCustos("Baixou o arquivo JSON de dados");}
+// Firestore tem um limite rigido de 1 MB por documento. Anexos de contrato (PDF/imagem em base64) podem
+// facilmente estourar isso sozinhos, entao para a NUVEM eles sao removidos (fica so o nome do arquivo, como aviso).
+// Os anexos continuam completos no "Salvar JSON" e no arquivo local - so nao vao para o Firebase.
+function montarDadosParaFirebase(){
+  var data=montarDadosCompletos();
+  var indiretoSemAnexos=(data.indiretoData||[]).map(function(it){
+    if(!it.contratos||!it.contratos.length)return it;
+    var itCopia=Object.assign({},it);
+    itCopia.contratos=it.contratos.map(function(c){
+      if(!c.anexoDataUrl)return c;
+      var cCopia=Object.assign({},c);
+      delete cCopia.anexoDataUrl; // remove so o conteudo do arquivo; mantem anexoNome como lembrete
+      return cCopia;
+    });
+    return itCopia;
+  });
+  data.indiretoData=indiretoSemAnexos;
+  data._anexosOmitidosNaNuvem=true;
+  return data;
+}
+// Confere se os dados cabem no limite de 1 MB do Firestore ANTES de tentar salvar, para dar um aviso claro
+// em vez de deixar o Firebase recusar silenciosamente (ex: se a Classificacao crescer muito no futuro).
+function verificarTamanhoParaFirebase(data){
+  var bytes;
+  try{bytes=new Blob([JSON.stringify(data)]).size;}catch(e){return null;}
+  var LIMITE=1048576;
+  if(bytes>=LIMITE)return "Os dados (sem contar anexos) tem "+(bytes/1024).toFixed(0)+" KB, acima do limite de 1024 KB por documento do Firestore. Reduza o tamanho (ex: relatorios muito grandes na aba Classificacao) antes de salvar na nuvem, ou use Salvar JSON como alternativa.";
+  return null;
+}
 async function salvarNaNuvem(){
   var btn=document.getElementById("btn-salvar-nuvem"),st=document.getElementById("nuvem-status");
   if(!window.firebaseSalvarDados){st.textContent="Firebase ainda nao carregou. Aguarde e tente de novo.";st.style.color="#dc2626";return;}
   btn.disabled=true;var txtOriginal=btn.innerHTML;btn.innerHTML="Salvando...";st.textContent="";
   try{
-    var data=montarDadosCompletos();
+    var data=montarDadosParaFirebase();
+    var avisoTamanho=verificarTamanhoParaFirebase(data);
+    if(avisoTamanho){st.textContent=avisoTamanho;st.style.color="#dc2626";btn.disabled=false;btn.innerHTML=txtOriginal;return;}
     await window.firebaseSalvarDados(data);
-    st.textContent="Salvo na nuvem em "+new Date().toLocaleString("pt-BR")+".";st.style.color="#15803d";
+    st.textContent="Salvo na nuvem em "+new Date().toLocaleString("pt-BR")+". (Anexos de contrato nao vao para a nuvem - use Salvar JSON para guardar com anexos.)";st.style.color="#15803d";
     registrarHistoricoEngCustos("Salvou os dados na nuvem (Firebase)");
   }catch(ex){
     st.textContent="Erro ao salvar: "+ex.message;st.style.color="#dc2626";
@@ -5362,14 +5525,58 @@ async function salvarNovaVersaoNuvem(){
   if(label===null)return;
   btn.disabled=true;var txtOriginal=btn.innerHTML;btn.innerHTML="Salvando...";st.textContent="";
   try{
-    var data=montarDadosCompletos();
+    var data=montarDadosParaFirebase();
+    var avisoTamanho=verificarTamanhoParaFirebase(data);
+    if(avisoTamanho){st.textContent=avisoTamanho;st.style.color="#dc2626";btn.disabled=false;btn.innerHTML=txtOriginal;return;}
     await window.firebaseSalvarNovaVersao(data,label);
-    st.textContent="Nova versao salva em "+new Date().toLocaleString("pt-BR")+".";st.style.color="#15803d";
+    st.textContent="Nova versao salva em "+new Date().toLocaleString("pt-BR")+". (Anexos de contrato nao vao para a nuvem.)";st.style.color="#15803d";
     registrarHistoricoEngCustos("Salvou uma nova versao na nuvem"+(label?" (\""+label+"\")":""));
   }catch(ex){
     st.textContent="Erro ao salvar nova versao: "+ex.message;st.style.color="#dc2626";
   }finally{
     btn.disabled=false;btn.innerHTML=txtOriginal;
+  }
+}
+// Abre a lista de versoes salvas no Firebase para o usuario escolher UMA para sobrescrever com os dados atuais
+async function abrirModalSalvarVersaoExistente(){
+  document.getElementById("modal-salvar-versao-existente").classList.add("on");
+  document.getElementById("salvar-existente-status").textContent="";
+  var wrap=document.getElementById("salvar-existente-lista");
+  wrap.innerHTML="<p style='font-size:12px;color:#94a3b8'>Carregando versoes...</p>";
+  if(!window.firebaseListarVersoes){wrap.innerHTML="<p style='font-size:12px;color:#dc2626'>Firebase ainda nao carregou. Feche e tente novamente em alguns segundos.</p>";return;}
+  try{
+    var versoes=await window.firebaseListarVersoes();
+    if(!versoes||!versoes.length){wrap.innerHTML="<p style='font-size:12px;color:#94a3b8'>Nenhuma versao salva na nuvem ainda. Use \"Salvar na Nuvem\" ou \"Salvar Nova Versao\" primeiro.</p>";return;}
+    var h="";
+    versoes.forEach(function(v){
+      var d=v.data||{};
+      var quando=d._criadoEm?new Date(d._criadoEm).toLocaleString("pt-BR"):"data desconhecida";
+      var nome=d._versaoLabel||d.projNome||v.id;
+      h+="<div style='border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px'>";
+      h+="<div><div style='font-weight:700;font-size:13px;color:#1e293b'>"+nome+"</div><div style='font-size:11px;color:#94a3b8'>Salva em "+quando+"</div></div>";
+      h+="<button class='btn b-blue b-sm' onclick=\"confirmarSalvarSobreVersao('"+v.id+"','"+nome.replace(/'/g,"&#39;")+"')\">&#128190; Salvar aqui</button>";
+      h+="</div>";
+    });
+    wrap.innerHTML=h;
+  }catch(ex){
+    wrap.innerHTML="<p style='font-size:12px;color:#dc2626'>Erro ao listar versoes: "+ex.message+"</p>";
+  }
+}
+// Sobrescreve a versao escolhida com os dados ATUAIS desta tela (a versao antiga que estava la e perdida)
+async function confirmarSalvarSobreVersao(id,nome){
+  var msg='Salvar os dados ATUAIS desta tela por cima da versao "'+nome+'"? Os dados que essa versao tinha antes serao perdidos - essa acao nao pode ser desfeita.';
+  if(!confirm(msg))return;
+  var st=document.getElementById("salvar-existente-status");
+  st.textContent="Salvando...";st.style.color="#64748b";
+  try{
+    var data=montarDadosParaFirebase();
+    var avisoTamanho=verificarTamanhoParaFirebase(data);
+    if(avisoTamanho){st.textContent=avisoTamanho;st.style.color="#dc2626";return;}
+    await window.firebaseSalvarVersaoPorId(id,data,nome);
+    st.textContent="Salvo por cima de \""+nome+"\" em "+new Date().toLocaleString("pt-BR")+". (Anexos de contrato nao vao para a nuvem.)";st.style.color="#15803d";
+    registrarHistoricoEngCustos("Salvou por cima da versao existente na nuvem (\""+nome+"\")");
+  }catch(ex){
+    st.textContent="Erro ao salvar: "+ex.message;st.style.color="#dc2626";
   }
 }
 // Migra a configuracao antiga de Horas Extras (3 faixas: semana/sabado/domingo) para o novo modelo de 2 faixas (semana/fimSemana).
@@ -5932,6 +6139,12 @@ init();
     const snap = await getDoc(ref);
     if (!snap.exists()) return null;
     return snap.data();
+  };
+
+  // Sobrescreve uma versao ja existente (documento especifico, por id) com os dados atuais - mantem o mesmo _versaoLabel de antes
+  window.firebaseSalvarVersaoPorId = async function (id, dadosJSON, labelExistente) {
+    const dados = { ...dadosJSON, _criadoEm: new Date().toISOString(), _versaoLabel: labelExistente || null };
+    await setDoc(doc(db, NOME_COLECAO, id), dados);
   };
 </script>
 </body>
