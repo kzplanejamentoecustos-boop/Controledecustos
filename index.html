@@ -1248,6 +1248,7 @@ async function carregarVersaoEscolhida(id,nome){
     var d=await window.firebaseCarregarVersaoPorId(id);
     if(!d){alert("Versao nao encontrada.");return;}
     aplicarDadosImportados(d);
+    await mesclarAnexosDaNuvem(id);
     S.landingJsonCarregado=true;
     S.landingJsonNome=nome;
     atualizarLandingJsonStatus();
@@ -1255,6 +1256,21 @@ async function carregarVersaoEscolhida(id,nome){
   }catch(ex){
     alert("Erro ao carregar versao: "+ex.message);
   }
+}
+// Busca a subcolecao de anexos dessa versao e devolve o anexoDataUrl de cada contrato (casando pelo anexoId salvo)
+async function mesclarAnexosDaNuvem(docId){
+  if(!window.firebaseListarAnexos)return;
+  try{
+    var anexos=await window.firebaseListarAnexos(docId);
+    if(!anexos||!anexos.length)return;
+    var porId={};anexos.forEach(function(a){porId[a.id]=a.data;});
+    S.indiretoData.forEach(function(it){
+      if(!it.contratos)return;
+      it.contratos.forEach(function(c){
+        if(c.anexoId&&porId[c.anexoId])c.anexoDataUrl=porId[c.anexoId].dataUrl;
+      });
+    });
+  }catch(ex){ /* se falhar ao buscar anexos, o resto dos dados ja foi carregado normalmente - so os anexos ficam indisponiveis */ }
 }
 function landingRemoverJson(){
   if(!confirm("Remover o JSON carregado? Sera necessario importar um novo arquivo (ou comecar do zero) em seguida."))return;
@@ -2725,17 +2741,18 @@ function abrirContratosModal(idx){
   var lista=document.getElementById("ctr-lista");
   lista.innerHTML="";
   var contratos=(it.contratos&&it.contratos.length)?it.contratos:[{numero:"",valor:0}];
-  contratos.forEach(function(c){adicionarContratoRow(c.numero,c.valor,c.anexoNome,c.anexoDataUrl);});
+  contratos.forEach(function(c){adicionarContratoRow(c.numero,c.valor,c.anexoNome,c.anexoDataUrl,c.anexoId);});
   atualizarCtrTotal();
   document.getElementById("modal-contratos").classList.add("on");
 }
-function adicionarContratoRow(numero,valor,anexoNome,anexoDataUrl){
+function adicionarContratoRow(numero,valor,anexoNome,anexoDataUrl,anexoId){
   var lista=document.getElementById("ctr-lista");
   var div=document.createElement("div");
   div.className="ctr-row";
   div.style.cssText="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;align-items:center;padding:8px;border:1px solid #f1f5f9;border-radius:8px";
   div.dataset.anexoNome=anexoNome||"";
   div.dataset.anexoDataUrl=anexoDataUrl||"";
+  div.dataset.anexoId=anexoId||"";
   div.innerHTML="<input type='text' placeholder='No do contrato/aditivo' class='ctr-numero' style='flex:1;min-width:140px;border:2px solid #e2e8f0;border-radius:8px;padding:7px 9px;font-size:12.5px' value=\""+(numero?String(numero).replace(/"/g,"&quot;"):"")+"\">"+
     "<input type='text' inputmode='decimal' placeholder='Valor contratado' class='ctr-valor' style='width:150px;border:2px solid #e2e8f0;border-radius:8px;padding:7px 9px;font-size:12.5px;text-align:right' value=\""+(valor?fmtNumBR(valor):"")+"\" onblur=\"this.value=this.value?fmtNumBR(parseValorIndiretoBR(this.value)):'';atualizarCtrTotal();\" oninput=\"atualizarCtrTotal()\">"+
     "<button type='button' onclick='this.closest(\".ctr-row\").remove();atualizarCtrTotal()' style='color:#dc2626;background:none;border:none;cursor:pointer;font-size:16px' title='Remover linha'>&#128465;</button>"+
@@ -2754,14 +2771,27 @@ function dataUrlParaBlob(dataUrl){
   for(var i=0;i<len;i++)bytes[i]=binStr.charCodeAt(i);
   return new Blob([bytes],{type:mime});
 }
+// Tipos que o proprio navegador consegue exibir numa aba (PDF e imagens). Os demais (Excel, Word etc.)
+// o navegador nao sabe renderizar - nesse caso baixa o arquivo, para abrir no programa local (Excel, Word...).
+var EXTENSOES_VISIVEIS_NO_NAVEGADOR=["pdf","jpg","jpeg","png","gif","webp","bmp","svg"];
 function abrirAnexoContratoRow(btn){
   var row=btn.closest(".ctr-row");
   var url=row.dataset.anexoDataUrl;if(!url)return;
+  var nome=row.dataset.anexoNome||"anexo";
   try{
     var blob=dataUrlParaBlob(url);
     var blobUrl=URL.createObjectURL(blob);
-    var win=window.open(blobUrl,"_blank");
-    if(!win)alert("O navegador bloqueou a abertura da nova aba. Permita pop-ups para este site e tente novamente.");
+    var ext=(nome.split(".").pop()||"").toLowerCase();
+    var visivelNoNavegador=EXTENSOES_VISIVEIS_NO_NAVEGADOR.indexOf(ext)>=0;
+    if(visivelNoNavegador){
+      var win=window.open(blobUrl,"_blank");
+      if(!win)alert("O navegador bloqueou a abertura da nova aba. Permita pop-ups para este site e tente novamente.");
+    }else{
+      // Excel/Word e outros formatos que o navegador nao exibe: baixa o arquivo para abrir no programa local
+      var a=document.createElement("a");
+      a.href=blobUrl;a.download=nome;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+    }
     setTimeout(function(){URL.revokeObjectURL(blobUrl);},60000);
   }catch(e){
     alert("Nao foi possivel abrir o anexo: "+e.message);
@@ -2778,7 +2808,9 @@ function atualizarLinhaAnexoContrato(row){
     h+="<span style='font-size:11px;color:#64748b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+(nome?("&#128196; "+nome):"Nenhum arquivo anexado")+"</span>";
   }
   if(url){
-    h+="<button type='button' onclick='abrirAnexoContratoRow(this)' style='font-size:11px;color:#1e40af;font-weight:600;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0'>Abrir</button>";
+    var extAtual=(nome||"").split(".").pop().toLowerCase();
+    var rotuloAcao=EXTENSOES_VISIVEIS_NO_NAVEGADOR.indexOf(extAtual)>=0?"Abrir":"Baixar";
+    h+="<button type='button' onclick='abrirAnexoContratoRow(this)' style='font-size:11px;color:#1e40af;font-weight:600;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0'>"+rotuloAcao+"</button>";
     h+="<button type='button' onclick='removerAnexoContrato(this)' style='color:#dc2626;background:none;border:none;cursor:pointer;font-size:11px' title='Remover anexo'>&#10060;</button>";
   }
   wrap.innerHTML=h;
@@ -2791,6 +2823,7 @@ function anexarArquivoContrato(inputEl){
     var row=inputEl.closest(".ctr-row");
     row.dataset.anexoNome=f.name;
     row.dataset.anexoDataUrl=e.target.result;
+    row.dataset.anexoId=gerarId("anexo"); // id estavel, usado para salvar/recuperar este anexo na subcolecao do Firebase
     atualizarLinhaAnexoContrato(row);
   };
   reader.onerror=function(){alert("Erro ao ler o arquivo.");};
@@ -2799,7 +2832,7 @@ function anexarArquivoContrato(inputEl){
 }
 function removerAnexoContrato(btn){
   var row=btn.closest(".ctr-row");
-  row.dataset.anexoNome="";row.dataset.anexoDataUrl="";
+  row.dataset.anexoNome="";row.dataset.anexoDataUrl="";row.dataset.anexoId="";
   atualizarLinhaAnexoContrato(row);
 }
 function atualizarCtrTotal(){
@@ -2816,7 +2849,8 @@ function salvarContratos(){
     var valor=parseValorIndiretoBR(row.querySelector(".ctr-valor").value)||0;
     var anexoNome=row.dataset.anexoNome||"";
     var anexoDataUrl=row.dataset.anexoDataUrl||"";
-    if(numero||valor>0||anexoNome)contratos.push({numero:numero,valor:valor,anexoNome:anexoNome,anexoDataUrl:anexoDataUrl});
+    var anexoId=row.dataset.anexoId||"";
+    if(numero||valor>0||anexoNome)contratos.push({numero:numero,valor:valor,anexoNome:anexoNome,anexoDataUrl:anexoDataUrl,anexoId:anexoId});
   });
   it.contratos=contratos;
   it.contratoDistratado=document.getElementById("ctr-distratado").checked;
@@ -5501,6 +5535,29 @@ function verificarTamanhoParaFirebase(data){
   if(bytes>=LIMITE)return "Os dados (sem contar anexos) tem "+(bytes/1024).toFixed(0)+" KB, acima do limite de 1024 KB por documento do Firestore. Reduza o tamanho (ex: relatorios muito grandes na aba Classificacao) antes de salvar na nuvem, ou use Salvar JSON como alternativa.";
   return null;
 }
+// Depois do documento principal salvo, sobe cada anexo de contrato (que tenha dado novo, com anexoDataUrl) para a
+// subcolecao "anexos" dessa mesma versao. Cada anexo tambem tem o limite de 1MB do Firestore - os que passarem
+// desse limite sao pulados (com aviso), mas o resto continua salvando normalmente.
+async function subirAnexosParaNuvem(docId){
+  if(!window.firebaseSalvarAnexo)return{enviados:0,pulados:0};
+  var enviados=0,pulados=0;
+  for(var i=0;i<S.indiretoData.length;i++){
+    var it=S.indiretoData[i];
+    if(!it.contratos||!it.contratos.length)continue;
+    for(var j=0;j<it.contratos.length;j++){
+      var c=it.contratos[j];
+      if(!c.anexoDataUrl||!c.anexoId)continue;
+      var tamanho;
+      try{tamanho=new Blob([c.anexoDataUrl]).size;}catch(e){tamanho=c.anexoDataUrl.length;}
+      if(tamanho>=1000000){pulados++;continue;}
+      try{
+        await window.firebaseSalvarAnexo(docId,c.anexoId,c.anexoNome||"anexo",c.anexoDataUrl);
+        enviados++;
+      }catch(ex){pulados++;}
+    }
+  }
+  return{enviados:enviados,pulados:pulados};
+}
 async function salvarNaNuvem(){
   var btn=document.getElementById("btn-salvar-nuvem"),st=document.getElementById("nuvem-status");
   if(!window.firebaseSalvarDados){st.textContent="Firebase ainda nao carregou. Aguarde e tente de novo.";st.style.color="#dc2626";return;}
@@ -5509,8 +5566,9 @@ async function salvarNaNuvem(){
     var data=montarDadosParaFirebase();
     var avisoTamanho=verificarTamanhoParaFirebase(data);
     if(avisoTamanho){st.textContent=avisoTamanho;st.style.color="#dc2626";btn.disabled=false;btn.innerHTML=txtOriginal;return;}
-    await window.firebaseSalvarDados(data);
-    st.textContent="Salvo na nuvem em "+new Date().toLocaleString("pt-BR")+". (Anexos de contrato nao vao para a nuvem - use Salvar JSON para guardar com anexos.)";st.style.color="#15803d";
+    var docId=await window.firebaseSalvarDados(data);
+    var resAnexos=await subirAnexosParaNuvem(docId);
+    st.textContent="Salvo na nuvem em "+new Date().toLocaleString("pt-BR")+"."+(resAnexos.enviados?" "+resAnexos.enviados+" anexo(s) enviado(s).":"")+(resAnexos.pulados?" "+resAnexos.pulados+" anexo(s) muito grande(s) para a nuvem (acima de 1MB) foram pulados.":"");st.style.color="#15803d";
     registrarHistoricoEngCustos("Salvou os dados na nuvem (Firebase)");
   }catch(ex){
     st.textContent="Erro ao salvar: "+ex.message;st.style.color="#dc2626";
@@ -5528,8 +5586,9 @@ async function salvarNovaVersaoNuvem(){
     var data=montarDadosParaFirebase();
     var avisoTamanho=verificarTamanhoParaFirebase(data);
     if(avisoTamanho){st.textContent=avisoTamanho;st.style.color="#dc2626";btn.disabled=false;btn.innerHTML=txtOriginal;return;}
-    await window.firebaseSalvarNovaVersao(data,label);
-    st.textContent="Nova versao salva em "+new Date().toLocaleString("pt-BR")+". (Anexos de contrato nao vao para a nuvem.)";st.style.color="#15803d";
+    var docId=await window.firebaseSalvarNovaVersao(data,label);
+    var resAnexos=await subirAnexosParaNuvem(docId);
+    st.textContent="Nova versao salva em "+new Date().toLocaleString("pt-BR")+"."+(resAnexos.enviados?" "+resAnexos.enviados+" anexo(s) enviado(s).":"")+(resAnexos.pulados?" "+resAnexos.pulados+" anexo(s) muito grande(s) para a nuvem (acima de 1MB) foram pulados.":"");st.style.color="#15803d";
     registrarHistoricoEngCustos("Salvou uma nova versao na nuvem"+(label?" (\""+label+"\")":""));
   }catch(ex){
     st.textContent="Erro ao salvar nova versao: "+ex.message;st.style.color="#dc2626";
@@ -5572,8 +5631,9 @@ async function confirmarSalvarSobreVersao(id,nome){
     var data=montarDadosParaFirebase();
     var avisoTamanho=verificarTamanhoParaFirebase(data);
     if(avisoTamanho){st.textContent=avisoTamanho;st.style.color="#dc2626";return;}
-    await window.firebaseSalvarVersaoPorId(id,data,nome);
-    st.textContent="Salvo por cima de \""+nome+"\" em "+new Date().toLocaleString("pt-BR")+". (Anexos de contrato nao vao para a nuvem.)";st.style.color="#15803d";
+    var docIdSalvo=await window.firebaseSalvarVersaoPorId(id,data,nome);
+    var resAnexos=await subirAnexosParaNuvem(docIdSalvo);
+    st.textContent="Salvo por cima de \""+nome+"\" em "+new Date().toLocaleString("pt-BR")+"."+(resAnexos.enviados?" "+resAnexos.enviados+" anexo(s) enviado(s).":"")+(resAnexos.pulados?" "+resAnexos.pulados+" anexo(s) muito grande(s) para a nuvem (acima de 1MB) foram pulados.":"");st.style.color="#15803d";
     registrarHistoricoEngCustos("Salvou por cima da versao existente na nuvem (\""+nome+"\")");
   }catch(ex){
     st.textContent="Erro ao salvar: "+ex.message;st.style.color="#dc2626";
@@ -6117,12 +6177,14 @@ init();
   window.firebaseSalvarDados = async function (dadosJSON) {
     const dados = { ...dadosJSON, _criadoEm: new Date().toISOString(), _versaoLabel: "Salvamento rapido" };
     await setDoc(doc(db, NOME_COLECAO, NOME_DOCUMENTO), dados);
+    return NOME_DOCUMENTO;
   };
 
   // Nova versao: cria um documento novo (com ID automatico) na mesma colecao, preservando o historico
   window.firebaseSalvarNovaVersao = async function (dadosJSON, label) {
     const dados = { ...dadosJSON, _criadoEm: new Date().toISOString(), _versaoLabel: (label && label.trim()) ? label.trim() : null };
-    await addDoc(collection(db, NOME_COLECAO), dados);
+    const ref = await addDoc(collection(db, NOME_COLECAO), dados);
+    return ref.id;
   };
 
   // Lista todas as versoes salvas (documento fixo + versoes avulsas), mais recente primeiro
@@ -6145,6 +6207,19 @@ init();
   window.firebaseSalvarVersaoPorId = async function (id, dadosJSON, labelExistente) {
     const dados = { ...dadosJSON, _criadoEm: new Date().toISOString(), _versaoLabel: labelExistente || null };
     await setDoc(doc(db, NOME_COLECAO, id), dados);
+    return id;
+  };
+
+  // Anexos (PDF/Excel/etc dos Contratos e Aditivos) ficam numa SUBCOLECAO de cada versao salva, um documento por
+  // anexo - assim cada um tem seu proprio limite de 1MB, sem contar no tamanho do documento principal.
+  window.firebaseSalvarAnexo = async function (docId, anexoId, nome, dataUrl) {
+    await setDoc(doc(db, NOME_COLECAO, docId, "anexos", anexoId), { nome: nome, dataUrl: dataUrl, salvoEm: new Date().toISOString() });
+  };
+  window.firebaseListarAnexos = async function (docId) {
+    const snap = await getDocs(collection(db, NOME_COLECAO, docId, "anexos"));
+    const out = [];
+    snap.forEach((d) => out.push({ id: d.id, data: d.data() }));
+    return out;
   };
 </script>
 </body>
