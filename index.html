@@ -878,6 +878,23 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
     </div>
   </div>
 </div>
+<div class="modal-bg" id="modal-confirmar-salvar-existente">
+  <div class="modal" style="max-width:440px">
+    <div class="mh">
+      <h3 style="color:#b91c1c">&#9888; Confirmar Substituicao</h3>
+      <button class="mc" onclick="document.getElementById('modal-confirmar-salvar-existente').classList.remove('on')">&#10005;</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:13px;line-height:1.5">Voce esta prestes a salvar os dados ATUAIS desta tela por cima da versao:</p>
+      <p style="font-size:15px;font-weight:700;margin:10px 0;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#991b1b" id="cfse-nome-versao"></p>
+      <p style="font-size:13px;line-height:1.5;color:#b91c1c;font-weight:600">Os dados que essa versao tinha antes serao perdidos. Essa acao nao pode ser desfeita.</p>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn b-outline" style="flex:1" onclick="document.getElementById('modal-confirmar-salvar-existente').classList.remove('on')">Cancelar</button>
+        <button class="btn" style="flex:1;background:#dc2626;color:#fff;border:none" onclick="executarSalvarSobreVersao()">Sim, substituir</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="modal-bg" id="modal-eng">
   <div class="modal">
     <div class="mh"><h3>Configuracoes Avancadas</h3><button class="mc" onclick="fecharEng()">X</button></div>
@@ -6173,9 +6190,16 @@ async function abrirModalSalvarVersaoExistente(){
   }
 }
 // Sobrescreve a versao escolhida com os dados ATUAIS desta tela (a versao antiga que estava la e perdida)
-async function confirmarSalvarSobreVersao(id,nome){
-  var msg='Salvar os dados ATUAIS desta tela por cima da versao "'+nome+'"? Os dados que essa versao tinha antes serao perdidos - essa acao nao pode ser desfeita.';
-  if(!confirm(msg))return;
+var _pendingSalvarExistenteId=null,_pendingSalvarExistenteNome=null;
+function confirmarSalvarSobreVersao(id,nome){
+  _pendingSalvarExistenteId=id;_pendingSalvarExistenteNome=nome;
+  document.getElementById("cfse-nome-versao").textContent=nome;
+  document.getElementById("modal-confirmar-salvar-existente").classList.add("on");
+}
+async function executarSalvarSobreVersao(){
+  var id=_pendingSalvarExistenteId,nome=_pendingSalvarExistenteNome;
+  document.getElementById("modal-confirmar-salvar-existente").classList.remove("on");
+  if(!id)return;
   var st=document.getElementById("salvar-existente-status");
   st.textContent="Salvando...";st.style.color="#64748b";
   try{
