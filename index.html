@@ -2337,6 +2337,8 @@ function calcLinhaAlimAlojado(cu){
 }
 // Sinalizacao de Faturamento Direto no nome da linha (escrita vermelha)
 // Rev53: tag discreta da classificacao (Material / Servico / Custo Indireto) ao lado do nome
+// Rev53: cores das composicoes (Indireto/Servico/Material/Equipamento)
+var COR_COMP_FILHO="#ffedd5"; // itens dentro da composicao: laranja claro
 function classifTag(it){
   if(!it||CLASSIF_CATS.indexOf(it.categoria)<0)return "";
   var id=it.classificacao||"",herdada=false;
@@ -3291,6 +3293,7 @@ function atualizarMoiMatTotais(idxAlterado,mesAlterado){
   var pAlt=S.moiData[idxAlterado];if(pAlt){normMoi(pAlt);var cuAlt=custoUnitMOI(pAlt),custoUnAlt=cuAlt.base+cuAlt.alojVal+cuAlt.vavrVal;
     var totRow=0;meses.forEach(function(m){totRow+=(pAlt.qtdPorMes[m]||0)*custoUnAlt;});
     var elRow=document.getElementById("moirow-tot-"+idxAlterado);if(elRow)elRow.textContent=fmt(totRow);
+    var qRowAlt=0;meses.forEach(function(m){qRowAlt+=(pAlt.qtdPorMes[m]||0);});var elQ=document.getElementById("moirow-qtd-"+idxAlterado);if(elQ)elQ.textContent=qRowAlt>0?qRowAlt:"-"; // Rev53
     var vAlt=(pAlt.qtdPorMes[mesAlterado]||0)*custoUnAlt;
     var elVal=document.getElementById("moival-"+idxAlterado+"-"+mesAlterado);if(elVal)elVal.textContent=vAlt>0?fmt(vAlt):"-";
   }
@@ -3303,6 +3306,7 @@ function atualizarMoiMatTotais(idxAlterado,mesAlterado){
   }
   var elMesQtd=document.getElementById("moicolqtd-tot-"+mesAlterado);if(elMesQtd)elMesQtd.textContent=totQtdMes>0?totQtdMes:"-";
   var elMes=document.getElementById("moicol-tot-"+mesAlterado);if(elMes)elMes.textContent=totMes>0?fmt(totMes):"-";
+  var elQT=document.getElementById("moimat-qtd-total");if(elQT)elQT.textContent=totQtdGeral>0?totQtdGeral:"-"; // Rev53
   var elGeral=document.getElementById("moimat-grand-total");if(elGeral)elGeral.innerHTML=fmt(totGeral)+"<div id='moimat-grand-total-qtd' style='font-size:10px;font-weight:600;color:#94a3b8'>"+totQtdGeral+" colaborador-mes</div>";
 }
 function expandirColunasMoiMat(){S.moiMatColunasRecolhidas=false;renderCustoMOMatrix();}
@@ -3748,6 +3752,7 @@ function atualizarModMatTotais(idxAlterado,mesAlterado){
     var cuAlt=custoUnitMOD(fnAlt),custoUnAlt=cuAlt.base+cuAlt.alojVal+cuAlt.vavrVal;
     var totRow=0;meses.forEach(function(m){totRow+=(fnAlt.qtdPorMes[m]||0)*custoUnAlt;});
     var elRow=document.getElementById("modrow-tot-"+idxAlterado);if(elRow)elRow.textContent=fmt(totRow);
+    var qRowAlt=0;meses.forEach(function(m){qRowAlt+=(fnAlt.qtdPorMes[m]||0);});var elQ=document.getElementById("modrow-qtd-"+idxAlterado);if(elQ)elQ.textContent=qRowAlt>0?qRowAlt:"-"; // Rev53
     var vAlt=(fnAlt.qtdPorMes[mesAlterado]||0)*custoUnAlt;
     var elVal=document.getElementById("modval-"+idxAlterado+"-"+mesAlterado);if(elVal)elVal.textContent=vAlt>0?fmt(vAlt):"-";
   }
@@ -3759,6 +3764,7 @@ function atualizarModMatTotais(idxAlterado,mesAlterado){
   }
   var elMesQtd=document.getElementById("modcolqtd-tot-"+mesAlterado);if(elMesQtd)elMesQtd.textContent=totQtdMes>0?totQtdMes:"-";
   var elMes=document.getElementById("modcol-tot-"+mesAlterado);if(elMes)elMes.textContent=totMes>0?fmt(totMes):"-";
+  var elQT=document.getElementById("modmat-qtd-total");if(elQT)elQT.textContent=totQtdGeral>0?totQtdGeral:"-"; // Rev53
   var elGeral=document.getElementById("modmat-grand-total");if(elGeral)elGeral.innerHTML=fmt(totGeral)+"<div id='modmat-grand-total-qtd' style='font-size:10px;font-weight:600;color:#94a3b8'>"+totQtdGeral+" colaborador-mes</div>";
 }
 function renderCustoModCards(){
@@ -3797,13 +3803,14 @@ function renderCustoModMatrix(){
     th2+="<th style='background:"+mbg+";opacity:.85;font-size:10px;min-width:50px;text-align:center;border-left:2px solid rgba(255,255,255,.25)'>Qtd</th>";
     th2+="<th style='background:"+mbg+";opacity:.85;font-size:10px;min-width:82px;text-align:center'>Valor (R$)</th>";
   }
+  th1+="<th rowspan='2' data-r1='1' style='position:sticky;right:110px;z-index:11;background:#1e3a8a;min-width:70px;text-align:center;border-left:2px solid #4a7fb5' title='Soma da quantidade (perman&ecirc;ncia) de todos os meses'>Qtd<br>Total</th>";
   th1+="<th rowspan='2' style='position:sticky;right:0;z-index:11;background:#1e3a8a;min-width:110px;text-align:right;border-left:2px solid #4a7fb5'>Total</th>";
   th1+="</tr>";th2+="</tr>";
   thead.innerHTML=th1+th2;
   var totMes={};meses.forEach(function(m){totMes[m]=0;});var totGeral=0;
   var totMesPrevisto={};meses.forEach(function(m){totMesPrevisto[m]=0;});var totGeralPrevisto=0;
-  var tb=bannerPrevistoSalvoHtml(9+meses.length*2+1);
-  var totQtdGeralMod=0,totQtdMesMod={};meses.forEach(function(m){totQtdMesMod[m]=0;});
+  var tb=bannerPrevistoSalvoHtml(9+meses.length*2+2);
+  var totQtdGeralMod=0,totQtdPrevMod=0,totQtdMesMod={};meses.forEach(function(m){totQtdMesMod[m]=0;});
   for(var idx=0;idx<S.modData.length;idx++){
     var fn=S.modData[idx];normMod(fn);var cu=custoUnitMOD(fn),custoUn=cu.base+cu.alojVal+cu.vavrVal;
     if(fn.custoUnPrevisto===undefined||fn.custoUnPrevisto===null)fn.custoUnPrevisto=custoUn;
@@ -3812,23 +3819,23 @@ function renderCustoModMatrix(){
     // Previsto: calculado SEMPRE (independente de a linha estar expandida na tela), para os totais baterem certo
     var snapFn=desmob?null:snapshotPrevistoDoItem("mod",fn.id);
     var previstoEditavelMod=!snapFn;
-    var totRowP=0,previstoPorMes={};
+    var totRowP=0,previstoPorMes={},qtdRowP=0;
     if(!desmob){
       meses.forEach(function(mP){
         var qP,custoUnPExibir;
         if(snapFn){qP=snapFn.qtdPrevistoPorMes[mP]||0;custoUnPExibir=snapFn.custoUnPrevisto||0;}
         else{qP=fn.qtdPrevistoPorMes[mP]||0;custoUnPExibir=fn.custoUnPrevisto;}
         var vP=qP*custoUnPExibir;
-        totMesPrevisto[mP]+=vP;totRowP+=vP;
+        totMesPrevisto[mP]+=vP;totRowP+=vP;qtdRowP+=qP;totQtdPrevMod+=qP;
         previstoPorMes[mP]={q:qP,v:vP};
       });
       totGeralPrevisto+=totRowP;
     }
     // ---- Linha REAL (existente) ----
-    var totRow=0,linhaMeses="";
+    var totRow=0,linhaMeses="",qtdRow=0;
     for(var mi2=0;mi2<meses.length;mi2++){
       var m=meses[mi2],q=fn.qtdPorMes[m]||0,v=q*custoUn;
-      totMes[m]+=v;totRow+=v;totQtdGeralMod+=q;totQtdMesMod[m]+=q;
+      totMes[m]+=v;totRow+=v;totQtdGeralMod+=q;totQtdMesMod[m]+=q;qtdRow+=q;
       linhaMeses+="<td style='padding:2px 3px;border-left:1px solid #f1f5f9'><input type='text' inputmode='numeric' class='mat-inp' style='width:50px;text-align:center"+(desmob?";background:#cbd5e1;color:#64748b;cursor:not-allowed":"")+"' value='"+(q>0?q:"")+"' placeholder='0'"+(desmob?" disabled title='Desmobilizado - edite a funcao para reativar'":" onchange=\"updModMatQtd("+idx+",'"+m+"',this.value)\"")+"></td>";
       linhaMeses+="<td id='modval-"+idx+"-"+m+"' class='mono tr' style='padding:2px 6px;font-size:11px;color:#475569'>"+(v>0?fmt(v):"-")+"</td>";
     }
@@ -3842,6 +3849,7 @@ function renderCustoModMatrix(){
     var horasHEMod=["semana","fimSemana"].map(function(dia,di){var h=ehHoristaMod?(parseFloat(S.he.mod[dia]&&S.he.mod[dia].horas)||0):0;return "<td class='mono tr'"+(di===1?" style='border-right:2px solid #e2e8f0'":"")+">"+(h>0?h+"h":"-")+"</td>";}).join("");
     tb+="<td>"+bdg(fn.regime==="PJ"?"pu":"bl",fn.regime)+"</td><td class='mono tr' style='font-size:11px'>"+encPct+"</td><td class='tc'>"+(fn.insalubridade.ativo?bdg("or",fn.insalubridade.percentual+"%"):"<span style='color:#cbd5e1'>-</span>")+"</td><td class='tc'>"+(fn.noturno.ativo?bdg("or",fn.noturno.percentual+"%"):"<span style='color:#cbd5e1'>-</span>")+"</td><td class='mono tr'>"+alimCelulaInfo(cu.vavrAtiva,cu.vavrVal,cu.vavrInfo)+"</td>"+horasHEMod;
     tb+=linhaMeses;
+    tb+="<td id='modrow-qtd-"+idx+"' data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+rowBg+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#334155'>"+(qtdRow>0?qtdRow:"-")+"</td>";
     tb+="<td id='modrow-tot-"+idx+"' style='position:sticky;right:0;z-index:2;background:"+rowBg+";border-left:2px solid #e2e8f0;font-weight:700;color:#1e3a8a' class='mono tr'>"+fmt(totRow)+"</td>";
     tb+="</tr>";
     // ---- Linha PREVISTO (abaixo do Real, so aparece se expandida - funcoes ativas apenas; totais ja foram somados acima independente disso) ----
@@ -3864,15 +3872,17 @@ function renderCustoModMatrix(){
       tb+="<td style='"+sC(1,bgP)+"text-align:right;padding:2px 3px'>"+custoUnitCelP+"</td>";
       tb+="<td colspan='7' style='background:"+bgP+";border-right:2px solid #e2e8f0'></td>";
       tb+=linhaMesesP;
+      tb+="<td data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+bgP+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#b45309'>"+(qtdRowP>0?qtdRowP:"-")+"</td>";
       tb+="<td class='mono tr' style='position:sticky;right:0;z-index:2;background:"+bgP+";border-left:2px solid #e2e8f0;font-weight:700;color:#b45309'>"+(totRowP>0?fmt(totRowP):"-")+"</td>";
       tb+="</tr>";
     }
   }
-  tbody.innerHTML=tb||"<tr><td colspan='"+(9+meses.length*2+1)+"' style='text-align:center;padding:20px;color:#94a3b8'>Nenhuma funcao MOD cadastrada</td></tr>";
+  tbody.innerHTML=tb||"<tr><td colspan='"+(9+meses.length*2+2)+"' style='text-align:center;padding:20px;color:#94a3b8'>Nenhuma funcao MOD cadastrada</td></tr>";
   var tf="<tr style='background:#fefce8;font-weight:700'>";
   tf+="<td style='"+sC(0,"#fefce8")+"color:#b45309'>TOTAL PREVISTO</td><td style='"+sC(1,"#fefce8")+"border-right:2px solid #e2e8f0'></td>";
   tf+="<td></td><td></td><td></td><td></td><td></td><td></td><td style='border-right:2px solid #e2e8f0'></td>";
   meses.forEach(function(m){tf+="<td colspan='2' class='mono tr' style='font-size:11px;border-left:1px solid #e2e8f0;color:#b45309'>"+(totMesPrevisto[m]>0?fmt(totMesPrevisto[m]):"-")+"</td>";});
+  tf+="<td data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+"#fefce8"+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#b45309'>"+(totQtdPrevMod>0?totQtdPrevMod:"-")+"</td>";
   tf+="<td style='position:sticky;right:0;z-index:2;background:#fefce8;border-left:2px solid #e2e8f0;color:#b45309'>"+fmt(totGeralPrevisto)+"</td>";
   tf+="</tr>";
   tf+="<tr style='background:#f1f5f9;font-weight:700'>";
@@ -3882,9 +3892,11 @@ function renderCustoModMatrix(){
     tf+="<td id='modcolqtd-tot-"+m+"' class='mono tr' style='font-size:11px;border-left:1px solid #e2e8f0'>"+(totQtdMesMod[m]>0?totQtdMesMod[m]:"-")+"</td>";
     tf+="<td id='modcol-tot-"+m+"' class='mono tr' style='font-size:11px'>"+(totMes[m]>0?fmt(totMes[m]):"-")+"</td>";
   });
+  tf+="<td id='modmat-qtd-total' data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+"#f1f5f9"+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#1e3a8a'>"+(totQtdGeralMod>0?totQtdGeralMod:"-")+"</td>";
   tf+="<td id='modmat-grand-total' style='position:sticky;right:0;z-index:2;background:#f1f5f9;border-left:2px solid #e2e8f0;color:#1e3a8a'>"+fmt(totGeral)+"<div id='modmat-grand-total-qtd' style='font-size:10px;font-weight:600;color:#94a3b8'>"+totQtdGeralMod+" colaborador-mes</div></td>";
   tf+="</tr>";
   tfoot.innerHTML=tf;
+  ajustarStickyDireita(thead.parentNode); // Rev53
 }
 // Fixa/libera o Previsto de uma funcao MOD (Qtd e Custo Unit. Previsto proprios, independentes do custo real calculado)
 function modTogglePrevistoFixado(idx){
@@ -5051,6 +5063,13 @@ function renderIndiretoCards(categoria){
 }
 // Rev53: recalcula o "left" das 3 colunas fixas (N. Pedido / Descricao / Fornecedor) pela largura real
 // do cabecalho, para que nao fiquem sobrepostas/transparentes ao rolar os meses na horizontal.
+// Rev53: posiciona a coluna "Qtd Total" (fixa a direita) colada na coluna Total, pela largura real dela
+function ajustarStickyDireita(tbl){
+  if(!tbl||!tbl.tHead||!tbl.tHead.rows.length)return;
+  var r=tbl.tHead.rows[0].cells,tot=r[r.length-1];if(!tot)return;
+  var w=tot.getBoundingClientRect().width;if(!w)return;
+  tbl.querySelectorAll("[data-r1]").forEach(function(c){c.style.right=w+"px";});
+}
 function ajustarStickyMatriz(tbl){
   if(!tbl||!tbl.tHead||!tbl.tHead.rows.length)return;
   var r=tbl.tHead.rows[0].cells;if(r.length<3)return;
@@ -5167,7 +5186,9 @@ function renderIndiretoMatrix(categoria){
     var h="";
     var cursorSt=dragAttrs?"cursor:grab;":"";
     h+="<tr"+(dragAttrs||"")+" style='"+cursorSt+"background:"+bg+"'>";
-    h+="<td style='"+sC(0,bg)+padL+";font-weight:600;font-size:12px'>"+(indent?"&#8627; ":"")+acoes+"</td>";
+    // Rev53: itens da composicao tem cor propria (laranja); o "validado" deles vira uma barra verde a esquerda
+    var barraVal=(it.validado&&it.composicaoPai)?"box-shadow:inset 4px 0 0 #16a34a;":"";
+    h+="<td style='"+sC(0,bg)+padL+";font-weight:600;font-size:12px;"+barraVal+"'"+(barraVal?" title='Validado'":"")+">"+(indent?"&#8627; ":"")+acoes+"</td>";
     h+="<td style='"+sC(1,bg)+"font-size:12px'>"+celDesc+"</td>";
     h+="<td style='"+sC(2,bg)+"font-size:12px;color:#64748b;border-right:2px solid #e2e8f0'>"+(it.fornecedor||"-")+"</td>";
     h+="<td class='mono tr'>"+fmt(it.valorUnit)+"</td>";
@@ -5244,7 +5265,7 @@ function renderIndiretoMatrix(categoria){
             ];
             // "+"/"-" 2o nivel: mostra/esconde a linha PREVISTO deste equipamento especifico
             var togglePrevisto={expandido:!!child.mostrarPrevisto,onclick:"equipToggleChildPrevisto("+ci+")"};
-            var res=linhaPR(ci,child,child.validado?"#f0fdf4":"#f8fafc",true,true,"",menuFilho,false,"",togglePrevisto);
+            var res=linhaPR(ci,child,COR_COMP_FILHO,true,true,"",menuFilho,false,"",togglePrevisto);
             tb+=res.html;
           });
         }
@@ -5663,6 +5684,7 @@ function renderCustoMOMatrix(){
     th2+="<th style='background:"+mbg+";opacity:.85;font-size:10px;min-width:50px;text-align:center;border-left:2px solid rgba(255,255,255,.25)'>Qtd</th>";
     th2+="<th style='background:"+mbg+";opacity:.85;font-size:10px;min-width:82px;text-align:center'>Valor (R$)</th>";
   }
+  th1+="<th rowspan='2' data-r1='1' style='position:sticky;right:110px;z-index:11;background:#581c87;min-width:70px;text-align:center;border-left:2px solid #4a7fb5' title='Soma da quantidade (perman&ecirc;ncia) de todos os meses'>Qtd<br>Total</th>";
   th1+="<th rowspan='2' style='position:sticky;right:0;z-index:11;background:#581c87;min-width:110px;text-align:right;border-left:2px solid #4a7fb5'>Total</th>";
   th1+="</tr>";th2+="</tr>";
   thead.innerHTML=th1+th2;
@@ -5679,15 +5701,15 @@ function renderCustoMOMatrix(){
     if(!ga.mapSetor[sk]){ga.mapSetor[sk]={nome:setor,pessoas:[]};ga.setores.push(ga.mapSetor[sk]);}
     ga.mapSetor[sk].pessoas.push({p:p,idx:idx});
   }
-  var colspanTotal=NCOLS+meses.length*2+1;
+  var colspanTotal=NCOLS+meses.length*2+2; // Rev53: +1 coluna Qtd Total
   // Pre-calcula totais completos (independente do colapso visual/expandido) e o custo unitario/total de cada pessoa
   var custoCache={};
-  var totQtdGeral=0,totQtdMes={};meses.forEach(function(m){totQtdMes[m]=0;});
+  var totQtdGeral=0,totQtdPrevMoi=0,totQtdMes={};meses.forEach(function(m){totQtdMes[m]=0;});
   for(var idx=0;idx<S.moiData.length;idx++){
     var p=S.moiData[idx];normMoi(p);
     var cu=custoUnitMOI(p),custoUn=cu.base+cu.alojVal+cu.vavrVal;
-    var totRow=0;
-    meses.forEach(function(m){var q=p.qtdPorMes[m]||0;totMes[m]+=q*custoUn;totRow+=q*custoUn;totQtdGeral+=q;totQtdMes[m]+=q;});
+    var totRow=0,qtdRow=0,qtdRowP=0;
+    meses.forEach(function(m){var q=p.qtdPorMes[m]||0;totMes[m]+=q*custoUn;totRow+=q*custoUn;totQtdGeral+=q;totQtdMes[m]+=q;qtdRow+=q;});
     totGeral+=totRow;
     // Previsto: calculado aqui tambem, para os totais baterem mesmo com a linha recolhida ou o grupo Area/Setor colapsado
     var desmobP=!!p.desmobilizado;
@@ -5701,12 +5723,12 @@ function renderCustoMOMatrix(){
         if(snapP){qP=snapP.qtdPrevistoPorMes[m]||0;custoUnPExibirMoi=snapP.custoUnPrevisto||0;}
         else{qP=p.qtdPrevistoPorMes[m]||0;custoUnPExibirMoi=p.custoUnPrevisto;}
         var vP=qP*custoUnPExibirMoi;
-        totMesPrevisto[m]+=vP;totRowP+=vP;
+        totMesPrevisto[m]+=vP;totRowP+=vP;qtdRowP+=qP;totQtdPrevMoi+=qP;
         previstoPorMes[m]={q:qP,v:vP};
       });
       totGeralPrevisto+=totRowP;
     }
-    custoCache[idx]={cu:cu,custoUn:custoUn,totRow:totRow,snapP:snapP,previstoEditavelMoi:previstoEditavelMoi,totRowP:totRowP,previstoPorMes:previstoPorMes};
+    custoCache[idx]={cu:cu,custoUn:custoUn,totRow:totRow,qtdRow:qtdRow,qtdRowP:qtdRowP,snapP:snapP,previstoEditavelMoi:previstoEditavelMoi,totRowP:totRowP,previstoPorMes:previstoPorMes};
   }
   var tb=bannerPrevistoSalvoHtml(colspanTotal);
   for(var gi=0;gi<gruposArea.length;gi++){
@@ -5753,6 +5775,7 @@ function renderCustoMOMatrix(){
           tb+=["semana","fimSemana"].map(function(dia,di){var h=ehHoristaMoi?(parseFloat(S.he.moi[dia]&&S.he.moi[dia].horas)||0):0;return "<td class='mono tr'"+(di===1?" style='border-right:2px solid #e2e8f0'":"")+">"+(h>0?h+"h":"-")+"</td>";}).join("");
         }
         tb+=linhaMeses;
+        tb+="<td id='moirow-qtd-"+idx+"' data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+rowBg+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#334155'>"+(cc.qtdRow>0?cc.qtdRow:"-")+"</td>";
         tb+="<td id='moirow-tot-"+idx+"' style='position:sticky;right:0;z-index:2;background:"+rowBg+";border-left:2px solid #e2e8f0;font-weight:700;color:#581c87' class='mono tr'>"+fmt(totRow)+"</td>";
         tb+="</tr>";
         // ---- Linha PREVISTO (abaixo do Real, so aparece se expandida - colaboradores ativos apenas; totais ja foram somados no pre-calculo acima) ----
@@ -5779,6 +5802,7 @@ function renderCustoMOMatrix(){
             tb+="<td colspan='11' style='background:"+bgPMoi+";border-right:2px solid #e2e8f0'></td>";
           }
           tb+=linhaMesesP;
+          tb+="<td data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+bgPMoi+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#b45309'>"+(cc.qtdRowP>0?cc.qtdRowP:"-")+"</td>";
           tb+="<td class='mono tr' style='position:sticky;right:0;z-index:2;background:"+bgPMoi+";border-left:2px solid #e2e8f0;font-weight:700;color:#b45309'>"+(totRowP>0?fmt(totRowP):"-")+"</td>";
           tb+="</tr>";
         }
@@ -5790,6 +5814,7 @@ function renderCustoMOMatrix(){
   tf+="<td style='"+sC(0,"#fefce8")+"color:#b45309'>TOTAL PREVISTO</td><td style='"+sC(1,"#fefce8")+"border-right:2px solid #e2e8f0'></td>";
   if(colunasVisiveis)tf+="<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td style='border-right:2px solid #e2e8f0'></td>";
   meses.forEach(function(m){tf+="<td colspan='2' class='mono tr' style='font-size:11px;border-left:1px solid #e2e8f0;color:#b45309'>"+(totMesPrevisto[m]>0?fmt(totMesPrevisto[m]):"-")+"</td>";});
+  tf+="<td data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+"#fefce8"+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#b45309'>"+(totQtdPrevMoi>0?totQtdPrevMoi:"-")+"</td>";
   tf+="<td style='position:sticky;right:0;z-index:2;background:#fefce8;border-left:2px solid #e2e8f0;color:#b45309'>"+fmt(totGeralPrevisto)+"</td>";
   tf+="</tr>";
   tf+="<tr style='background:#f1f5f9;font-weight:700'>";
@@ -5799,9 +5824,11 @@ function renderCustoMOMatrix(){
     tf+="<td id='moicolqtd-tot-"+m+"' class='mono tr' style='font-size:11px;border-left:1px solid #e2e8f0'>"+(totQtdMes[m]>0?totQtdMes[m]:"-")+"</td>";
     tf+="<td id='moicol-tot-"+m+"' class='mono tr' style='font-size:11px'>"+(totMes[m]>0?fmt(totMes[m]):"-")+"</td>";
   });
+  tf+="<td id='moimat-qtd-total' data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+"#f1f5f9"+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#581c87'>"+(totQtdGeral>0?totQtdGeral:"-")+"</td>";
   tf+="<td id='moimat-grand-total' style='position:sticky;right:0;z-index:2;background:#f1f5f9;border-left:2px solid #e2e8f0;color:#581c87'>"+fmt(totGeral)+"<div id='moimat-grand-total-qtd' style='font-size:10px;font-weight:600;color:#94a3b8'>"+totQtdGeral+" colaborador-mes</div></td>";
   tf+="</tr>";
   tfoot.innerHTML=tf;
+  ajustarStickyDireita(thead.parentNode); // Rev53
 }
 function calcIndiretoMesCategoria(categoria,mes){
   var total=0;
