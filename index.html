@@ -1387,6 +1387,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
           <button class="btn b-green" style="width:100%;text-align:left" onclick="salvarJSON()">&#128190; Salvar JSON</button>
           <button class="btn b-outline" style="width:100%;text-align:left" onclick="document.getElementById('inp-json').click()">&#128194; Carregar JSON</button>
           <button class="btn" style="width:100%;text-align:left;background:#15803d;color:#fff;border:none" onclick="fecharEng();exportarCompiladoExcelPerguntar()">&#128190; Exportar Compilado Excel</button>
+          <button class="btn" style="width:100%;text-align:left;background:#7c3aed;color:#fff;border:none" onclick="fecharEng();abrirTransferenciaCusto()">&#8644; Transfer&ecirc;ncia de Custo</button>
           <div style="border-top:1px dashed #e2e8f0;margin:4px 0"></div>
           <button class="btn b-blue" style="width:100%;text-align:left" id="btn-salvar-nuvem" onclick="salvarNaNuvem()">&#9729; Salvar na Nuvem (Firebase)</button>
           <button class="btn b-outline" style="width:100%;text-align:left" id="btn-nova-versao" onclick="salvarNovaVersaoNuvem()">&#9729; Salvar Nova Versao</button>
@@ -1487,10 +1488,10 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
 </div>
 <div class="modal-bg" id="modal-reauth-salvar">
   <div class="modal" style="max-width:400px">
-    <div class="mh"><h3>&#128274; Confirmar para salvar na nuvem</h3><button class="mc" onclick="cancelarReauthSalvar()">X</button></div>
+    <div class="mh"><h3 id="reauth-titulo">&#128274; Confirmar para salvar na nuvem</h3><button class="mc" onclick="cancelarReauthSalvar()">X</button></div>
     <div class="mb">
-      <p style="font-size:12px;color:#64748b;margin-bottom:8px">Por seguranca, informe novamente o login e a senha do Engenheiro de Custos para salvar na nuvem.</p>
-      <p style="font-size:12px;margin-bottom:12px;padding:8px 10px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;color:#115e59">Projeto que sera salvo: <b id="reauth-projeto"></b></p>
+      <p id="reauth-texto" style="font-size:12px;color:#64748b;margin-bottom:8px">Por seguranca, informe novamente o login e a senha do Engenheiro de Custos para salvar na nuvem.</p>
+      <p id="reauth-box" style="font-size:12px;margin-bottom:12px;padding:8px 10px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;color:#115e59"><span id="reauth-rotulo">Projeto que sera salvo:</span> <b id="reauth-projeto"></b></p>
       <div class="fg"><label>E-mail <span id="reauth-hint" style="font-weight:400;color:#94a3b8"></span></label><input type="email" id="reauth-email" list="lista-emails-eng" placeholder="seuemail@empresa.com" onkeydown="if(event.key==='Enter')document.getElementById('reauth-senha').focus()"></div>
       <div class="fg"><label>Senha</label><input type="password" id="reauth-senha" placeholder="Senha" onkeydown="if(event.key==='Enter')confirmarReauthSalvar()"></div>
       <div id="reauth-err" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px"></div>
@@ -5360,6 +5361,96 @@ async function exportarCurvaAbcModExcel(comPrevisto,wbExterno){
     a.href=url;a.download="Curva_ABC_MOD_"+(S.projNome||"obra").replace(/\s+/g,"_")+".xlsx";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   }catch(ex){if(wbExterno)throw ex;alert("Erro ao exportar: "+ex.message);}
 }
+// ===================== Rev53: TRANSFERENCIA DE CUSTO entre abas (Custo Indireto / Servico / Material / Equipamento / Seguros) =====================
+// Move a linha inteira (descricao, pedido, fornecedor, valores, permanencia mes a mes, previsto, contratos, observacoes, composicao com os itens)
+// de uma aba para outra: so muda a "aba" (categoria) da linha. Exige novo login do Engenheiro de Custos para confirmar.
+var TRANSF_CATS=["Indireto","Servico","Material","Equipamento","Seguro"],_transfSel={};
+function transfLinhasOrigem(cat){return S.indiretoData.filter(function(it){normIndireto(it);return it.categoria===cat&&!it.composicaoPai&&!it.contingenciaSync;});}
+function transfFilhos(it){return it.isComposicao?S.indiretoData.filter(function(ch){return ch.composicaoPai===it.compId;}):[];}
+function abrirTransferenciaCusto(){
+  if(!engDesbloqueado){alert("Dispon\u00edvel apenas para o Engenheiro de Custos.");return;}
+  var old=document.getElementById("transf-modal");if(old)old.remove();_transfSel={};
+  var ops=function(sel){return TRANSF_CATS.map(function(c){return "<option value='"+c+"'"+(c===sel?" selected":"")+">"+CAT_CFG[c].label+"</option>";}).join("");};
+  var d=document.createElement("div");d.id="transf-modal";
+  d.style.cssText="position:fixed;inset:0;z-index:190;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center";
+  var sst="flex:1;border:2px solid #e2e8f0;border-radius:8px;padding:9px 10px;font-size:14px;font-weight:600;background:#fff";
+  d.innerHTML="<div style='background:#fff;border-radius:12px;width:980px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 14px 40px rgba(0,0,0,.35)'>"+
+    "<div style='padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center'><div style='font-weight:800;font-size:16px;color:#1e293b'>&#8644; Transfer\u00eancia de Custo</div><button class='mc' onclick=\"document.getElementById('transf-modal').remove()\">&#10005;</button></div>"+
+    "<div style='padding:14px 20px'>"+
+      "<div style='font-size:12px;color:#64748b;margin-bottom:10px'>Escolha a aba de onde sai o custo e a aba para onde ele vai. Depois marque as linhas. A linha vai inteira: descri\u00e7\u00e3o, pedido, fornecedor, valores, perman\u00eancia m\u00eas a m\u00eas, previsto, contratos e observa\u00e7\u00f5es (composi\u00e7\u00e3o vai com todos os seus itens).</div>"+
+      "<div style='display:flex;gap:12px;align-items:center'>"+
+        "<div style='flex:1;display:flex;flex-direction:column;gap:3px'><label style='font-size:11px;font-weight:700;color:#64748b'>DE (aba de origem)</label><select id='transf-de' style='"+sst+"' onchange='transfRender()'>"+ops("Servico")+"</select></div>"+
+        "<div style='font-size:30px;font-weight:900;color:#7c3aed;padding-top:16px'>&#10132;</div>"+
+        "<div style='flex:1;display:flex;flex-direction:column;gap:3px'><label style='font-size:11px;font-weight:700;color:#64748b'>PARA (aba de destino)</label><select id='transf-para' style='"+sst+"' onchange='transfRender()'>"+ops("Material")+"</select></div>"+
+      "</div>"+
+      "<div style='display:flex;gap:8px;align-items:center;margin-top:12px'><input id='transf-busca' placeholder='Buscar por descri\u00e7\u00e3o, pedido ou fornecedor...' oninput='transfRender()' style='flex:1;border:1px solid #cbd5e1;border-radius:7px;padding:7px 10px;font-size:13px'>"+
+      "<label style='font-size:12px;display:flex;gap:5px;align-items:center;cursor:pointer;white-space:nowrap'><input type='checkbox' id='transf-todos' onchange='transfMarcarTodos(this.checked)'> Marcar todas (vis\u00edveis)</label></div>"+
+    "</div>"+
+    "<div style='flex:1;overflow:auto;padding:0 20px'><table style='width:100%;border-collapse:collapse;font-size:12.5px'><thead><tr style='background:#475569;color:#fff;position:sticky;top:0'>"+
+      "<th style='padding:7px;width:30px'></th><th style='padding:7px;text-align:left'>N\u00ba Pedido</th><th style='padding:7px;text-align:left'>Descri\u00e7\u00e3o</th><th style='padding:7px;text-align:left'>Fornecedor</th><th style='padding:7px;text-align:right'>Valor Total</th></tr></thead><tbody id='transf-tb'></tbody></table></div>"+
+    "<div style='padding:12px 20px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap'>"+
+      "<div id='transf-resumo' style='font-size:13px;color:#334155;font-weight:600'></div>"+
+      "<div style='display:flex;gap:8px'><button class='btn b-outline' onclick=\"document.getElementById('transf-modal').remove()\">Cancelar</button><button class='btn' id='transf-ok' style='background:#7c3aed;color:#fff;border:none' onclick='transfConfirmar()'>Confirmar Transfer\u00eancia</button></div>"+
+    "</div></div>";
+  document.body.appendChild(d);transfRender();
+}
+function transfValor(it){var t=calcTotalIndiretoItem(S.indiretoData.indexOf(it));return t||0;}
+function transfRender(){
+  var de=document.getElementById("transf-de").value,para=document.getElementById("transf-para").value,busca=(document.getElementById("transf-busca").value||"").toLowerCase().trim();
+  var esc=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;");};
+  Object.keys(_transfSel).forEach(function(id){var it=S.indiretoData.find(function(x){return x.id===id;});if(!it||it.categoria!==de)delete _transfSel[id];});
+  var h="";
+  transfLinhasOrigem(de).forEach(function(it){
+    var txt=((it.pedido||"")+" "+(it.descricao||"")+" "+(it.fornecedor||"")).toLowerCase();if(busca&&txt.indexOf(busca)<0)return;
+    var fil=transfFilhos(it),esp=(de==="Indireto"&&(it.qtdAuto||tipoLinhaEf(it)));
+    h+="<tr style='border-bottom:1px solid #f1f5f9;cursor:pointer"+(_transfSel[it.id]?";background:#f5f3ff":"")+"' onclick=\"transfToggle('"+String(it.id).replace(/'/g,"")+"',event)\">"+
+      "<td style='padding:6px 7px;text-align:center'><input type='checkbox'"+(_transfSel[it.id]?" checked":"")+" style='pointer-events:none'></td>"+
+      "<td style='padding:6px 7px;color:#475569'>"+esc(it.pedido&&it.pedido!=="-"?it.pedido:"-")+"</td>"+
+      "<td style='padding:6px 7px;font-weight:600'>"+(it.isComposicao?"&#128279; ":"")+esc(it.descricao||"-")+(fil.length?" <span style='font-size:10.5px;color:#64748b;font-weight:400'>(composi\u00e7\u00e3o com "+fil.length+" itens - vai junto)</span>":"")+
+        (esp?" <span title='Linha com quantidade autom\u00e1tica / alimenta\u00e7\u00e3o / rep\u00fablica. Esses recursos s\u00f3 existem no Custo Indireto: na outra aba a quantidade atual fica fixa (manual).' style='font-size:10px;color:#b45309;background:#fef3c7;border-radius:4px;padding:0 5px;font-weight:700'>&#9888; recurso s\u00f3 do Custo Indireto</span>":"")+"</td>"+
+      "<td style='padding:6px 7px;color:#64748b'>"+esc(it.fornecedor||"-")+"</td>"+
+      "<td style='padding:6px 7px;text-align:right;font-family:monospace'>"+fmt(transfValor(it))+"</td></tr>";
+  });
+  document.getElementById("transf-tb").innerHTML=h||"<tr><td colspan='5' style='padding:20px;text-align:center;color:#94a3b8'>Nenhuma linha nesta aba"+(busca?" para a busca":"")+"</td></tr>";
+  var ids=Object.keys(_transfSel),tot=0;ids.forEach(function(id){var it=S.indiretoData.find(function(x){return x.id===id;});if(it)tot+=transfValor(it);});
+  var mesma=(de===para);
+  document.getElementById("transf-resumo").innerHTML=mesma?"<span style='color:#dc2626'>Escolha abas diferentes em DE e PARA.</span>":(ids.length+" linha(s) selecionada(s) \u2014 "+fmt(tot)+" &nbsp; <span style='color:#7c3aed'>"+CAT_CFG[de].label+" =&gt; "+CAT_CFG[para].label+"</span>");
+  var ok=document.getElementById("transf-ok");ok.disabled=mesma||!ids.length;ok.style.opacity=ok.disabled?".5":"1";
+}
+function transfToggle(id,ev){if(_transfSel[id])delete _transfSel[id];else _transfSel[id]=true;transfRender();}
+function transfMarcarTodos(on){
+  var de=document.getElementById("transf-de").value,busca=(document.getElementById("transf-busca").value||"").toLowerCase().trim();
+  transfLinhasOrigem(de).forEach(function(it){var txt=((it.pedido||"")+" "+(it.descricao||"")+" "+(it.fornecedor||"")).toLowerCase();if(busca&&txt.indexOf(busca)<0)return;if(on)_transfSel[it.id]=true;else delete _transfSel[it.id];});
+  transfRender();
+}
+function transfConfirmar(){
+  var de=document.getElementById("transf-de").value,para=document.getElementById("transf-para").value,ids=Object.keys(_transfSel);
+  if(de===para||!ids.length)return;
+  var tot=0;ids.forEach(function(id){var it=S.indiretoData.find(function(x){return x.id===id;});if(it)tot+=transfValor(it);});
+  var acao="Transferir "+ids.length+" linha(s) ("+fmt(tot)+") de "+CAT_CFG[de].label+" => "+CAT_CFG[para].label;
+  exigirLoginParaSalvar(function(){transfExecutar(de,para,ids);},{titulo:"&#128274; Confirmar Transfer\u00eancia de Custo",texto:"Por seguran\u00e7a, informe novamente o login e a senha do Engenheiro de Custos para confirmar a transfer\u00eancia.",rotulo:"A\u00e7\u00e3o:",acao:acao});
+}
+function transfExecutar(de,para,ids){
+  var movidas=0,itens=0,classifLimpa=0,tot=0;
+  ids.forEach(function(id){
+    var it=S.indiretoData.find(function(x){return x.id===id;});if(!it||it.categoria!==de)return;
+    tot+=transfValor(it);
+    var grupo=[it].concat(transfFilhos(it));
+    grupo.forEach(function(x){
+      x.categoria=para;
+      // classificacao (DRE) e uma lista propria de cada aba: so mantem se existir com o mesmo id na aba de destino
+      if(x.classificacao){var l=(S.classificacoes&&S.classificacoes[para])||[];if(CLASSIF_CATS.indexOf(para)<0||!l.some(function(c){return c.id===x.classificacao;})){x.classificacao="";classifLimpa++;}}
+      itens++;
+    });
+    movidas++;
+  });
+  if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Transfer\u00eancia de Custo: "+movidas+" linha(s) ("+fmt(tot)+") de "+CAT_CFG[de].label+" => "+CAT_CFG[para].label);
+  var m=document.getElementById("transf-modal");if(m)m.remove();
+  sincronizarAlojamentoIndireto();renderTodasCategoriasIndireto();syncIndiretoNoColetor();
+  alert("Transfer\u00eancia conclu\u00edda: "+movidas+" linha(s)"+(itens>movidas?" ("+itens+" contando os itens de composi\u00e7\u00e3o)":"")+" \u2014 "+fmt(tot)+"\n"+CAT_CFG[de].label+" => "+CAT_CFG[para].label+
+    (classifLimpa?"\n\n"+classifLimpa+" linha(s) ficaram sem Classifica\u00e7\u00e3o (DRE), porque a lista de classifica\u00e7\u00f5es \u00e9 pr\u00f3pria de cada aba. Reclassifique na aba de destino.":"")+
+    "\n\nLembre de salvar na nuvem / exportar o JSON para gravar a altera\u00e7\u00e3o.");
+}
 // Rev53: Exportar Compilado (Ferramentas): um unico .xlsx com uma aba por tela de custo, mesmo layout das exportacoes individuais
 function exportarCompiladoExcelPerguntar(){perguntarPrevistoExportacao("Compilado (todas as abas de custo)",function(c){exportarCompiladoExcel(c);});}
 async function exportarCompiladoExcel(comPrevisto){
@@ -8733,9 +8824,13 @@ async function subirAnexosParaNuvem(docId){
 // Mostra tambem qual projeto esta aberto, para evitar salvar no projeto errado. Deixando o e-mail em branco vale a senha mestre
 // (mesma regra do acesso de Engenheiro de Custos).
 var _reauthCallback=null;
-function exigirLoginParaSalvar(callback){
-  _reauthCallback=callback;
-  document.getElementById("reauth-projeto").textContent=S.projNome||"(sem nome)";
+function exigirLoginParaSalvar(callback,opt){
+  _reauthCallback=callback;opt=opt||{}; // Rev53: opt = {titulo, texto, rotulo, acao} para outras acoes (ex.: Transferencia de Custo)
+  document.getElementById("reauth-titulo").innerHTML=opt.titulo||"&#128274; Confirmar para salvar na nuvem";
+  document.getElementById("reauth-texto").textContent=opt.texto||"Por seguranca, informe novamente o login e a senha do Engenheiro de Custos para salvar na nuvem.";
+  document.getElementById("reauth-rotulo").textContent=opt.rotulo||"Projeto que sera salvo:";
+  var bx=document.getElementById("reauth-box");bx.style.background=opt.acao?"#fffbeb":"#f0fdfa";bx.style.borderColor=opt.acao?"#fcd34d":"#99f6e4";bx.style.color=opt.acao?"#92400e":"#115e59";
+  document.getElementById("reauth-projeto").textContent=opt.acao||S.projNome||"(sem nome)";
   document.getElementById("reauth-hint").textContent=(S.equipeEng||[]).length?"(somente engenheiros de custos deste projeto)":"(em branco = senha mestre; projeto sem engenheiro cadastrado)";
   document.getElementById("reauth-email").value=S.usuarioLogado||"";
   document.getElementById("reauth-senha").value="";
