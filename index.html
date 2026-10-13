@@ -560,8 +560,9 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
   </div>
 </div>
 <div class="sec wrap" id="sec1">
-  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px">
     <div class="tgl"><button class="tgl-btn on" style="cursor:default">Projecao Total</button></div>
+    <span id="eap-btn-moi"></span>
   </div>
   <div class="cards c4" id="custo-cards"></div>
   <div class="box">
@@ -593,7 +594,8 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
     <div class="tgl">
       <button class="tgl-btn on" style="cursor:default">Projecao Total</button>
     </div>
-    <select class="ms" id="mes-mod" onchange="syncMes(this.value)"></select>
+    <select class="ms" id="mes-mod" onchange="syncMes(this.value)" style="display:none"></select><!-- Rev53: seletor de mes oculto (mantido so para o codigo que o preenche) -->
+    <span id="eap-btn-mod"></span>
   </div>
   <div class="cards c4" id="custo-mod-cards"></div>
   <div class="box">
@@ -1628,7 +1630,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       </div>
       <div class="fg">
         <label>Item EAP (Coletor Total) - opcional</label>
-        <input type="text" id="em3-item-eap" list="em3-item-eap-list" placeholder="Ex: 001.003.006" oninput="atualizarVisibAlimEfetivo()" onchange="atualizarVisibAlimEfetivo()">
+        <input type="text" id="em3-item-eap" list="em3-item-eap-list" placeholder="Ex: 1.1.1.4" oninput="atualizarVisibAlimEfetivo()" onchange="atualizarVisibAlimEfetivo()">
         <datalist id="em3-item-eap-list"></datalist>
         <p style="font-size:11px;color:#64748b;margin-top:4px">Lista mostra apenas itens ate o nivel 4 do Coletor Total. Se preenchido, o total deste item (e de todos os outros com a mesma numeracao) sera somado automaticamente no campo Real do Coletor Total.</p>
       </div>
@@ -1980,7 +1982,7 @@ function criarEstadoProjetoVazio(nome,local,ini,fim){
   S.modData=[];S.moiData=[];S.indiretoData=[];
   S.cronograma=[];S.pedidos=[];S.pedidosCompra=[];S.distPedidos={};S.ccosPed=[];S.distMensal={};S.medicoes={};S.escopos={};S.razaoMO={};
   S.filtPed={ccos:null,busca:"",saldo:"todos"};S.pagPed=0;
-  S.coletorEAP=[];S.coletorColapso={};S.coletorNivelAtivo=null;S.coletorBusca="";S.coletorMostrarMeses=false;S.coletorSyncedCodes=[];S.coletorSubtotais=[];
+  S.coletorEAP=[];S.receitaEAP=[];S.eapMOD="";S.eapMOI="";S.coletorColapso={};S.coletorNivelAtivo=null;S.coletorBusca="";S.coletorMostrarMeses=false;S.coletorSyncedCodes=[];S.coletorSubtotais=[];
   S.moiMatColapso={};S.moiMatColunasRecolhidas=false;
   S.dreReceitaData={receita:{},receitaContrato:{},takeInOut:{},difal:{},reajuste:{},faturamentoDireto:{}};
   S.previstosSalvos=[];S.previstoVisualizandoId=null;S.historicoEngCustos=[];
@@ -2294,12 +2296,55 @@ function normMod(fn){
   if(fn.custoUnPrevistoMoradia===undefined)fn.custoUnPrevistoMoradia=0;
   return fn;
 }
+// ===================== Rev53: Classificacao EAP da aba inteira (Custo M.O.D / Custo M.O.I) =====================
+// O total da aba (mesmo valor do TOTAL REAL / PREVISTO da tela) vai para o item da EAP escolhido no botao "Classificacao EAP".
+function moCustoUn(tipo,x){var cu=tipo==="mod"?custoUnitMOD(x):custoUnitMOI(x);return cu.base+cu.alojVal+cu.vavrVal;}
+function moLista(tipo){return tipo==="mod"?S.modData:S.moiData;}
+function moNorm(tipo,x){if(tipo==="mod")normMod(x);else normMoi(x);}
+function moRealMesTipo(tipo,mes){var t=0;moLista(tipo).forEach(function(x){moNorm(tipo,x);var q=(x.qtdPorMes&&x.qtdPorMes[mes])||0;if(q)t+=q*moCustoUn(tipo,x);});return t;}
+function moPrevMesTipo(tipo,mes){var t=0;moLista(tipo).forEach(function(x){moNorm(tipo,x);var sn=snapshotPrevistoDoItem(tipo,x.id);var q=sn?(sn.qtdPrevistoPorMes[mes]||0):((x.qtdPrevistoPorMes&&x.qtdPrevistoPorMes[mes])||0);if(!q)return;var cu=sn?(sn.custoUnPrevisto||0):((x.custoUnPrevisto!==undefined&&x.custoUnPrevisto!==null)?x.custoUnPrevisto:moCustoUn(tipo,x));t+=q*cu;});return t;}
+function moTotalTipo(tipo,prev){var t=0;mesesObra().forEach(function(m){t+=prev?moPrevMesTipo(tipo,m):moRealMesTipo(tipo,m);});return t;}
+function moTiposDoCodigo(code){var r=[];if(!code)return r;if(S.eapMOD&&code===S.eapMOD)r.push("mod");if(S.eapMOI&&code===S.eapMOI)r.push("moi");return r;}
+function moProprioMes(code,mes,prev){var t=moTiposDoCodigo(code);if(!t.length)return null;var v=0;t.forEach(function(tp){v+=prev?moPrevMesTipo(tp,mes):moRealMesTipo(tp,mes);});return v;}
+function moProprioTotal(code,prev){var t=moTiposDoCodigo(code);if(!t.length)return null;var v=0;t.forEach(function(tp){v+=moTotalTipo(tp,prev);});return v;}
+function moRotuloCodigo(code){var t=moTiposDoCodigo(code);return t.map(function(tp){return tp==="mod"?"Custo M.O.D (aba inteira)":"Custo M.O.I (aba inteira)";}).join(" + ");}
+function eapMoBotaoHtml(tipo){
+  var cod=tipo==="mod"?S.eapMOD:S.eapMOI,it=cod?S.coletorEAP.find(function(x){return x.item===cod;}):null;
+  var txt=cod?(cod+" - "+(it?it.descricao:"(c\u00f3digo n\u00e3o encontrado na EAP)")):"N\u00e3o classificada";
+  var cor=cod&&it?"background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe":"background:#fee2e2;color:#b91c1c;border:1px solid #fecaca";
+  return "<button class='btn b-sm' style='"+cor+";font-weight:700' title='Classifica\u00e7\u00e3o EAP de toda a aba (Coletor Total / Prev x Real)' onclick=\"abrirClassifEapAba('"+tipo+"')\">&#127991; Classifica\u00e7\u00e3o EAP: "+String(txt).replace(/</g,"&lt;")+"</button>";
+}
+function atualizarBotoesEapMo(){["mod","moi"].forEach(function(tp){var el=document.getElementById("eap-btn-"+tp);if(el)el.innerHTML=eapMoBotaoHtml(tp);});}
+function abrirClassifEapAba(tipo){
+  var cod=tipo==="mod"?S.eapMOD:S.eapMOI,old=document.getElementById("eap-aba-modal");if(old)old.remove();
+  var esc=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/'/g,"&#39;");};
+  var ops="<option value=''>\u2014 Sem classifica\u00e7\u00e3o \u2014</option>"+S.coletorEAP.map(function(x){return "<option value='"+esc(x.item)+"'"+(x.item===cod?" selected":"")+">"+"\u00a0\u00a0".repeat(Math.max(0,(x.nivel||1)-1))+esc(x.item+" - "+x.descricao)+"</option>";}).join("");
+  var d=document.createElement("div");d.id="eap-aba-modal";
+  d.style.cssText="position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center";
+  d.innerHTML="<div style='background:#fff;border-radius:10px;padding:20px 22px;width:560px;max-width:94vw;box-shadow:0 12px 32px rgba(0,0,0,.3)'>"+
+    "<div style='font-weight:700;font-size:15px;color:#1e293b;margin-bottom:6px'>&#127991; Classifica\u00e7\u00e3o EAP - "+(tipo==="mod"?"Custo M.O.D":"Custo M.O.I")+"</div>"+
+    "<div style='font-size:12px;color:#64748b;margin-bottom:12px'>Todo o custo desta aba (Real e Previsto) vai para o item da EAP escolhido, no Coletor Total e no Prev x Real.</div>"+
+    "<select id='eap-aba-sel' style='width:100%;border:2px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px'>"+ops+"</select>"+
+    "<div style='display:flex;gap:8px;justify-content:flex-end;margin-top:16px'><button class='btn' id='eap-aba-cancel' style='background:#e2e8f0;color:#334155;border:none'>Cancelar</button><button class='btn b-pri' id='eap-aba-ok'>Salvar</button></div></div>";
+  document.body.appendChild(d);
+  var fechar=function(){d.remove();};d.addEventListener("click",function(e){if(e.target===d)fechar();});
+  document.getElementById("eap-aba-cancel").onclick=fechar;
+  document.getElementById("eap-aba-ok").onclick=function(){
+    var v=document.getElementById("eap-aba-sel").value||"";
+    if(tipo==="mod")S.eapMOD=v;else S.eapMOI=v;
+    if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Classifica\u00e7\u00e3o EAP da aba "+(tipo==="mod"?"Custo M.O.D":"Custo M.O.I")+": "+(v||"sem classifica\u00e7\u00e3o"));
+    fechar();syncIndiretoNoColetor();atualizarBotoesEapMo();
+  };
+}
+// Rev53: "tipo" da linha de efetivo (Alimentacao, Baixada, Plano de Saude, Transporte, EPI, Exames, Alojamento-Republica).
+// Antes era deduzido do codigo EAP; agora fica gravado na propria linha, para a reclassificacao EAP nao mudar o comportamento.
+function tipoLinhaEf(it){if(!it)return "";if(it.tipoEfetivo!==undefined&&it.tipoEfetivo!==null)return it.tipoEfetivo;return (EFETIVO_EAPS[it.itemEAP]||it.itemEAP===ALOJ_EAP_CODE)?it.itemEAP:"";}
 // ===== Rateio de Republica/Moradia =====
 // Opcoes = linhas do CUSTO INDIRETO vinculadas ao item EAP 001.003.006 (ALOJAMENTO) do Coletor Total.
 // Quem for classificado numa linha NAO soma moradia no proprio custo (o custo fica so na linha do Indireto, para nao contar 2x);
 // aqui so se calcula o rateio INFORMATIVO = valor unitario da linha / quantidade de pessoas classificadas nela.
 var ALOJ_EAP_CODE="001.003.006";
-function alojLinhaElegivel(it){return!!it&&it.categoria==="Indireto"&&!it.isComposicao&&!it.composicaoPai&&it.itemEAP===ALOJ_EAP_CODE;}
+function alojLinhaElegivel(it){return!!it&&it.categoria==="Indireto"&&!it.isComposicao&&!it.composicaoPai&&tipoLinhaEf(it)===ALOJ_EAP_CODE;}
 function alojLinhasDisponiveis(){return S.indiretoData.filter(function(it){normIndireto(it);return alojLinhaElegivel(it);});}
 function alojLinhaValida(id){
   if(!id)return null;
@@ -2358,7 +2403,7 @@ function sincronizarAlojamentoIndireto(){
     }else if(efetivoLinhaAuto(it)){
       // Quantidade automatica (Alimentacao, Baixada, Plano de Saude, Transporte, EPI, Exames): efetivo M.O.I.+M.O.D. do mes
       // (todo o efetivo OU so os alojados em Republica); o usuario so altera o Valor Unitario.
-      var soAloj=(it.efetivoModo==="alojados"),ehAlim=(it.itemEAP===ALIM_EAP_CODE);
+      var soAloj=(it.efetivoModo==="alojados"),ehAlim=(tipoLinhaEf(it)===ALIM_EAP_CODE);
       if(ehAlim&&!it.composicaoPai){if(soAloj)temAloj=true;else temTodos=true;} // so a Alimentacao (linha fora de composicao) substitui custo nas pessoas (alim. alojada / VA-VR); os demais itens nao tem custo nas pessoas
       var serie=soAloj?efetivoAloj:efetivo,nq2={};
       meses.forEach(function(m){if(serie[m]>0)nq2[m]=serie[m];});
@@ -2373,7 +2418,7 @@ function sincronizarAlojamentoIndireto(){
 var ALIM_EAP_CODE="001.003.002",_alimTodosAtiva=false,_alimAlojAtiva=false;
 // Qualquer linha do Custo Indireto (inclusive itens dentro de composicao e linhas sem Item EAP). Ficam de fora: a linha-mae da composicao
 // (soma dos itens de baixo), a linha fixa "Contingencia" e as linhas de republica (001.003.006), que seguem a permanencia automatica propria.
-function efetivoLinhaElegivel(it){return!!it&&it.categoria==="Indireto"&&!it.isComposicao&&!it.contingenciaSync&&it.itemEAP!=="001.003.006";}
+function efetivoLinhaElegivel(it){return!!it&&it.categoria==="Indireto"&&!it.isComposicao&&!it.contingenciaSync&&tipoLinhaEf(it)!==ALOJ_EAP_CODE;}
 function efetivoLinhaAuto(it){return efetivoLinhaElegivel(it)&&(it.efetivoModo==="todos"||it.efetivoModo==="alojados");}
 // Linha "todo o efetivo": substitui no custo das pessoas a alimentacao alojada E o VA/VR.
 // Linha "so alojados": substitui so a alimentacao alojada (item que so existe para quem esta em Republica); o VA/VR segue nas pessoas.
@@ -2419,7 +2464,7 @@ function alojBadgeAuto(it){
   if(!it.qtdAuto)return"";
   var estilo="font-size:9.5px;font-weight:700;color:#0f766e;background:#ccfbf1;border:1px solid #5eead4;border-radius:5px;padding:0 4px;cursor:help;white-space:nowrap";
   if(it.qtdAutoTipo==="alim"||it.qtdAutoTipo==="efetivo"){
-    var cfgB=EFETIVO_EAPS[it.itemEAP]||{nome:"",icone:"&#128101;"},soAlojB=(it.efetivoModo==="alojados");
+    var cfgB=EFETIVO_EAPS[tipoLinhaEf(it)]||{nome:"",icone:"&#128101;"},soAlojB=(it.efetivoModo==="alojados");
     var avisoB=(it.qtdAutoTipo==="alim")?" O custo de alimentacao nas pessoas fica apenas para visualizacao (nao soma no custo).":"";
     return" <span title='Quantidade automatica"+(cfgB.nome?" ("+cfgB.nome+")":"")+": a cada mes e a soma do efetivo (pessoas) do Custo M.O.I. + Custo M.O.D. ("+(soAlojB?"somente quem esta classificado em Republica":"todo o efetivo")+"). Voce so altera o Valor Unitario."+avisoB+" Para digitar a quantidade a mao, mude a opcao da linha para Manual.' style='"+estilo+"'>"+cfgB.icone+" auto ("+(soAlojB?"efetivo alojado (Republica)":"todo o efetivo M.O.I.+M.O.D.")+")</span>";
   }
@@ -2904,11 +2949,9 @@ function calcIndiretoPorItemEAPPorMes(itemEAP,mes){
 }
 // Valor "proprio" (nao agregado dos filhos) de Real para um item da EAP, num mes especifico, puxando de todas as abas
 function calcRealPorMesItemProprio(itemCode,mes){
-  if(itemCode==="001.003.001")return calcGeralMOPorMes(mes);
-  if(itemCode==="001.003.002")return calcAlimentacaoPorMes(mes)+calcServMatIndPorItemEAPPorMes("001.003.002",mes);
-  if(itemCode==="001.003.006")return calcMoradiaPorMes(mes)+calcServMatIndPorItemEAPPorMes("001.003.006",mes);
-  if(indiretoQtdVinculos(itemCode)>0)return calcIndiretoPorItemEAPPorMes(itemCode,mes);
-  return null; // sem dado mensal disponivel (item sem vinculo automatico e sem lancamento manual mensal)
+  var mo=moProprioMes(itemCode,mes,false),ind=indiretoQtdVinculos(itemCode)>0?calcIndiretoPorItemEAPPorMes(itemCode,mes):null; // Rev53
+  if(mo===null&&ind===null)return null;
+  return (mo||0)+(ind||0); // sem dado mensal disponivel (item sem vinculo automatico e sem lancamento manual mensal)
 }
 // Pre-calcula, de uma unica vez, os valores mensais de todas as fontes (MOD, MOI, Alimentacao, Alojamento,
 // Custo Indireto/Servico/Material/Equipamento) para evitar recalcular tudo a cada item x mes do Coletor Total (lento).
@@ -2945,15 +2988,17 @@ function prepararRealMensalColetor(){
       meses.forEach(function(m){var q=it.qtdPorMes[m]||0;moradia[m]=(moradia[m]||0)+q*it.valorUnit;});
     }
   }
-  return{geralMO:geralMO,alim:alim,moradia:moradia,indireto:indireto};
+  var mod={},moi={};meses.forEach(function(m){mod[m]=moRealMesTipo("mod",m);moi[m]=moRealMesTipo("moi",m);}); // Rev53
+  return{geralMO:geralMO,alim:alim,moradia:moradia,indireto:indireto,mod:mod,moi:moi};
 }
 // Valor "proprio" (nao agregado dos filhos) de Real para um item da EAP, num mes especifico, usando os dados ja pre-calculados
 function calcRealPorMesItemProprioRapido(itemCode,mes,dados){
-  if(itemCode==="001.003.001")return dados.geralMO[mes]||0;
-  if(itemCode==="001.003.002")return dados.alim[mes]||0;
-  if(itemCode==="001.003.006")return dados.moradia[mes]||0;
-  if(dados.indireto[itemCode]!==undefined)return dados.indireto[itemCode][mes]||0;
-  return null; // sem vinculo automatico -> sem dado mensal
+  var mo=null; // Rev53: aba M.O.D / M.O.I inteira no item classificado
+  if(S.eapMOD&&itemCode===S.eapMOD)mo=(mo||0)+((dados.mod&&dados.mod[mes])||0);
+  if(S.eapMOI&&itemCode===S.eapMOI)mo=(mo||0)+((dados.moi&&dados.moi[mes])||0);
+  var ind=dados.indireto[itemCode]!==undefined?(dados.indireto[itemCode][mes]||0):null;
+  if(mo===null&&ind===null)return null; // sem vinculo automatico -> sem dado mensal
+  return (mo||0)+(ind||0);
 }
 // Agrega (bottom-up) o Real por mes de cada item da EAP, somando o valor proprio com os filhos
 function computeColetorRealPorMes(mes,dados){
@@ -3016,15 +3061,17 @@ function prepararPrevistoMensalColetor(){
       }
     });
   });
-  return{geralMO:geralMO,alim:alim,moradia:moradia,indireto:indireto};
+  var mod={},moi={};meses.forEach(function(m){mod[m]=moPrevMesTipo("mod",m);moi[m]=moPrevMesTipo("moi",m);}); // Rev53
+  return{geralMO:geralMO,alim:alim,moradia:moradia,indireto:indireto,mod:mod,moi:moi};
 }
 // Valor "proprio" (nao agregado dos filhos) de Previsto para um item da EAP, num mes especifico.
 function calcPrevistoPorMesItemProprioRapido(itemCode,mes,dados){
-  if(itemCode==="001.003.001")return dados.geralMO[mes]||0;
-  if(itemCode==="001.003.002")return dados.alim[mes]||0;
-  if(itemCode==="001.003.006")return dados.moradia[mes]||0;
-  if(dados.indireto[itemCode]!==undefined)return dados.indireto[itemCode][mes]||0;
-  return null;
+  var mo=null; // Rev53
+  if(S.eapMOD&&itemCode===S.eapMOD)mo=(mo||0)+((dados.mod&&dados.mod[mes])||0);
+  if(S.eapMOI&&itemCode===S.eapMOI)mo=(mo||0)+((dados.moi&&dados.moi[mes])||0);
+  var ind=dados.indireto[itemCode]!==undefined?(dados.indireto[itemCode][mes]||0):null;
+  if(mo===null&&ind===null)return null;
+  return (mo||0)+(ind||0);
 }
 function computeColetorPrevistoPorMes(mes,dados){
   var arr=S.coletorEAP,n=arr.length,prevArr=new Array(n).fill(0);
@@ -3054,12 +3101,7 @@ function renderResumoMOCards(){
     card("re","Custo Total (MOD+MOI)",fmt(totGeral),meses.length+" meses de obra");
   // Mantem o item 001.003.001 e 001.003.002 da EAP sincronizados, mesmo se o Coletor Total nao estiver aberto
   // 001.003.001 vinculado apenas aos cards "Custo Total M.O.D" + "Custo Total M.O.I" (nao usa a soma dos 5 cards)
-  var itemMO=S.coletorEAP.find(function(x){return x.item==="001.003.001";});
-  if(itemMO)itemMO.real=totMod+totMoi;
-  var itemAlim=S.coletorEAP.find(function(x){return x.item==="001.003.002";});
-  if(itemAlim)itemAlim.real=totAlim;
-  var itemAloj=S.coletorEAP.find(function(x){return x.item==="001.003.006";});
-  if(itemAloj)itemAloj.real=totMoradia+calcTotalServMatIndPorItemEAP("001.003.006");
+  syncIndiretoNoColetor(); // Rev53: Real do Coletor pela classificacao EAP das abas e das linhas
 }
 function renderEfetivo(){if(!S.mesSel)return;var mes=S.mesSel,st=stM(mes),bEl=document.getElementById("mes-bdg");bEl.className="bdg "+(st==="real"?"bd-gr":st==="atual"?"bd-bl":"bd-gy");bEl.textContent=st==="real"?"Realizado":st==="atual"?"Mes Atual":"Projetado";var cp=custoPorMes(),dm=cp[mes]||{mod:0,moi:0,total:0,qtd:0,qMOD:0,qMOI:0,aloj:0,alojMOD:0,alojMOI:0};var mTb=document.getElementById("tb-mod");mTb.innerHTML="";var tMD=0,tAMD=0,qMD=0,qAMD=0;for(var i=0;i<S.modData.length;i++){var fn=S.modData[i],q=fn.qtdPorMes[mes]||0,sal=fn.salario||(S.salMOD[fn.funcao]||0),cu=custoUnitMOD(fn);tMD+=q*(cu.base+cu.alojVal+cu.vavrVal);tAMD+=q*(cu.alojVal+cu.vavrVal);qMD+=q;if(fn.alojado)qAMD+=q;var tr=document.createElement("tr");if(fn.alojado)tr.className="aloj";if(!q)tr.classList.add("dim");var tipoHoraBadgeMod=fn.regime==="PJ"?"<span style='color:#cbd5e1'>-</span>":"<span onclick='toggleTipoHoraMod("+i+")' style='cursor:pointer'>"+(fn.tipoHora==="mensalista"?bdg("gy","M"):bdg("gr","H"))+"</span>";
 tr.innerHTML="<td><b>"+fn.funcao+"</b></td><td>"+bdg(fn.regime==="PJ"?"pu":"bl",fn.regime)+"</td><td class='tc'>"+tipoHoraBadgeMod+"</td><td class='tc'>"+(fn.alojado?bdg("or","S"):"<span style='color:#cbd5e1'>N</span>")+"</td><td class='tc' style='font-size:18px;font-weight:700;color:#1d4ed8'>"+q+"</td><td class='mono'>"+fmt(sal)+"</td><td class='mono' style='color:#ca8a04'>"+(cu.heVal>0?fmt(cu.heVal):"-")+"</td><td class='mono' style='color:#ea580c'>"+(cu.alojVal>0?fmt(cu.alojVal):"-")+"</td><td class='mono'>"+fmt(cu.base)+"</td><td class='mono' style='color:#dc2626;font-weight:700'>"+fmt(q*(cu.base+cu.alojVal))+"</td>";mTb.appendChild(tr);}if(!S.modData.length)mTb.innerHTML="<tr><td colspan='10' style='text-align:center;color:#94a3b8;padding:20px'>Importe o arquivo de efetivo</td></tr>";document.getElementById("mod-qtd").textContent=qMD;document.getElementById("mod-atot").textContent=tAMD>0?fmt(tAMD):"-";document.getElementById("mod-tot").textContent=fmt(tMD);document.getElementById("mod-bdgs").innerHTML=bdg("bl",qMD+" colaboradores")+(qAMD>0?" "+bdg("or",qAMD+" alojados"):"");var moiTb=document.getElementById("tb-moi");moiTb.innerHTML="";var tMI=0,tAMI=0,qMI=0,qAMI=0;
@@ -3847,6 +3889,7 @@ function renderCustoModCards(){
   document.getElementById("custo-mod-cards").innerHTML=card("bl","MOD Obra",fmt(tot),sub);
 }
 function renderCustoModMatrix(){
+  atualizarBotoesEapMo(); // Rev53
   var thead=document.getElementById("modmat-thead"),tbody=document.getElementById("modmat-tbody"),tfoot=document.getElementById("modmat-tfoot");
   if(!thead||!tbody||!tfoot)return;
   var meses=mesesObra();
@@ -4068,6 +4111,7 @@ function normIndireto(it){
   if(it.validado===undefined)it.validado=false;
   if(it.observacao===undefined)it.observacao="";
   if(it.faturamentoDireto===undefined)it.faturamentoDireto=false; // marca "Faturamento Direto" (sera usada depois para compor o lucro)
+  if(it.tipoEfetivo===undefined)it.tipoEfetivo=(EFETIVO_EAPS[it.itemEAP]||it.itemEAP===ALOJ_EAP_CODE)?it.itemEAP:""; // Rev53
   if(it.efetivoModo===undefined){
     // migra os campos antigos: Alimentacao era sempre automatica; Baixada tinha manual/todos/alojados; demais itens: manual
     var cfgN=EFETIVO_EAPS[it.itemEAP];
@@ -4220,15 +4264,16 @@ function setEfetivoRadio(v){
 }
 // Mostra/oculta a caixa: aparece em toda linha do Custo Indireto (menos composicao-mae, Contingencia e republica 001.003.006). Nome mantido: e chamado pelo campo Item EAP.
 function atualizarVisibAlimEfetivo(){
-  var cod=(document.getElementById("em3-item-eap").value||"").trim();
   var cat=document.getElementById("em3-categoria").value;
+  var idxT=parseInt(document.getElementById("em3-idx").value),itT=idxT>=0?S.indiretoData[idxT]:null;
+  var cod=(cat==="Indireto"&&itT)?tipoLinhaEf(itT):""; // Rev53: tipo gravado na linha (sem campo na tela; linha nova = comum)
   var idx=parseInt(document.getElementById("em3-idx").value);
   var it=idx>=0?S.indiretoData[idx]:null;
   var cfg=EFETIVO_EAPS[cod]||{nome:"",icone:"&#128101;",padrao:"manual"};
   var mostrar=!!(cat==="Indireto"&&cod!=="001.003.006"&&!(it&&(it.isComposicao||it.contingenciaSync)));
   document.getElementById("em3-efetivo-box").style.display=mostrar?"block":"none";
   if(!mostrar)return;
-  document.getElementById("em3-efetivo-tit").innerHTML=cfg.icone+" Quantidade automatica"+(cfg.nome?" - "+cfg.nome:"")+(cod?" (EAP "+cod+")":" (esta linha)");
+  document.getElementById("em3-efetivo-tit").innerHTML=cfg.icone+" Quantidade automatica"+(cfg.nome?" - "+cfg.nome:" (esta linha)");
   document.getElementById("em3-efetivo-nota").innerHTML=(cod===ALIM_EAP_CODE
     ?'Nas opcoes automaticas a quantidade de cada mes vem pronta e voce so informa o <b>Valor Unitario</b>. "Todo o efetivo" substitui no custo das pessoas a alimentacao alojada e o VA/VR; "Somente alojado" substitui so a alimentacao alojada (o VA/VR continua nas pessoas). Em "Manual" o custo das pessoas nao muda.'
     :'Nas opcoes automaticas a quantidade de cada mes vem pronta e voce so informa o <b>Valor Unitario</b>. Isso nao altera o custo das pessoas.');
@@ -4385,7 +4430,7 @@ function salvarEditIndireto(){
   if(CLASSIF_CATS.indexOf(it.categoria)>=0)it.classificacao=document.getElementById("em3-classif").value||""; // Rev48
   it.unidade=document.getElementById("em3-unidade").value||""; // Rev53
   var radEf=document.querySelector("input[name='em3-efetivo-modo']:checked");
-  var podeEfetivo=(it.categoria==="Indireto"&&!it.isComposicao&&!it.contingenciaSync&&itemEapDigitado!=="001.003.006"); // composicao-mae, Contingencia e republica: sempre manual
+  var podeEfetivo=(it.categoria==="Indireto"&&!it.isComposicao&&!it.contingenciaSync&&tipoLinhaEf(it)!==ALOJ_EAP_CODE); // composicao-mae, Contingencia e republica: sempre manual
   it.efetivoModo=(podeEfetivo&&radEf&&(radEf.value==="todos"||radEf.value==="alojados"))?radEf.value:"manual";
   if(criandoNovo)S.indiretoData.push(it);
   if(it.composicaoPai)recalcularComposicaoMacro(it.composicaoPai);
@@ -4693,34 +4738,19 @@ function indiretoQtdVinculos(itemEAP){
 // (ex: usuario mudou o codigo EAP de um item de Servico/Material/etc de um codigo para outro) - sem isso o valor
 // antigo ficava "fantasma" no item que nao esta mais vinculado.
 function syncIndiretoNoColetor(){
+  // Rev53: Real "proprio" de cada item da EAP = linhas de Custo Indireto/Servico/Material/Equipamento classificadas nele
+  // + aba Custo M.O.D e/ou Custo M.O.I inteira, se a aba estiver classificada nele (botao "Classificacao EAP").
   var codigos={};
-  for(var i=0;i<S.indiretoData.length;i++){
-    var it=S.indiretoData[i];normIndireto(it);
-    if(it.itemEAP)codigos[it.itemEAP]=true;
-  }
-  var codigosAtuais=Object.keys(codigos);
-  // Limpa itens que estavam sincronizados antes mas nao tem mais vinculo nenhum agora
-  // 001.003.002 (Alimentacao) nunca e zerado aqui: seu Real e sempre recalculado abaixo (MOD/MOI + vinculos)
+  for(var i=0;i<S.indiretoData.length;i++){var it=S.indiretoData[i];normIndireto(it);if(it.itemEAP)codigos[it.itemEAP]=true;}
+  if(S.eapMOD)codigos[S.eapMOD]=true;if(S.eapMOI)codigos[S.eapMOI]=true;
   (S.coletorSyncedCodes||[]).forEach(function(cod){
-    if(cod==="001.003.002"||cod==="001.003.006")return;
-    if(!codigos[cod]){
-      var alvoAntigo=S.coletorEAP.find(function(x){return x.item===cod;});
-      if(alvoAntigo)alvoAntigo.real=0;
-    }
+    if(!codigos[cod]){var alvoAntigo=S.coletorEAP.find(function(x){return x.item===cod;});if(alvoAntigo)alvoAntigo.real=0;}
   });
-  // Aplica os valores atuais
-  codigosAtuais.forEach(function(cod){
-    if(cod==="001.003.002"||cod==="001.003.006")return; // tratados abaixo (soma MOD/MOI + Servico/Material/Indireto vinculados)
+  Object.keys(codigos).forEach(function(cod){
     var alvo=S.coletorEAP.find(function(x){return x.item===cod;});
-    if(alvo)alvo.real=calcTotalIndiretoPorItemEAP(cod);
+    if(alvo)alvo.real=calcTotalIndiretoPorItemEAP(cod)+(moProprioTotal(cod,false)||0);
   });
-  S.coletorSyncedCodes=codigosAtuais;
-  // Item 001.003.002 (Alimentacao): Alim.Alojado+VA/VR (MOD+MOI) + tudo que estiver classificado nas abas
-  // Servico, Material e Custo Indireto com este mesmo codigo EAP (Equipamento NAO entra aqui)
-  var itemAlimSync=S.coletorEAP.find(function(x){return x.item==="001.003.002";});
-  if(itemAlimSync)itemAlimSync.real=calcTotalAlimentacaoObra()+calcTotalServMatIndPorItemEAP("001.003.002");
-  var itemAlojSync=S.coletorEAP.find(function(x){return x.item==="001.003.006";});
-  if(itemAlojSync)itemAlojSync.real=calcTotalMoradiaObra()+calcTotalServMatIndPorItemEAP("001.003.006");
+  S.coletorSyncedCodes=Object.keys(codigos);
 }
 // Retorna o proprio codigo + todos os codigos filhos (subarvore) de um item do Coletor Total
 function coletorSubtreeCodes(itemCode){
@@ -4736,9 +4766,9 @@ function calcComposicaoReal(itemCode){
   var codes=coletorSubtreeCodes(itemCode);
   var setCodes={};codes.forEach(function(c){setCodes[c]=true;});
   var linhas=[],total=0;
-  if(setCodes["001.003.001"]){var v=calcTotalGeralMO();if(v>0){linhas.push({cat:"Mao de Obra",nome:"Custo Total M.O.D + Custo Total M.O.I",desc:"Custo Total M.O.D + Custo Total M.O.I (aba RESUMO M.O.)",valor:v});total+=v;}}
-  if(setCodes["001.003.002"]){var v=calcTotalAlimentacaoObra();if(v>0){linhas.push({cat:"Alimentacao",nome:"Alim.Alojado + VA/VR",desc:"Alim.Alojado + VA/VR (MOD+MOI)",valor:v});total+=v;}}
-  if(setCodes["001.003.006"]){var v=calcTotalMoradiaObra();if(v>0){linhas.push({cat:"Alojamento",nome:"Moradia",desc:"Moradia (MOD+MOI)",valor:v});total+=v;}}
+  // Rev53: abas M.O.D / M.O.I inteiras, conforme a Classificacao EAP de cada aba
+  if(S.eapMOD&&setCodes[S.eapMOD]){var v=moTotalTipo("mod",false);if(v>0){linhas.push({cat:"Mao de Obra",nome:"Custo M.O.D (aba inteira)",desc:"Custo M.O.D - total da aba (EAP "+S.eapMOD+")",valor:v});total+=v;}}
+  if(S.eapMOI&&setCodes[S.eapMOI]){var v=moTotalTipo("moi",false);if(v>0){linhas.push({cat:"Mao de Obra",nome:"Custo M.O.I (aba inteira)",desc:"Custo M.O.I - total da aba (EAP "+S.eapMOI+")",valor:v});total+=v;}}
   for(var i=0;i<S.indiretoData.length;i++){
     var it=S.indiretoData[i];normIndireto(it);
     if(!it.itemEAP||!setCodes[it.itemEAP])continue;
@@ -4751,7 +4781,7 @@ function calcComposicaoReal(itemCode){
   // Lancamentos manuais: valor digitado direto no campo Real de algum item da subarvore que NAO veio
   // de nenhuma das fontes acima (nem MOD/MOI, nem vinculo de Custo Indireto/Servico/Material/Equipamento)
   codes.forEach(function(c){
-    if(c==="001.003.001"||c==="001.003.002"||c==="001.003.006")return;
+    if(moTiposDoCodigo(c).length)return; // Rev53
     if(indiretoQtdVinculos(c)>0)return;
     var itC=S.coletorEAP.find(function(x){return x.item===c;});
     if(itC&&itC.real>0){
@@ -6435,6 +6465,7 @@ function dropEquip(ev,idxAlvo){
   renderIndiretoMatrix(itOrig.categoria);
 }
 function renderCustoMOMatrix(){
+  atualizarBotoesEapMo(); // Rev53
   var thead=document.getElementById("moimat-thead"),tbody=document.getElementById("moimat-tbody"),tfoot=document.getElementById("moimat-tfoot");
   if(!thead||!tbody||!tfoot)return;
   var meses=mesesObra();
@@ -6723,14 +6754,16 @@ function garantirItensEAPReceita(){
     {codigo:"001.001.002.003.002.004",inserirDepois:true,novo:{nivel:6,item:"001.001.002.003.002.005",descricao:"Espalhamento de Material em Bota-Fora",orcado:0,rao:0,real:0}}
   ];
   itens.forEach(function(cfg){
-    var jaExiste=S.coletorEAP.some(function(it){return it.item===cfg.novo.item;});
+    var jaExiste=receitaEAPBase().some(function(it){return it.item===cfg.novo.item;});
     if(jaExiste)return;
-    var idx=S.coletorEAP.findIndex(function(it){return it.item===cfg.codigo;});
+    var idx=receitaEAPBase().findIndex(function(it){return it.item===cfg.codigo;});
     if(idx<0)return;
-    S.coletorEAP.splice(idx+1,0,cfg.novo);
+    receitaEAPBase().splice(idx+1,0,cfg.novo);
   });
 }
-function receitaFullEAP(){return S.coletorEAP.filter(function(it){return !/^001\.00[345](\.|$)/.test(it.item);});}
+// Rev53: a Receita tem EAP propria (S.receitaEAP); o Coletor Total / Prev x Real usam S.coletorEAP
+function receitaEAPBase(){return (Array.isArray(S.receitaEAP)&&S.receitaEAP.length)?S.receitaEAP:S.coletorEAP;}
+function receitaFullEAP(){return receitaEAPBase().filter(function(it){return !/^001\.00[345](\.|$)/.test(it.item);});}
 // Total contratado da Receita (valor total de venda, raiz da EAP) - usado no card do Dashboard
 function receitaTotalContratado(){return(receitaComputeAgregado(function(it){return S.receitaVenda[it.item]?receitaValorVendaItem(it.item):0;})[0])||0;}
 // Dados reais extraidos do orcamento do cliente (Pasta2.xlsx) - preenche qtd/unidade/preco de venda na primeira vez
@@ -6798,7 +6831,7 @@ function receitaBuildNivelBtns(containerId){
   el.innerHTML=h;
 }
 function receitaAbrirDescModal(item){
-  var it=S.coletorEAP.find(function(x){return x.item===item;});if(!it)return;
+  var it=receitaEAPBase().find(function(x){return x.item===item;});if(!it)return;
   document.getElementById("rc-desc-item").textContent=it.item;
   document.getElementById("rc-desc-texto").textContent=it.descricao;
   document.getElementById("modal-rc-desc").classList.add("on");
@@ -6926,7 +6959,7 @@ function receitaImportarMedicaoArquivo(inputEl){
       var branchCD=dadosBMM.filter(function(r){return r.codigo.indexOf("001.002")===0;});
       var bmmOrdenado=branchCD.concat(branchCI);
 
-      var nossoEAP=S.coletorEAP.filter(function(it){return !/^001\.00[345](\.|$)/.test(it.item)&&it.item!=="001";});
+      var nossoEAP=receitaEAPBase().filter(function(it){return !/^001\.00[345](\.|$)/.test(it.item)&&it.item!=="001";});
       function norm(s){return String(s||"").trim().toLowerCase();}
 
       var i2=0,j2=0,mapeados=[],divergencias=0;
@@ -7193,11 +7226,9 @@ function calcTotalPrevistoPorItemEAP(itemEAP){
 // Alimentacao (001.003.002) e Alojamento (001.003.006) nao tem Previsto proprio: no M.O.D/M.O.I o Previsto e um valor unico por
 // pessoa/funcao (nao quebrado em base/alimentacao/moradia como o Real), entao nao da para separar so essa parcela.
 function calcPrevistoItemProprio(itemCode){
-  if(itemCode==="001.003.001")return calcTotalGeralMOPrevisto();
-  if(itemCode==="001.003.002")return calcTotalAlimentacaoPrevisto()+calcTotalPrevistoPorItemEAP("001.003.002");
-  if(itemCode==="001.003.006")return calcTotalMoradiaPrevisto()+calcTotalPrevistoPorItemEAP("001.003.006");
-  if(indiretoQtdVinculos(itemCode)>0)return calcTotalPrevistoPorItemEAP(itemCode);
-  return null;
+  var mo=moProprioTotal(itemCode,true),ind=indiretoQtdVinculos(itemCode)>0?calcTotalPrevistoPorItemEAP(itemCode):null; // Rev53
+  if(mo===null&&ind===null)return null;
+  return (mo||0)+(ind||0);
 }
 function calcTotalPrevistoGeral(){
   var meses=mesesObra(),total=0;
@@ -8058,8 +8089,8 @@ function coletorRowHtml(it,nv,mostrarToggle,temFilhos,colapsado,realAgregado,rao
   }
   if(subtotalOnly){
     h+="<td style='padding:3px 4px'><input type='text' class='inp-sm' style='width:130px;background:#f8fafc;border-color:#cbd5e1;color:#475569;font-weight:700;cursor:not-allowed' value='"+coletorFmtMoeda(realExibir)+"' disabled title='Subtotal automatico (soma dos itens abaixo)'></td>";
-  }else if(it.item==="001.003.001"||it.item==="001.003.002"||it.item==="001.003.006"){
-    var tituloVinculo=it.item==="001.003.001"?"Custo Total M.O.D + Custo Total M.O.I":it.item==="001.003.002"?"Alimentacao (Alim.Alojado+VA/VR)":"Alojamento - Moradia (MOD+MOI + linhas vinculadas do Custo Indireto)";
+  }else if(moTiposDoCodigo(it.item).length){
+    var tituloVinculo=moRotuloCodigo(it.item)+(indiretoQtdVinculos(it.item)>0?" + "+indiretoQtdVinculos(it.item)+" linha(s) vinculada(s)":""); // Rev53
     h+="<td style='padding:3px 4px'><input type='text' class='inp-sm' style='width:130px;background:#f0fdf4;border-color:#86efac;color:#15803d;font-weight:700;cursor:not-allowed' value='"+coletorFmtMoeda(it.real)+"' disabled title='Vinculado automaticamente ao card "+tituloVinculo+" (aba RESUMO M.O.)'>"+(nv===4&&temFilhos?"<span onclick=\"abrirComposicaoReal('"+it.item.replace(/'/g,"&#39;")+"')\" title='Ver composicao do Real' style='cursor:pointer;margin-left:4px;font-size:13px'>&#128202;</span>":"")+"</td>";
   }else if(indiretoQtdVinculos(it.item)>0){
     var qtdVinc=indiretoQtdVinculos(it.item);
@@ -8113,16 +8144,7 @@ function renderColetorTotal(){
   var meses=mesesObra();
   renderColetorThead(meses);
   // Vincula automaticamente o REAL das linhas de Custo Indireto que tenham um codigo EAP preenchido
-  syncIndiretoNoColetor();
-  // Vincula automaticamente o REAL do item 001.003.001 (Mao de Obra) ao Total Geral M.O. calculado na aba RESUMO M.O.
-  var itemMO=S.coletorEAP.find(function(x){return x.item==="001.003.001";});
-  if(itemMO)itemMO.real=calcTotalGeralMO();
-  // Vincula automaticamente o REAL do item 001.003.002 (Alimentacao): MOD+MOI + Servico/Material/Indireto vinculados a este codigo EAP
-  var itemAlim=S.coletorEAP.find(function(x){return x.item==="001.003.002";});
-  if(itemAlim)itemAlim.real=calcTotalAlimentacaoObra()+calcTotalServMatIndPorItemEAP("001.003.002");
-  // Vincula automaticamente o REAL do item 001.003.006 (Alojamento) ao card Alojamento - Moradia (MOD+MOI) da aba RESUMO M.O.
-  var itemAloj=S.coletorEAP.find(function(x){return x.item==="001.003.006";});
-  if(itemAloj)itemAloj.real=calcTotalMoradiaObra()+calcTotalServMatIndPorItemEAP("001.003.006");
+  syncIndiretoNoColetor(); // Rev53: inclui as abas M.O.D / M.O.I conforme a Classificacao EAP de cada aba
   var busca=(S.coletorBusca||"").toLowerCase().trim();
   var h="",totOrc=0,totRao=0,totReal=0;
   var agreg=computeColetorAgregados();
@@ -8327,10 +8349,7 @@ function renderPrevReal(){
   var tb=document.getElementById("tb-prevreal");if(!tb)return;
   var meses=mesesObra();
   // Mantem o Real dos itens auto-vinculados (001.003.001/002/006 e itens com codigo EAP) atualizado, igual ao Coletor Total
-  syncIndiretoNoColetor();
-  var itemMO=S.coletorEAP.find(function(x){return x.item==="001.003.001";});if(itemMO)itemMO.real=calcTotalGeralMO();
-  var itemAlim=S.coletorEAP.find(function(x){return x.item==="001.003.002";});if(itemAlim)itemAlim.real=calcTotalAlimentacaoObra()+calcTotalServMatIndPorItemEAP("001.003.002");
-  var itemAloj=S.coletorEAP.find(function(x){return x.item==="001.003.006";});if(itemAloj)itemAloj.real=calcTotalMoradiaObra()+calcTotalServMatIndPorItemEAP("001.003.006");
+  syncIndiretoNoColetor(); // Rev53
 
   // Escolher um periodo so filtra QUAIS MESES aparecem como coluna - nao muda nenhum valor calculado (Total continua sendo sempre o total do projeto inteiro)
   var temPeriodo=!!(S.prevRealFiltroMesIni||S.prevRealFiltroMesFim);
@@ -8644,7 +8663,7 @@ document.getElementById("inp-razao").onchange=function(e){
 };
 document.getElementById("inp-crono").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array",cellDates:false}),sn=wb.SheetNames[0];for(var i=0;i<wb.SheetNames.length;i++){var n=wb.SheetNames[i].toLowerCase();if(n.indexOf("task")>=0||n.indexOf("tarefa")>=0){sn=wb.SheetNames[i];break;}}var rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:""}),hi=0;for(var i=0;i<Math.min(8,rows.length);i++){if(rows[i].filter(function(c){return String(c).trim().length>1;}).length>=2){hi=i;break;}}var FMP={nome:["nome","name","task name"],inicio:["inicio","start"],fim:["termino","fim","finish"],pct:["concluido","complete"],nivel:["nivel","level","outline"],duracao:["duracao","duration","dias"],custo:["custo","cost","baseline"],pedido:["pedido","pc","ordem"]},hdrs=rows[hi].map(function(h){return String(h).trim();}),hmap={};for(var h2=0;h2<hdrs.length;h2++){var h=hdrs[h2].toLowerCase(),fks=Object.keys(FMP);for(var fi=0;fi<fks.length;fi++){if(hmap[fks[fi]]===undefined){var ks=FMP[fks[fi]];for(var ki=0;ki<ks.length;ki++){if(h.indexOf(ks[ki])>=0){hmap[fks[fi]]=h2;break;}}}}}var pDate=function(v){if(!v)return null;if(typeof v==="number"){var d=XLSX.SSF.parse_date_code(v);if(d)return new Date(d.y,d.m-1,d.d);}var s=String(v).trim(),m1=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m1)return new Date(+m1[3],+m1[2]-1,+m1[1]);var m2=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m2)return new Date(+m2[1],+m2[2]-1,+m2[3]);return null;},ts=[];for(var ri=hi+1;ri<rows.length;ri++){var row=rows[ri],nm=hmap.nome!==undefined?String(row[hmap.nome]||"").trim():"";if(!nm)continue;var ini=hmap.inicio!==undefined?pDate(row[hmap.inicio]):null,fim=hmap.fim!==undefined?pDate(row[hmap.fim]):null,pct=parseFloat(String(hmap.pct!==undefined?row[hmap.pct]:0).replace("%","").replace(",","."))||0;if(pct>1)pct=pct/100;var nv=hmap.nivel!==undefined?parseInt(row[hmap.nivel])||1:1,dur=parseFloat(String(hmap.duracao!==undefined?row[hmap.duracao]:"").replace(/[^0-9.]/g,""))||0;if(!dur&&ini&&fim)dur=Math.round((fim-ini)/86400000);var custo=hmap.custo!==undefined?parseFloat(row[hmap.custo])||0:0,pedido=hmap.pedido!==undefined?String(row[hmap.pedido]||"").trim():"",mesIni=ini?mkM(ini.getFullYear(),ini.getMonth()+1):null,mesFim=fim?mkM(fim.getFullYear(),fim.getMonth()+1):null,st="Nao Iniciado";if(pct>=1)st="Concluido";else if(pct>0)st="Em Andamento";else if(ini&&ini<=TODAY)st="Atrasado";ts.push({nome:nm,inicio:ini?ini.toLocaleDateString("pt-BR"):"-",fim:fim?fim.toLocaleDateString("pt-BR"):"-",mesIni:mesIni,mesFim:mesFim,duracao:dur,pct:pct,nivel:nv,status:st,custo:custo,pedido:pedido});}S.cronograma=ts;renderCrono();renderDRE();renderDash();renderImportStatus();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
 document.getElementById("inp-pedidos").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array"}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:""}),norm=function(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,"");},get=function(r){var terms=[].slice.call(arguments,1);var k=Object.keys(r).find(function(k){return terms.some(function(t){return norm(k).indexOf(t)>=0;});});return k?r[k]:"";},pd=[];for(var i=0;i<rows.length;i++){var r=rows[i];pd.push({id:i,pedido:String(get(r,"pedido","pc","numero","order")||"").trim(),descricao:String(get(r,"descricao","desc","item","material")||"").trim(),fornecedor:String(get(r,"fornecedor","supplier")||"").trim(),etapa:String(get(r,"etapa","fase","atividade","tarefa","task")||"").trim(),valor:parseFloat(String(get(r,"valor","value","custo","cost","total")||"0").replace(/[^\d.,]/g,"").replace(",","."))||0,status:String(get(r,"status","situacao")||"").trim(),data:String(get(r,"data","date","emissao")||"").trim()});}S.pedidos=pd.filter(function(p){return p.pedido||p.descricao;});renderCrono();renderDRE();renderDash();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
-function montarDadosCompletos(){sincronizarAlojamentoIndireto();return {version:52,exportadoEm:new Date().toISOString(),projetoId:S.projetoId||"legado",projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[],mesCustoVigente:S.mesCustoVigente||null,classificacaoColunas:S.classificacaoColunas||[],classificacaoLinhas:S.classificacaoLinhas||[],receitaVenda:S.receitaVenda||{},receitaMedicoes:S.receitaMedicoes||[],receitaValoresMedicao:S.receitaValoresMedicao||{},receitaFaturamentoDireto:S.receitaFaturamentoDireto||{},receitaProxId:S.receitaProxId||1,avancoFisicoPct:(S.avancoFisicoPct===undefined?null:S.avancoFisicoPct),fdPrevisto:(S.fdPrevisto===undefined?null:S.fdPrevisto),fdConsumido:(S.fdConsumido===undefined?null:S.fdConsumido),adtValor:(S.adtValor===undefined?null:S.adtValor),adtDescontado:(S.adtDescontado===undefined?null:S.adtDescontado),obraDataInicio:S.obraDataInicio||"",obraPrazoDias:(S.obraPrazoDias===undefined?null:S.obraPrazoDias),dreGer:S.dreGer||null,classificacoes:S.classificacoes||{},unidadesMedida:S.unidadesMedida||[],abcCfg:S.abcCfg||null,abcModCfg:S.abcModCfg||null,takeInOut:S.takeInOut||[],receitaImportadoDeArquivo:!!S.receitaImportadoDeArquivo,contingenciaData:S.contingenciaData||[]};}
+function montarDadosCompletos(){sincronizarAlojamentoIndireto();return {version:52,exportadoEm:new Date().toISOString(),projetoId:S.projetoId||"legado",projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,receitaEAP:S.receitaEAP||[],eapMOD:S.eapMOD||"",eapMOI:S.eapMOI||"",coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[],mesCustoVigente:S.mesCustoVigente||null,classificacaoColunas:S.classificacaoColunas||[],classificacaoLinhas:S.classificacaoLinhas||[],receitaVenda:S.receitaVenda||{},receitaMedicoes:S.receitaMedicoes||[],receitaValoresMedicao:S.receitaValoresMedicao||{},receitaFaturamentoDireto:S.receitaFaturamentoDireto||{},receitaProxId:S.receitaProxId||1,avancoFisicoPct:(S.avancoFisicoPct===undefined?null:S.avancoFisicoPct),fdPrevisto:(S.fdPrevisto===undefined?null:S.fdPrevisto),fdConsumido:(S.fdConsumido===undefined?null:S.fdConsumido),adtValor:(S.adtValor===undefined?null:S.adtValor),adtDescontado:(S.adtDescontado===undefined?null:S.adtDescontado),obraDataInicio:S.obraDataInicio||"",obraPrazoDias:(S.obraPrazoDias===undefined?null:S.obraPrazoDias),dreGer:S.dreGer||null,classificacoes:S.classificacoes||{},unidadesMedida:S.unidadesMedida||[],abcCfg:S.abcCfg||null,abcModCfg:S.abcModCfg||null,takeInOut:S.takeInOut||[],receitaImportadoDeArquivo:!!S.receitaImportadoDeArquivo,contingenciaData:S.contingenciaData||[]};}
 function salvarJSON(){var data=montarDadosCompletos();var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="custos_"+S.projNome.replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);registrarHistoricoEngCustos("Baixou o arquivo JSON de dados");}
 // Firestore tem um limite rigido de 1 MB por documento. Anexos de contrato (PDF/imagem em base64) podem
 // facilmente estourar isso sozinhos, entao para a NUVEM eles sao removidos (fica so o nome do arquivo, como aviso).
@@ -8875,7 +8894,7 @@ function migrarHEParaFimSemana(he){
   });
   return he;
 }
-function aplicarDadosImportados(d){S.projetoId=d.projetoId||"legado";S.avancoFisicoPct=(d.avancoFisicoPct===undefined||d.avancoFisicoPct===null||d.avancoFisicoPct==="")?null:Number(d.avancoFisicoPct);S.fdPrevisto=(d.fdPrevisto===undefined||d.fdPrevisto===null||d.fdPrevisto==="")?null:Number(d.fdPrevisto);S.fdConsumido=(d.fdConsumido===undefined||d.fdConsumido===null||d.fdConsumido==="")?null:Number(d.fdConsumido);S.adtValor=(d.adtValor===undefined||d.adtValor===null||d.adtValor==="")?null:Number(d.adtValor);S.adtDescontado=(d.adtDescontado===undefined||d.adtDescontado===null||d.adtDescontado==="")?null:Number(d.adtDescontado);S.obraDataInicio=d.obraDataInicio||"";S.dreGer=(d.dreGer&&Array.isArray(d.dreGer.linhas))?d.dreGer:null;S.classificacoes=(d.classificacoes&&typeof d.classificacoes==="object")?d.classificacoes:{};S.unidadesMedida=Array.isArray(d.unidadesMedida)?d.unidadesMedida:[];S.abcCfg=(d.abcCfg&&typeof d.abcCfg==="object")?d.abcCfg:null;S.abcModCfg=(d.abcModCfg&&typeof d.abcModCfg==="object")?d.abcModCfg:null;S.takeInOut=Array.isArray(d.takeInOut)?d.takeInOut:[];S.obraPrazoDias=(d.obraPrazoDias===undefined||d.obraPrazoDias===null||d.obraPrazoDias==="")?null:parseInt(d.obraPrazoDias,10);if(d.projNome)S.projNome=d.projNome;if(d.projSub!==undefined)S.projSub=d.projSub;if(d.projLocal!==undefined)S.projLocal=d.projLocal;if(d.logoB64)S.logoB64=d.logoB64;if(d.obraIni)S.obraIni=d.obraIni;if(d.obraFim)S.obraFim=d.obraFim;if(d.mult)S.mult=d.mult;if(d.he)S.he=migrarHEParaFimSemana(d.he);if(d.aloj)S.aloj=d.aloj;if(d.salMOD)S.salMOD=d.salMOD;if(d.modData)S.modData=d.modData;if(d.moiData)S.moiData=d.moiData;if(d.indiretoData)S.indiretoData=d.indiretoData;if(d.cronograma)S.cronograma=d.cronograma;if(d.pedidos)S.pedidos=d.pedidos;if(d.pedidosCompra){S.pedidosCompra=d.pedidosCompra;var ccoSet={};S.pedidosCompra.forEach(function(p){ccoSet[p.ccoInfo.full]=p.ccoInfo;});S.ccosPed=Object.values(ccoSet);buildFiltroCCOPed();if(S.pedidosCompra.length){document.getElementById("ped-compra-empty").style.display="none";document.getElementById("ped-compra-content").style.display="block";}}if(d.distPedidos)S.distPedidos=d.distPedidos;if(d.distMensal)S.distMensal=d.distMensal;if(d.medicoes)S.medicoes=d.medicoes;if(d.escopos)S.escopos=d.escopos;if(d.razaoMO)S.razaoMO=d.razaoMO;if(d.coletorEAP)S.coletorEAP=d.coletorEAP;garantirItensEAPReceita();if(d.coletorColapso)S.coletorColapso=d.coletorColapso;if(d.coletorNivelAtivo!==undefined)S.coletorNivelAtivo=d.coletorNivelAtivo;if(d.coletorSyncedCodes)S.coletorSyncedCodes=d.coletorSyncedCodes;if(d.encargos)S.encargos=d.encargos;if(d.equipeEng)S.equipeEng=d.equipeEng;if(d.coletorSubtotais)S.coletorSubtotais=d.coletorSubtotais;if(d.dreReceitaData)S.dreReceitaData=d.dreReceitaData;if(d.dreImpostoPct)S.dreImpostoPct=d.dreImpostoPct;if(d.previstosSalvos)S.previstosSalvos=d.previstosSalvos;if(d.previstoVisualizandoId!==undefined)S.previstoVisualizandoId=d.previstoVisualizandoId;if(d.historicoEngCustos)S.historicoEngCustos=d.historicoEngCustos;if(d.mesCustoVigente!==undefined)S.mesCustoVigente=d.mesCustoVigente;if(d.classificacaoColunas)S.classificacaoColunas=d.classificacaoColunas;if(d.classificacaoLinhas)S.classificacaoLinhas=d.classificacaoLinhas;
+function aplicarDadosImportados(d){S.projetoId=d.projetoId||"legado";S.avancoFisicoPct=(d.avancoFisicoPct===undefined||d.avancoFisicoPct===null||d.avancoFisicoPct==="")?null:Number(d.avancoFisicoPct);S.fdPrevisto=(d.fdPrevisto===undefined||d.fdPrevisto===null||d.fdPrevisto==="")?null:Number(d.fdPrevisto);S.fdConsumido=(d.fdConsumido===undefined||d.fdConsumido===null||d.fdConsumido==="")?null:Number(d.fdConsumido);S.adtValor=(d.adtValor===undefined||d.adtValor===null||d.adtValor==="")?null:Number(d.adtValor);S.adtDescontado=(d.adtDescontado===undefined||d.adtDescontado===null||d.adtDescontado==="")?null:Number(d.adtDescontado);S.obraDataInicio=d.obraDataInicio||"";S.dreGer=(d.dreGer&&Array.isArray(d.dreGer.linhas))?d.dreGer:null;S.classificacoes=(d.classificacoes&&typeof d.classificacoes==="object")?d.classificacoes:{};S.unidadesMedida=Array.isArray(d.unidadesMedida)?d.unidadesMedida:[];S.abcCfg=(d.abcCfg&&typeof d.abcCfg==="object")?d.abcCfg:null;S.abcModCfg=(d.abcModCfg&&typeof d.abcModCfg==="object")?d.abcModCfg:null;S.takeInOut=Array.isArray(d.takeInOut)?d.takeInOut:[];S.obraPrazoDias=(d.obraPrazoDias===undefined||d.obraPrazoDias===null||d.obraPrazoDias==="")?null:parseInt(d.obraPrazoDias,10);if(d.projNome)S.projNome=d.projNome;if(d.projSub!==undefined)S.projSub=d.projSub;if(d.projLocal!==undefined)S.projLocal=d.projLocal;if(d.logoB64)S.logoB64=d.logoB64;if(d.obraIni)S.obraIni=d.obraIni;if(d.obraFim)S.obraFim=d.obraFim;if(d.mult)S.mult=d.mult;if(d.he)S.he=migrarHEParaFimSemana(d.he);if(d.aloj)S.aloj=d.aloj;if(d.salMOD)S.salMOD=d.salMOD;if(d.modData)S.modData=d.modData;if(d.moiData)S.moiData=d.moiData;if(d.indiretoData)S.indiretoData=d.indiretoData;if(d.cronograma)S.cronograma=d.cronograma;if(d.pedidos)S.pedidos=d.pedidos;if(d.pedidosCompra){S.pedidosCompra=d.pedidosCompra;var ccoSet={};S.pedidosCompra.forEach(function(p){ccoSet[p.ccoInfo.full]=p.ccoInfo;});S.ccosPed=Object.values(ccoSet);buildFiltroCCOPed();if(S.pedidosCompra.length){document.getElementById("ped-compra-empty").style.display="none";document.getElementById("ped-compra-content").style.display="block";}}if(d.distPedidos)S.distPedidos=d.distPedidos;if(d.distMensal)S.distMensal=d.distMensal;if(d.medicoes)S.medicoes=d.medicoes;if(d.escopos)S.escopos=d.escopos;if(d.razaoMO)S.razaoMO=d.razaoMO;if(d.coletorEAP)S.coletorEAP=d.coletorEAP;S.receitaEAP=(Array.isArray(d.receitaEAP)&&d.receitaEAP.length)?d.receitaEAP:JSON.parse(JSON.stringify(S.coletorEAP||[]));S.eapMOD=d.eapMOD||"";S.eapMOI=d.eapMOI||"";garantirItensEAPReceita();if(d.coletorColapso)S.coletorColapso=d.coletorColapso;if(d.coletorNivelAtivo!==undefined)S.coletorNivelAtivo=d.coletorNivelAtivo;if(d.coletorSyncedCodes)S.coletorSyncedCodes=d.coletorSyncedCodes;if(d.encargos)S.encargos=d.encargos;if(d.equipeEng)S.equipeEng=d.equipeEng;if(d.coletorSubtotais)S.coletorSubtotais=d.coletorSubtotais;if(d.dreReceitaData)S.dreReceitaData=d.dreReceitaData;if(d.dreImpostoPct)S.dreImpostoPct=d.dreImpostoPct;if(d.previstosSalvos)S.previstosSalvos=d.previstosSalvos;if(d.previstoVisualizandoId!==undefined)S.previstoVisualizandoId=d.previstoVisualizandoId;if(d.historicoEngCustos)S.historicoEngCustos=d.historicoEngCustos;if(d.mesCustoVigente!==undefined)S.mesCustoVigente=d.mesCustoVigente;if(d.classificacaoColunas)S.classificacaoColunas=d.classificacaoColunas;if(d.classificacaoLinhas)S.classificacaoLinhas=d.classificacaoLinhas;
 // So aplica os dados de Receita da base carregada se ela ja tiver sido salva DEPOIS da correcao dos valores reais
 // da BMM (marcada por receitaImportadoDeArquivo=true). Uma base salva ANTES dessa correcao ainda tem os valores
 // antigos (do seed desatualizado) - nesse caso mantem os dados corretos que ja vem de fabrica no arquivo, em vez
