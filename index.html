@@ -283,6 +283,7 @@ select.ms{border:2px solid #93c5fd;border-radius:8px;padding:5px 10px;font-weigh
 .ped-matrix-tbl{border-collapse:separate;border-spacing:0;font-size:12px}
 .ped-matrix-tbl th,.ped-matrix-tbl td{padding:6px 8px;border-bottom:1px solid #e2e8f0;white-space:nowrap;border-right:1px solid #f1f5f9}
 .ped-matrix-tbl thead{position:sticky;top:0;z-index:10}
+.grp-oculto{display:none}
 .mat-inp{width:76px;border:1.5px solid #e2e8f0;border-radius:5px;padding:3px 4px;font-size:11px;font-family:monospace;text-align:right;background:#fff;outline:none}
 .cco-chk-row{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;font-size:12px}
 .cco-chk-row:hover{background:#f8fafc}
@@ -481,7 +482,6 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
         <div class="ctl-sub">
           <div class="ctl-item" data-idx="8" onclick="setTabAndClose(8)">Coletor Total</div>
           <div class="ctl-item" data-idx="16" onclick="setTabAndClose(16)">Prev x Real</div>
-          <div class="ctl-item" data-idx="17" onclick="setTabAndClose(17)">Classificacao</div>
           <div class="ctl-item" data-idx="7" onclick="setTabAndClose(7)">Importar</div>
           <div class="ctl-item" data-idx="4" onclick="setTabAndClose(4)">Dashboard</div>
           <div class="ctl-item" data-idx="20" onclick="setTabAndClose(20)">DRE</div>
@@ -497,17 +497,32 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       <div class="ctl-item has-sub">
         <span>Custos</span><span>&#9656;</span>
         <div class="ctl-sub">
-          <div class="ctl-item" data-idx="0" onclick="setTabAndClose(0)">Resumo M.O.</div>
-          <div class="ctl-item" data-idx="1" onclick="setTabAndClose(1)">Custo M.O.I</div>
-          <div class="ctl-item" data-idx="10" onclick="setTabAndClose(10)">Custo M.O.D</div>
+          <div class="ctl-item has-sub">
+            <span>M&atilde;o de Obra</span><span>&#9656;</span>
+            <div class="ctl-sub">
+              <div class="ctl-item" data-idx="0" onclick="setTabAndClose(0)">Resumo M.O.</div>
+              <div class="ctl-item" data-idx="1" onclick="setTabAndClose(1)">Custo M.O.I</div>
+              <div class="ctl-item" data-idx="10" onclick="setTabAndClose(10)">Custo M.O.D</div>
+            </div>
+          </div>
           <div class="ctl-item" data-idx="11" onclick="setTabAndClose(11)">Custo Indireto</div>
           <div class="ctl-item" data-idx="12" onclick="setTabAndClose(12)">Servico</div>
           <div class="ctl-item" data-idx="13" onclick="setTabAndClose(13)">Material</div>
           <div class="ctl-item" data-idx="14" onclick="setTabAndClose(14)">Equipamento</div>
-          <div class="ctl-item" data-idx="19" onclick="setTabAndClose(19)">Seguros</div>
           <div class="ctl-item" data-idx="18" onclick="setTabAndClose(18)">Contingencia</div>
-          <div class="ctl-item" data-idx="22" onclick="setTabAndClose(22)">Curva ABC</div>
-          <div class="ctl-item" data-idx="23" onclick="setTabAndClose(23)">Curva ABC de MOD</div>
+          <div class="ctl-item" data-idx="17" onclick="setTabAndClose(17)">Classificacao</div>
+          <div class="ctl-item has-sub">
+            <span>Curvas ABC</span><span>&#9656;</span>
+            <div class="ctl-sub">
+              <div class="ctl-item" onclick="abrirCurvaAbc('total')">Curva ABC Total</div>
+              <div class="ctl-item" onclick="abrirCurvaAbc('mod')">Curva ABC MOD</div>
+              <div class="ctl-item" onclick="abrirCurvaAbc('moi')">Curva ABC MOI</div>
+              <div class="ctl-item" onclick="abrirCurvaAbc('Indireto')">Curva ABC Custo Indireto</div>
+              <div class="ctl-item" onclick="abrirCurvaAbc('Equipamento')">Curva ABC Equipamento</div>
+              <div class="ctl-item" onclick="abrirCurvaAbc('Material')">Curva ABC Material</div>
+              <div class="ctl-item" onclick="abrirCurvaAbc('Servico')">Curva ABC Servi&ccedil;o</div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="ctl-item" data-idx="2" onclick="setTabAndClose(2)">Planejamento</div>
@@ -590,10 +605,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
 </div>
 <!-- ===== SEC 10: CUSTO M.O.D ===== -->
 <div class="sec wrap" id="sec10">
-  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px">
-    <div class="tgl">
-      <button class="tgl-btn on" style="cursor:default">Projecao Total</button>
-    </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-bottom:14px"><!-- Rev53: botao "Projecao Total" retirado -->
     <select class="ms" id="mes-mod" onchange="syncMes(this.value)" style="display:none"></select><!-- Rev53: seletor de mes oculto (mantido so para o codigo que o preenche) -->
     <span id="eap-btn-mod"></span>
   </div>
@@ -629,6 +641,9 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Indireto')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Indireto')">&#128065; Reexibir Previsto</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Indireto')">&#128190; Exportar Excel</button>
+        <span style="display:inline-flex;gap:6px;align-items:center;margin-left:4px">
+          <button class="btn b-sm" id="filt-limpar-Indireto" title="Limpar filtro" onclick="filtroIndiretoLimpar('Indireto')" style="display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">&#10005; Limpar</button>
+        </span>
         <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Indireto')" data-categoria="Indireto">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
       </div>
@@ -652,6 +667,9 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Servico')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Servico')">&#128065; Reexibir Previsto</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Servico')">&#128190; Exportar Excel</button>
+        <span style="display:inline-flex;gap:6px;align-items:center;margin-left:4px">
+          <button class="btn b-sm" id="filt-limpar-Servico" title="Limpar filtro" onclick="filtroIndiretoLimpar('Servico')" style="display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">&#10005; Limpar</button>
+        </span>
         <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Servico')" data-categoria="Servico">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
       </div>
@@ -675,6 +693,9 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Material')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Material')">&#128065; Reexibir Previsto</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Material')">&#128190; Exportar Excel</button>
+        <span style="display:inline-flex;gap:6px;align-items:center;margin-left:4px">
+          <button class="btn b-sm" id="filt-limpar-Material" title="Limpar filtro" onclick="filtroIndiretoLimpar('Material')" style="display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">&#10005; Limpar</button>
+        </span>
         <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Material')" data-categoria="Material">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
       </div>
@@ -698,6 +719,9 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Equipamento')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Equipamento')">&#128065; Reexibir Previsto</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Equipamento')">&#128190; Exportar Excel</button>
+        <span style="display:inline-flex;gap:6px;align-items:center;margin-left:4px">
+          <button class="btn b-sm" id="filt-limpar-Equipamento" title="Limpar filtro" onclick="filtroIndiretoLimpar('Equipamento')" style="display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">&#10005; Limpar</button>
+        </span>
         <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Equipamento')" data-categoria="Equipamento">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
       </div>
@@ -713,6 +737,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
 </div>
 <!-- Rev39: aba Seguros (mesma estrutura da aba Servico, categoria 'Seguro' em S.indiretoData) -->
 <div class="sec wrap" id="sec19">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><span id="eap-btn-seg"></span></div>
   <div class="cards c4" id="seguro-cards"></div>
   <div class="box">
     <div class="bh">
@@ -1004,8 +1029,26 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
 </div>
 <!-- ===== SEC 17: CLASSIFICACAO ===== -->
 <div class="sec wrap" id="sec17">
-  <div class="ibox">Classificacao — importe um relatorio (ex: Notas Fiscais/Razao Contabil) e vincule cada linha a um item existente de Custo Indireto, Servico, Material ou Equipamento. O "Mes do Custo Vigente" abaixo define ate qual mes esse custo classificado ja deve estar apropriado.</div>
+  <div class="ibox">Classifica&ccedil;&atilde;o &mdash; todas as linhas das abas Custo Indireto, Servi&ccedil;o, Material e Equipamento (sem os itens de dentro de composi&ccedil;&atilde;o), com o Item EAP de cada uma. A lista &eacute; atualizada sozinha ao abrir a aba.</div>
+  <!-- Rev53: todas as linhas das abas de custo (montadas na hora, sempre atualizadas) -->
   <div class="box">
+    <div class="bh" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h3>Linhas das Abas de Custo <span id="clsl-cnt" style="font-size:12px;font-weight:400;color:#64748b"></span></h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px">
+        <select id="clsl-aba" onchange="renderClassifLinhasCusto()" style="border:1px solid #cbd5e1;border-radius:6px;padding:4px 8px;font-size:12px">
+          <option value="">Todas as abas</option><option value="Indireto">Custo Indireto</option><option value="Servico">Servico</option><option value="Material">Material</option><option value="Equipamento">Equipamento</option>
+        </select>
+        <input type="text" id="clsl-busca" placeholder="&#128269; Buscar descri&ccedil;&atilde;o" oninput="clearTimeout(window._clslT);window._clslT=setTimeout(renderClassifLinhasCusto,200)" style="width:260px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 8px;font-size:12px">
+        <button class="btn b-sm" style="background:#334155;color:#fff;border:none" onclick="renderClassifLinhasCusto()" title="Recarregar as linhas das abas de custo">&#8635; Atualizar</button>
+      </div>
+    </div>
+    <div class="tw" style="max-height:60vh"><table>
+      <thead class="th-dk"><tr><th>Aba</th><th>Descri&ccedil;&atilde;o</th><th>Item EAP</th></tr></thead>
+      <tbody id="tb-clsl"></tbody>
+      <tfoot><tr id="tf-clsl" style="background:#f1f5f9;font-weight:700"></tr></tfoot>
+    </table></div>
+  </div>
+  <div class="box" style="display:none"><!-- Rev53: quadro retirado -->
     <div class="bh"><h3>Mes do Custo Vigente</h3></div>
     <div class="bp" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div class="fg" style="margin:0"><label>Mes do Custo Vigente</label><input type="month" id="mes-custo-vigente" onchange="S.mesCustoVigente=this.value;registrarHistoricoEngCustos('Definiu o mes do custo vigente: '+this.value);renderClassificacao();"></div>
@@ -1013,7 +1056,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
     </div>
   </div>
   <input type="file" id="inp-classificacao" accept=".xlsx,.xls,.csv" style="display:none">
-  <div class="box">
+  <div class="box" style="display:none"><!-- Rev53: quadro retirado -->
     <div class="bh"><h3>Relatorio Importado</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn b-green b-sm" onclick="document.getElementById('inp-classificacao').click()">&#10133; Importar Relatorio</button><span id="classificacao-mes-vigente" style="font-size:11px;color:#64748b"></span><span id="classificacao-cnt" style="font-size:11px;color:#64748b"></span></div></div>
     <div class="tw" style="max-height:70vh"><table>
       <thead class="th-dk" id="thead-classificacao"></thead>
@@ -1046,11 +1089,11 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
 </div>
 <!-- ===== Rev53: SEC 22 - CURVA ABC ===== -->
 <div class="sec wrap" id="sec22">
-  <div class="ibox">Curva ABC dos itens lan&ccedil;ados nas abas de custo (Custo Indireto, Servi&ccedil;o, Material, Equipamento e Seguros), do maior para o menor Valor Total (quantidade real de todos os meses &times; valor unit&aacute;rio). Composi&ccedil;&otilde;es entram pela linha principal, igual aos totais das abas.</div>
+  <div class="ibox" id="abc-info"></div>
   <div class="cards" id="abc-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px"></div>
   <div class="box">
     <div class="bh" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-      <h3>Curva ABC</h3>
+      <h3 id="abc-titulo">Curva ABC</h3>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px">
         <span id="abc-cats" style="display:flex;gap:8px;flex-wrap:wrap"></span>
         <span style="color:#64748b">Classe A at&eacute; <input type="number" id="abc-lim-a" min="1" max="99" style="width:52px;border:1px solid #cbd5e1;border-radius:6px;padding:3px 5px" onchange="abcSetLimite()">%</span>
@@ -1060,7 +1103,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
     </div>
     <div class="bp">
       <div class="tw" style="overflow:auto;max-height:70vh"><table>
-        <thead><tr><th class="tc">#</th><th class="tc">Classe</th><th>Aba</th><th>Descri&ccedil;&atilde;o</th><th>Fornecedor</th><th class="tr">Valor Unit.</th><th class="tr">Qtd Total</th><th class="tc">Unid.</th><th class="tr">Valor Total</th><th class="tr">% Item</th><th class="tr">% Acumulado</th></tr></thead>
+        <thead id="thead-abc"></thead>
         <tbody id="tb-abc"></tbody>
         <tfoot><tr id="tf-abc" style="background:#f1f5f9;font-weight:700"></tr></tfoot>
       </table></div>
@@ -1068,12 +1111,13 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
   </div>
 </div>
 <div class="sec wrap" id="sec18">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><span id="eap-btn-contg"></span></div>
   <div class="ibox">Cadastre aqui as contingencias previstas para a obra. O Valor Total e calculado automaticamente (Porcentagem Adotada x Valor do Servico).</div>
   <div class="cards c3" id="conting-cards"></div>
   <div class="box">
     <div class="bh" style="display:flex;justify-content:space-between;align-items:center">
       <h3>Contingencias Cadastradas</h3>
-      <div style="display:flex;gap:6px"><button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarContingenciaExcel()">&#128190; Exportar Excel</button><button class="btn b-blue b-sm" onclick="abrirNovaContingencia()">&#10133; Cadastrar Contingencia</button></div>
+      <div style="display:flex;gap:6px"><button class="btn b-sm" style="background:#0f766e;color:#fff;border:none" onclick="contgSalvarReplan()" title="Salva uma c&oacute;pia das conting&ecirc;ncias atuais com o nome que voc&ecirc; informar">&#128204; Salvar Replan</button><button class="btn b-sm" style="background:#7c3aed;color:#fff;border:none" onclick="contgRedistribuir()" title="Distribui o valor da conting&ecirc;ncia igualmente do m&ecirc;s seguinte ao atual at&eacute; o fim da obra">&#128197; Redistribuir no Prazo Restante</button><button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarContingenciaExcel()">&#128190; Exportar Excel</button><button class="btn b-blue b-sm" onclick="abrirNovaContingencia()">&#10133; Cadastrar Contingencia</button></div>
     </div>
     <div class="bp">
       <div class="tw"><table>
@@ -1081,8 +1125,10 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
         <tbody id="tb-contingencia"></tbody>
         <tfoot><tr id="tf-contingencia" style="background:#f1f5f9;font-weight:700"></tr></tfoot>
       </table></div>
+      <div id="cg-distrib-info" style="font-size:12px;color:#475569;margin-top:8px"></div>
     </div>
   </div>
+  <div id="cg-replans"></div>
 </div>
 <div class="modal-bg" id="modal-contingencia">
   <div class="modal" style="max-width:460px">
@@ -1983,7 +2029,7 @@ function criarEstadoProjetoVazio(nome,local,ini,fim){
   S.modData=[];S.moiData=[];S.indiretoData=[];
   S.cronograma=[];S.pedidos=[];S.pedidosCompra=[];S.distPedidos={};S.ccosPed=[];S.distMensal={};S.medicoes={};S.escopos={};S.razaoMO={};
   S.filtPed={ccos:null,busca:"",saldo:"todos"};S.pagPed=0;
-  S.coletorEAP=[];S.receitaEAP=[];S.eapMOD="";S.eapMOI="";S.coletorColapso={};S.coletorNivelAtivo=null;S.coletorBusca="";S.coletorMostrarMeses=false;S.coletorSyncedCodes=[];S.coletorSubtotais=[];
+  S.coletorEAP=[];S.receitaEAP=[];S.eapMOD="";S.eapMOI="";S.eapSEG="";S.eapCONTG=null;S.contingenciaReplans=[];S.coletorColapso={};S.coletorNivelAtivo=null;S.coletorBusca="";S.coletorMostrarMeses=false;S.coletorSyncedCodes=[];S.coletorSubtotais=[];
   S.moiMatColapso={};S.moiMatColunasRecolhidas=false;
   S.dreReceitaData={receita:{},receitaContrato:{},takeInOut:{},difal:{},reajuste:{},faturamentoDireto:{}};
   S.previstosSalvos=[];S.previstoVisualizandoId=null;S.historicoEngCustos=[];
@@ -2309,22 +2355,37 @@ function moTiposDoCodigo(code){var r=[];if(!code)return r;if(S.eapMOD&&code===S.
 function moProprioMes(code,mes,prev){var t=moTiposDoCodigo(code);if(!t.length)return null;var v=0;t.forEach(function(tp){v+=prev?moPrevMesTipo(tp,mes):moRealMesTipo(tp,mes);});return v;}
 function moProprioTotal(code,prev){var t=moTiposDoCodigo(code);if(!t.length)return null;var v=0;t.forEach(function(tp){v+=moTotalTipo(tp,prev);});return v;}
 function moRotuloCodigo(code){var t=moTiposDoCodigo(code);return t.map(function(tp){return tp==="mod"?"Custo M.O.D (aba inteira)":"Custo M.O.I (aba inteira)";}).join(" + ");}
+// Rev53: classificacao EAP da aba inteira tambem para Seguros e Contingencia
+function eapAbaNome(tipo){return {mod:"Custo M.O.D",moi:"Custo M.O.I",seg:"Seguros",contg:"Contingencia"}[tipo]||tipo;}
+function contgLinhaSync(){return S.indiretoData.find(function(x){return x.contingenciaSync;})||null;}
+function eapAbaGet(tipo){
+  if(tipo==="mod")return S.eapMOD||"";if(tipo==="moi")return S.eapMOI||"";if(tipo==="seg")return S.eapSEG||"";
+  if(tipo==="contg"){if(typeof S.eapCONTG==="string")return S.eapCONTG;var l=contgLinhaSync();return l?(l.itemEAP||""):"";}
+  return "";
+}
+function eapAbaSet(tipo,v){if(tipo==="mod")S.eapMOD=v;else if(tipo==="moi")S.eapMOI=v;else if(tipo==="seg")S.eapSEG=v;else if(tipo==="contg")S.eapCONTG=v;aplicarEapAbas();}
+// Seguros: todas as linhas da aba ficam no codigo escolhido. Contingencia: a linha automatica "Contingencia" (Custo Indireto).
+function aplicarEapAbas(){
+  if(S.eapSEG)S.indiretoData.forEach(function(x){if(x.categoria==="Seguro")x.itemEAP=S.eapSEG;});
+  if(typeof S.eapCONTG==="string"){var l=contgLinhaSync();if(l)l.itemEAP=S.eapCONTG;}
+}
+function eapGovernado(cat,it){if(cat==="Seguro"&&S.eapSEG)return S.eapSEG;if(it&&it.contingenciaSync&&typeof S.eapCONTG==="string"&&S.eapCONTG)return S.eapCONTG;return "";}
 function eapMoBotaoHtml(tipo){
-  var cod=tipo==="mod"?S.eapMOD:S.eapMOI,it=cod?S.coletorEAP.find(function(x){return x.item===cod;}):null;
+  var cod=eapAbaGet(tipo),it=cod?S.coletorEAP.find(function(x){return x.item===cod;}):null;
   var txt=cod?(cod+" - "+(it?it.descricao:"(c\u00f3digo n\u00e3o encontrado na EAP)")):"N\u00e3o classificada";
   var cor=cod&&it?"background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe":"background:#fee2e2;color:#b91c1c;border:1px solid #fecaca";
   return "<button class='btn b-sm' style='"+cor+";font-weight:700' title='Classifica\u00e7\u00e3o EAP de toda a aba (Coletor Total / Prev x Real)' onclick=\"abrirClassifEapAba('"+tipo+"')\">&#127991; Classifica\u00e7\u00e3o EAP: "+String(txt).replace(/</g,"&lt;")+"</button>";
 }
-function atualizarBotoesEapMo(){["mod","moi"].forEach(function(tp){var el=document.getElementById("eap-btn-"+tp);if(el)el.innerHTML=eapMoBotaoHtml(tp);});}
+function atualizarBotoesEapMo(){["mod","moi","seg","contg"].forEach(function(tp){var el=document.getElementById("eap-btn-"+tp);if(el)el.innerHTML=eapMoBotaoHtml(tp);});}
 function abrirClassifEapAba(tipo){
-  var cod=tipo==="mod"?S.eapMOD:S.eapMOI,old=document.getElementById("eap-aba-modal");if(old)old.remove();
+  var cod=eapAbaGet(tipo),old=document.getElementById("eap-aba-modal");if(old)old.remove();
   var esc=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/'/g,"&#39;");};
   var ops="<option value=''>\u2014 Sem classifica\u00e7\u00e3o \u2014</option>"+S.coletorEAP.map(function(x){return "<option value='"+esc(x.item)+"'"+(x.item===cod?" selected":"")+">"+"\u00a0\u00a0".repeat(Math.max(0,(x.nivel||1)-1))+esc(x.item+" - "+x.descricao)+"</option>";}).join("");
   var d=document.createElement("div");d.id="eap-aba-modal";
   d.style.cssText="position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center";
   d.innerHTML="<div style='background:#fff;border-radius:10px;padding:20px 22px;width:560px;max-width:94vw;box-shadow:0 12px 32px rgba(0,0,0,.3)'>"+
-    "<div style='font-weight:700;font-size:15px;color:#1e293b;margin-bottom:6px'>&#127991; Classifica\u00e7\u00e3o EAP - "+(tipo==="mod"?"Custo M.O.D":"Custo M.O.I")+"</div>"+
-    "<div style='font-size:12px;color:#64748b;margin-bottom:12px'>Todo o custo desta aba (Real e Previsto) vai para o item da EAP escolhido, no Coletor Total e no Prev x Real.</div>"+
+    "<div style='font-weight:700;font-size:15px;color:#1e293b;margin-bottom:6px'>&#127991; Classifica\u00e7\u00e3o EAP - "+eapAbaNome(tipo)+"</div>"+
+    "<div style='font-size:12px;color:#64748b;margin-bottom:12px'>"+(tipo==="seg"?"Todas as linhas da aba Seguros passam a ficar neste item da EAP (Coletor Total / Prev x Real), inclusive as que forem cadastradas depois.":tipo==="contg"?"A linha Contingencia (soma desta aba, lancada no Custo Indireto) passa a ficar neste item da EAP (Coletor Total / Prev x Real).":"Todo o custo desta aba (Real e Previsto) vai para o item da EAP escolhido, no Coletor Total e no Prev x Real.")+"</div>"+
     "<select id='eap-aba-sel' style='width:100%;border:2px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px'>"+ops+"</select>"+
     "<div style='display:flex;gap:8px;justify-content:flex-end;margin-top:16px'><button class='btn' id='eap-aba-cancel' style='background:#e2e8f0;color:#334155;border:none'>Cancelar</button><button class='btn b-pri' id='eap-aba-ok'>Salvar</button></div></div>";
   document.body.appendChild(d);
@@ -2332,9 +2393,10 @@ function abrirClassifEapAba(tipo){
   document.getElementById("eap-aba-cancel").onclick=fechar;
   document.getElementById("eap-aba-ok").onclick=function(){
     var v=document.getElementById("eap-aba-sel").value||"";
-    if(tipo==="mod")S.eapMOD=v;else S.eapMOI=v;
-    if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Classifica\u00e7\u00e3o EAP da aba "+(tipo==="mod"?"Custo M.O.D":"Custo M.O.I")+": "+(v||"sem classifica\u00e7\u00e3o"));
+    eapAbaSet(tipo,v);
+    if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Classifica\u00e7\u00e3o EAP da aba "+eapAbaNome(tipo)+": "+(v||"sem classifica\u00e7\u00e3o"));
     fechar();syncIndiretoNoColetor();atualizarBotoesEapMo();
+    if(tipo==="seg"||tipo==="contg")renderTodasCategoriasIndireto();
   };
 }
 // Rev53: "tipo" da linha de efetivo (Alimentacao, Baixada, Plano de Saude, Transporte, EPI, Exames, Alojamento-Republica).
@@ -4298,6 +4360,7 @@ function novoItemIndireto(categoria){
   mostrarCamposHEIndireto(categoria);
   atualizarValorUnitFinalIndireto();
   document.getElementById("em3-item-eap").value="";
+  (function(){var g=eapGovernado(categoria,null),el=document.getElementById("em3-item-eap");if(g)el.value=g;el.disabled=!!g;el.title=g?"Classifica\u00e7\u00e3o definida pelo bot\u00e3o Classifica\u00e7\u00e3o EAP da aba":"";})(); // Rev53
   _efetivoRadioTocado=false;setEfetivoRadio("manual");atualizarVisibAlimEfetivo();
   document.getElementById("em3-fat-direto").checked=false;
   preencherClassifIndireto(categoria,""); // Rev48
@@ -4350,6 +4413,7 @@ function abrirEditIndireto(idx){
   mostrarCamposHEIndireto(it.categoria);
   atualizarValorUnitFinalIndireto();
   document.getElementById("em3-item-eap").value=it.itemEAP||"";
+  (function(){var g=eapGovernado(it.categoria,it),el=document.getElementById("em3-item-eap");if(g)el.value=g;el.disabled=!!g;el.title=g?"Classifica\u00e7\u00e3o definida pelo bot\u00e3o Classifica\u00e7\u00e3o EAP da aba":"";})(); // Rev53
   _efetivoRadioTocado=true;setEfetivoRadio(it.efetivoModo);atualizarVisibAlimEfetivo();
   document.getElementById("em3-fat-direto").checked=!!it.faturamentoDireto;
   preencherClassifIndireto(it.categoria,it.classificacao||""); // Rev48
@@ -4426,6 +4490,7 @@ function salvarEditIndireto(){
     it.valorUnit=baseDigitada;
   }
   it.itemEAP=itemEapDigitado;
+  (function(){var g=eapGovernado(it.categoria,it);if(g)it.itemEAP=g;})(); // Rev53
   it.validado=document.getElementById("em3-validado").checked;
   it.faturamentoDireto=document.getElementById("em3-fat-direto").checked;
   if(CLASSIF_CATS.indexOf(it.categoria)>=0)it.classificacao=document.getElementById("em3-classif").value||""; // Rev48
@@ -4566,12 +4631,26 @@ function obsIniciarEventos(){
     if(texto)obsInserirTextoNoCursor(texto);
   });
 }
+// Rev53: o mesmo editor de observacao serve a Contingencia (idx no formato "cg:N")
+function obsAlvo(idx){var sx=String(idx);
+  if(sx.indexOf("eap:")===0){var cod=sx.slice(4),e=S.coletorEAP.find(function(x){return x.item===cod;});return e?{it:{get descricao(){return e.item+" - "+e.descricao;},get observacao(){return e.observacao;},set observacao(v){e.observacao=v;},get obsImagens(){return e.obsImagens;},set obsImagens(v){e.obsImagens=v;}},rotulo:"Coletor Total"}:null;}
+  if(sx.indexOf("cg:")===0){var c=S.contingenciaData[parseInt(sx.slice(3))];return c?{it:c,rotulo:"Conting\u00eancia"}:null;}var it=S.indiretoData[parseInt(sx)];return it?{it:it,rotulo:CAT_CFG[it.categoria].label}:null;}
+function obsIconeColetor(e){ // Rev53: observacao em cada linha do Coletor Total
+  var txt=(e.observacao||"").trim(),arg="&quot;eap:"+String(e.item).replace(/"/g,"")+"&quot;";
+  if(txt){txt=obsTextoSemImagens(txt);var resumo=txt.length>300?txt.slice(0,300)+"...":txt;return " <span class='obs-ico tem' onclick='event.stopPropagation();abrirObservacaoIndireto("+arg+")' title='"+escAttrObs(resumo)+"'>&#128221;</span>";}
+  return " <span class='obs-ico' onclick='event.stopPropagation();abrirObservacaoIndireto("+arg+")' title='Adicionar observacao'>&#128172;</span>";
+}
+function obsIconeContingencia(idx,c){
+  var txt=(c.observacao||"").trim(),arg="&quot;cg:"+idx+"&quot;";
+  if(txt){txt=obsTextoSemImagens(txt);var resumo=txt.length>300?txt.slice(0,300)+"...":txt;return " <span class='obs-ico tem' onclick='event.stopPropagation();abrirObservacaoIndireto("+arg+")' title='"+escAttrObs(resumo)+"'>&#128221;</span>";}
+  return " <span class='obs-ico' onclick='event.stopPropagation();abrirObservacaoIndireto("+arg+")' title='Adicionar observacao'>&#128172;</span>";
+}
 function abrirObservacaoIndireto(idx){
-  var it=S.indiretoData[idx];if(!it)return;
+  var alvo=obsAlvo(idx);if(!alvo)return;var it=alvo.it;
   _obsSoLeitura=(S.modoAcesso==="visualizador");
   obsIniciarEventos();
   document.getElementById("obs-idx").value=idx;
-  document.getElementById("obs-titulo").textContent=(it.descricao||it.pedido||"Item sem nome")+" ("+CAT_CFG[it.categoria].label+")";
+  document.getElementById("obs-titulo").textContent=(it.descricao||it.pedido||"Item sem nome")+" ("+alvo.rotulo+")";
   _obsImgsTemp=Object.assign({},it.obsImagens||{});_obsRange=null;
   var ed=document.getElementById("obs-editor");
   carregarEditorObs(it.observacao||"");
@@ -4586,8 +4665,7 @@ function abrirObservacaoIndireto(idx){
 }
 function salvarObservacaoIndireto(limpar){
   if(S.modoAcesso==="visualizador")return;
-  var idx=parseInt(document.getElementById("obs-idx").value);
-  var it=S.indiretoData[idx];if(!it)return;
+  var idxObs=document.getElementById("obs-idx").value,alvo=obsAlvo(idxObs);if(!alvo)return;var it=alvo.it;
   if(limpar){it.observacao="";it.obsImagens={};}
   else{
     var texto=serializarEditorObs(document.getElementById("obs-editor"));
@@ -4596,7 +4674,9 @@ function salvarObservacaoIndireto(limpar){
     it.observacao=texto;it.obsImagens=imgs; // so mantem as imagens que continuam no texto
   }
   document.getElementById("modal-obs-indireto").classList.remove("on");
-  renderTodasCategoriasIndireto();
+  if(String(idxObs).indexOf("cg:")===0)renderContingencia();
+  else if(String(idxObs).indexOf("eap:")===0)renderColetorTotal(); // Rev53
+  else renderTodasCategoriasIndireto();
 }
 function excluirItemIndireto(idx){
   var itChk=S.indiretoData[idx];
@@ -4678,11 +4758,13 @@ function atualizarIndiretoMatTotais(idxAlterado,mesAlterado){
     var it=S.indiretoData[i];
     if(it.categoria!==itAlt.categoria)continue; // totais da tabela sao apenas da mesma categoria
     if(it.composicaoPai)continue; // ja contado na linha da composicao
+    if(!indiretoPassaFiltro(it))continue; // Rev53: rodape mostra o total do que esta filtrado
     var qMes=it.qtdPorMes[mesAlterado]||0;totMes+=qMes*it.valorUnit;
     meses.forEach(function(m){totGeral+=(it.qtdPorMes[m]||0)*it.valorUnit;});
   }
   var elMes=document.getElementById(prefix+"-col-tot-"+mesAlterado);if(elMes)elMes.textContent=totMes>0?fmt(totMes):"-";
   var elGeral=document.getElementById(prefix+"-grand-total");if(elGeral)elGeral.textContent=fmt(totGeral);
+  grupoEapAtualizarTotal(itAlt); // Rev53: total do grupo EAP
 }
 function calcTotalIndiretoObra(categoria){
   var meses=mesesObra(),total=0;
@@ -4739,6 +4821,7 @@ function indiretoQtdVinculos(itemEAP){
 // (ex: usuario mudou o codigo EAP de um item de Servico/Material/etc de um codigo para outro) - sem isso o valor
 // antigo ficava "fantasma" no item que nao esta mais vinculado.
 function syncIndiretoNoColetor(){
+  aplicarEapAbas(); // Rev53
   // Rev53: Real "proprio" de cada item da EAP = linhas de Custo Indireto/Servico/Material/Equipamento classificadas nele
   // + aba Custo M.O.D e/ou Custo M.O.I inteira, se a aba estiver classificada nele (botao "Classificacao EAP").
   var codigos={};
@@ -5084,7 +5167,7 @@ function montarAbaDashboard(ws,wb){
   ws.getCell("B2").font={size:9,color:{argb:"FF64748B"}};
   // ---- Composicao do custo (vinculos com o TOTAL REAL de cada aba) ----
   xlSecao(ws,4,7,10,"Composi\u00e7\u00e3o do Total de Custos (TOTAL REAL de cada aba)","#334155");
-  var abas=["Custo MOI","Custo MOD","Custo Indireto","Servico","Material","Equipamento","Seguros"],r=5,somaV=0,ini=5;
+  var abas=["Custo MOI","Custo MOD","Custo Indireto","Servico","Material","Equipamento"],r=5,somaV=0,ini=5;
   abas.forEach(function(a){
     var x=refs[a];var cl=ws.getCell(r,7),cv=ws.getCell(r,8);
     cl.value=a;cl.font={color:{argb:"FF334155"}};
@@ -5147,127 +5230,152 @@ function montarAbaDashboard(ws,wb){
   }
   ws.views=[{showGridLines:false}];
 }
-// ===================== Rev53: CURVA ABC =====================
-var ABC_CATS=["Indireto","Servico","Material","Equipamento","Seguro"];
+// ===================== Rev53: CURVAS ABC (Total, MOD, MOI, Custo Indireto, Equipamento, Material, Servico) =====================
+// Um unico motor/tela (sec22); a "fonte" define de onde vem a lista. Total = todas as abas de custo (inclui MOD e MOI).
+var ABC_FONTES={
+  total:{titulo:"Curva ABC Total",aba:"ABC Total",desc:"todas as abas de custo (Custo M.O.D, Custo M.O.I, Custo Indireto, Servi\u00e7o, Material e Equipamento)"},
+  mod:{titulo:"Curva ABC MOD",aba:"ABC MOD",desc:"aba Custo M.O.D (cada fun\u00e7\u00e3o; valor unit. = custo mensal por pessoa)"},
+  moi:{titulo:"Curva ABC MOI",aba:"ABC MOI",desc:"aba Custo M.O.I (cada colaborador; valor unit. = custo mensal por pessoa)"},
+  Indireto:{titulo:"Curva ABC Custo Indireto",aba:"ABC Custo Indireto",desc:"aba Custo Indireto"},
+  Equipamento:{titulo:"Curva ABC Equipamento",aba:"ABC Equipamento",desc:"aba Equipamento"},
+  Material:{titulo:"Curva ABC Material",aba:"ABC Material",desc:"aba Material"},
+  Servico:{titulo:"Curva ABC Servi\u00e7o",aba:"ABC Servico",desc:"aba Servi\u00e7o"}
+};
+var ABC_ORDEM=["total","mod","moi","Indireto","Equipamento","Material","Servico"];
+var ABC_CATS_TOTAL=["mod","moi","Indireto","Servico","Material","Equipamento"];
 var ABC_COR={A:["#b91c1c","#fee2e2"],B:["#b45309","#fef3c7"],C:["#15803d","#dcfce7"]};
-function abcCfg(){if(!S.abcCfg||typeof S.abcCfg!=="object")S.abcCfg={};var c=S.abcCfg;if(!(c.limA>0))c.limA=80;if(!(c.limB>0))c.limB=95;if(!Array.isArray(c.cats))c.cats=ABC_CATS.slice();return c;}
-// Lista ordenada (maior -> menor). Classe pelo % acumulado ANTES do item: o item que cruza o limite continua na classe de cima.
-function abcLista(){
-  var cfg=abcCfg(),meses=mesesObra(),l=[];
-  S.indiretoData.forEach(function(it){
-    normIndireto(it);if(cfg.cats.indexOf(it.categoria)<0||it.composicaoPai)return; // composicao conta pela linha principal (igual aos totais)
-    var q=0;meses.forEach(function(m){q+=it.qtdPorMes[m]||0;});
-    var v=q*(it.valorUnit||0);if(!(v>0))return;
-    l.push({it:it,aba:CAT_CFG[it.categoria]?CAT_CFG[it.categoria].label:it.categoria,qtd:q,valor:v});
-  });
+var ABC_FONTE="total";
+function abcRotuloFonte(k){return k==="mod"?"Custo M.O.D":k==="moi"?"Custo M.O.I":(CAT_CFG[k]?CAT_CFG[k].label:k);}
+function abrirCurvaAbc(fonte){ABC_FONTE=fonte;CTL_LABELS[22]=ABC_FONTES[fonte].titulo;setTabAndClose(22);}
+function abcCfgFonte(fonte){
+  if(!S.abcCfgs||typeof S.abcCfgs!=="object")S.abcCfgs={};
+  var c=S.abcCfgs[fonte];if(!c){c=S.abcCfgs[fonte]={};if(S.abcCfg&&fonte==="total"){c.limA=S.abcCfg.limA;c.limB=S.abcCfg.limB;}if(S.abcModCfg&&fonte==="mod"){c.limA=S.abcModCfg.limA;c.limB=S.abcModCfg.limB;}}
+  if(!(c.limA>0))c.limA=80;if(!(c.limB>0))c.limB=95;if(fonte==="total"&&!Array.isArray(c.cats))c.cats=ABC_CATS_TOTAL.slice();
+  return c;
+}
+// Itens de uma fonte: {key, aba, desc, forn, unit, qtd, unidade, valor, it(indireto)|null, desmob}
+function abcItensFonte(fonte){
+  var cfg=abcCfgFonte(fonte),meses=mesesObra(),l=[];
+  var incInd=function(cat){S.indiretoData.forEach(function(it){normIndireto(it);if(it.categoria!==cat||it.composicaoPai)return;
+    var q=0;meses.forEach(function(m){q+=it.qtdPorMes[m]||0;});var v=q*(it.valorUnit||0);if(!(v>0))return;
+    l.push({key:"i:"+it.id,aba:abcRotuloFonte(cat),desc:it.descricao||"-",forn:it.fornecedor||"-",unit:it.valorUnit||0,qtd:q,unidade:it.unidade||"",valor:v,it:it});});};
+  var incMo=function(tp){moLista(tp).forEach(function(x){moNorm(tp,x);var cu=moCustoUn(tp,x),q=0;meses.forEach(function(m){q+=(x.qtdPorMes&&x.qtdPorMes[m])||0;});var v=q*cu;if(!(v>0))return;
+    l.push({key:tp+":"+x.id,aba:abcRotuloFonte(tp),desc:tp==="mod"?(x.funcao||"-"):(x.nome||x.cargo||"-"),forn:tp==="moi"?(x.cargo||"-"):"-",unit:cu,qtd:q,unidade:"pessoa-m\u00eas",valor:v,it:null,desmob:!!x.desmobilizado});});};
+  var lista=fonte==="total"?cfg.cats:[fonte];
+  lista.forEach(function(k){if(k==="mod"||k==="moi")incMo(k);else incInd(k);});
   l.sort(function(a,b){return b.valor-a.valor;});
   var tot=0;l.forEach(function(x){tot+=x.valor;});
   var acum=0;l.forEach(function(x){var ant=tot>0?acum/tot*100:0;acum+=x.valor;x.pct=tot>0?x.valor/tot*100:0;x.acum=tot>0?acum/tot*100:0;x.classe=ant<cfg.limA?"A":(ant<cfg.limB?"B":"C");});
   return {itens:l,total:tot,cfg:cfg};
 }
+function abcLista(){return abcItensFonte("total");} // compatibilidade
 function abcSetLimite(){
-  var cfg=abcCfg(),a=parseFloat(document.getElementById("abc-lim-a").value),b=parseFloat(document.getElementById("abc-lim-b").value);
+  var cfg=abcCfgFonte(ABC_FONTE),a=parseFloat(document.getElementById("abc-lim-a").value),b=parseFloat(document.getElementById("abc-lim-b").value);
   if(!(a>0&&a<100)||!(b>a&&b<=100)){alert("Limites inv\u00e1lidos: A deve ser entre 1 e 99 e B maior que A (at\u00e9 100).");renderCurvaAbc();return;}
   cfg.limA=a;cfg.limB=b;renderCurvaAbc();
 }
+function abcToggleCat(cat,on){var cfg=abcCfgFonte("total"),i=cfg.cats.indexOf(cat);if(on&&i<0)cfg.cats.push(cat);if(!on&&i>=0)cfg.cats.splice(i,1);renderCurvaAbc();}
 var ABC_ABERTOS={}; // composicoes expandidas na tela da Curva ABC
 function abcToggleComp(id){ABC_ABERTOS[id]=!ABC_ABERTOS[id];renderCurvaAbc();}
 function abcFilhos(it){if(!it||!it.isComposicao)return [];return S.indiretoData.filter(function(ch){return ch.composicaoPai===it.compId;});}
 function abcQtdValor(it){var q=0;mesesObra().forEach(function(m){q+=(it.qtdPorMes&&it.qtdPorMes[m])||0;});return {q:q,v:q*(it.valorUnit||0)};}
-function abcToggleCat(cat,on){var cfg=abcCfg(),i=cfg.cats.indexOf(cat);if(on&&i<0)cfg.cats.push(cat);if(!on&&i>=0)cfg.cats.splice(i,1);renderCurvaAbc();}
 function renderCurvaAbc(){
   var tb=document.getElementById("tb-abc");if(!tb)return;
-  var r=abcLista(),cfg=r.cfg,esc=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;");};
+  var F=ABC_FONTES[ABC_FONTE]||ABC_FONTES.total,r=abcItensFonte(ABC_FONTE),cfg=r.cfg,esc=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;");};
+  document.getElementById("abc-titulo").textContent=F.titulo;
+  document.getElementById("abc-info").innerHTML="<b>"+F.titulo+"</b> — origem: "+F.desc+". Itens do maior para o menor Valor Total (quantidade real de todos os meses &times; valor unit&aacute;rio). Composi&ccedil;&otilde;es entram pela linha principal, igual aos totais das abas.";
   document.getElementById("abc-lim-a").value=cfg.limA;document.getElementById("abc-lim-b").value=cfg.limB;
-  document.getElementById("abc-cats").innerHTML=ABC_CATS.map(function(c){return "<label style='display:flex;align-items:center;gap:3px;cursor:pointer'><input type='checkbox'"+(cfg.cats.indexOf(c)>=0?" checked":"")+" onchange=\"abcToggleCat('"+c+"',this.checked)\">"+CAT_CFG[c].label+"</label>";}).join("");
-  var h="",res={A:{n:0,v:0},B:{n:0,v:0},C:{n:0,v:0}};
+  document.getElementById("abc-cats").innerHTML=ABC_FONTE==="total"?ABC_CATS_TOTAL.map(function(c){return "<label style='display:flex;align-items:center;gap:3px;cursor:pointer'><input type='checkbox'"+(cfg.cats.indexOf(c)>=0?" checked":"")+" onchange=\"abcToggleCat('"+c+"',this.checked)\">"+abcRotuloFonte(c)+"</label>";}).join(""):"";
+  var colAba=(ABC_FONTE==="total"),colForn=(ABC_FONTE==="moi")?"Cargo":"Fornecedor",colDesc=(ABC_FONTE==="mod")?"Fun\u00e7\u00e3o":(ABC_FONTE==="moi")?"Colaborador":"Descri\u00e7\u00e3o";
+  var thS="style='background:#334155;color:#fff;position:sticky;top:0;z-index:2'";
+  document.getElementById("thead-abc").innerHTML="<tr><th class='tc' "+thS+">N\u00ba da Linha</th><th class='tc' "+thS+">Classe</th>"+(colAba?"<th "+thS+">Aba</th>":"")+"<th "+thS+">"+colDesc+"</th><th "+thS+">"+colForn+"</th><th class='tr' "+thS+">Valor Unit.</th><th class='tr' "+thS+">Qtd Total</th><th class='tc' "+thS+">Unid.</th><th class='tr' "+thS+">Valor Total</th><th class='tr' "+thS+">% Item</th><th class='tr' "+thS+">% Acumulado</th></tr>";
+  var nCol=colAba?11:10,h="",res={A:{n:0,v:0},B:{n:0,v:0},C:{n:0,v:0}};
   r.itens.forEach(function(x,i){
     var it=x.it,cor=ABC_COR[x.classe];res[x.classe].n++;res[x.classe].v+=x.valor;
-    var fil=abcFilhos(it),aberto=!!ABC_ABERTOS[it.id];
-    var btn=fil.length?"<span onclick=\"abcToggleComp('"+String(it.id).replace(/'/g,"")+"')\" title='"+(aberto?"Recolher":"Expandir")+" composi\u00e7\u00e3o' style='cursor:pointer;display:inline-block;width:18px;height:18px;line-height:16px;text-align:center;border:1px solid #93c5fd;border-radius:4px;background:#eff6ff;color:#1d4ed8;font-weight:800;margin-right:5px'>"+(aberto?"\u2212":"+")+"</span>":"";
-    h+="<tr"+(it.isComposicao?" style='background:#eff6ff'":"")+"><td class='tc' style='color:#94a3b8'>"+(i+1)+"</td><td class='tc'><span style='display:inline-block;min-width:22px;font-weight:800;border-radius:5px;padding:1px 6px;color:"+cor[0]+";background:"+cor[1]+"'>"+x.classe+"</span></td>"+
-      "<td style='color:#64748b;font-size:11.5px'>"+esc(x.aba)+"</td><td style='font-weight:600'>"+btn+(it.isComposicao?"&#128279; ":"")+esc(it.descricao||"-")+(fil.length?" <span style='font-size:10px;color:#64748b;font-weight:400'>("+fil.length+" itens)</span>":"")+"</td><td style='color:#64748b'>"+esc(it.fornecedor||"-")+"</td>"+
-      "<td class='mono tr'>"+fmt(it.valorUnit||0)+"</td><td class='mono tr'>"+fmtQtdBR(x.qtd)+"</td><td class='tc' style='color:#475569;font-weight:600'>"+esc(it.unidade||"-")+"</td><td class='mono tr' style='font-weight:700'>"+fmt(x.valor)+"</td>"+
+    var fil=it?abcFilhos(it):[],aberto=!!ABC_ABERTOS[x.key];
+    var btn=fil.length?"<span onclick=\"abcToggleComp('"+String(x.key).replace(/'/g,"")+"')\" title='"+(aberto?"Recolher":"Expandir")+" composi\u00e7\u00e3o' style='cursor:pointer;display:inline-block;width:18px;height:18px;line-height:16px;text-align:center;border:1px solid #93c5fd;border-radius:4px;background:#eff6ff;color:#1d4ed8;font-weight:800;margin-right:5px'>"+(aberto?"\u2212":"+")+"</span>":"";
+    h+="<tr"+(it&&it.isComposicao?" style='background:#eff6ff'":(x.desmob?" style='opacity:.75'":""))+"><td class='tc' style='color:#64748b'>"+(i+1)+"</td><td class='tc'><span style='display:inline-block;min-width:22px;font-weight:800;border-radius:5px;padding:1px 6px;color:"+cor[0]+";background:"+cor[1]+"'>"+x.classe+"</span></td>"+
+      (colAba?"<td style='color:#64748b;font-size:11.5px'>"+esc(x.aba)+"</td>":"")+
+      "<td style='font-weight:600'>"+btn+(it&&it.isComposicao?"&#128279; ":"")+esc(x.desc)+(fil.length?" <span style='font-size:10px;color:#64748b;font-weight:400'>("+fil.length+" itens)</span>":"")+(x.desmob?" <span style='font-size:10px;color:#64748b;font-weight:400'>(desmobilizado)</span>":"")+"</td><td style='color:#64748b;white-space:normal;max-width:180px'>"+esc(x.forn)+"</td>"+
+      "<td class='mono tr'>"+fmt(x.unit)+"</td><td class='mono tr'>"+fmtQtdBR(x.qtd)+"</td><td class='tc' style='color:#475569;font-weight:600'>"+esc(x.unidade||"-")+"</td><td class='mono tr' style='font-weight:700'>"+fmt(x.valor)+"</td>"+
       "<td class='mono tr'>"+fmtPctBR(x.pct)+"%</td><td class='mono tr' style='color:#475569'>"+fmtPctBR(x.acum)+"%</td></tr>";
-    if(aberto)fil.forEach(function(ch){ // itens da composicao (nao entram no total/classes: ja estao na linha principal)
-      normIndireto(ch);var qv=abcQtdValor(ch);
-      h+="<tr style='background:"+COR_COMP_FILHO+";font-size:12px'><td></td><td></td><td style='color:#94a3b8;font-size:11px'>"+esc(x.aba)+"</td>"+
+    if(aberto)fil.forEach(function(ch){normIndireto(ch);var qv=abcQtdValor(ch);
+      h+="<tr style='background:"+COR_COMP_FILHO+";font-size:12px'><td></td><td></td>"+(colAba?"<td style='color:#94a3b8;font-size:11px'>"+esc(x.aba)+"</td>":"")+
         "<td style='padding-left:30px'>&#8627; "+esc(ch.descricao||"-")+"</td><td style='color:#64748b'>"+esc(ch.fornecedor||"-")+"</td>"+
         "<td class='mono tr'>"+fmt(ch.valorUnit||0)+"</td><td class='mono tr'>"+(qv.q?fmtQtdBR(qv.q):"-")+"</td><td class='tc' style='color:#475569'>"+esc(ch.unidade||"-")+"</td><td class='mono tr'>"+fmt(qv.v)+"</td>"+
-        "<td class='mono tr' style='color:#b45309' title='% do valor da composi\u00e7\u00e3o'>"+(x.valor>0?fmtPctBR(qv.v/x.valor*100)+"% comp.":"-")+"</td><td></td></tr>";
-    });
+        "<td class='mono tr' style='color:#b45309' title='% do valor da composi\u00e7\u00e3o'>"+(x.valor>0?fmtPctBR(qv.v/x.valor*100)+"% comp.":"-")+"</td><td></td></tr>";});
   });
-  tb.innerHTML=h||"<tr><td colspan='11' style='text-align:center;padding:20px;color:#94a3b8'>Nenhum item com valor nas abas selecionadas</td></tr>";
-  document.getElementById("tf-abc").innerHTML="<td colspan='8'>Total ("+r.itens.length+" itens)</td><td class='mono tr'>"+fmt(r.total)+"</td><td class='mono tr'>"+(r.total>0?"100,00%":"-")+"</td><td></td>";
+  tb.innerHTML=h||"<tr><td colspan='"+nCol+"' style='text-align:center;padding:20px;color:#94a3b8'>Nenhum item com valor</td></tr>";
+  document.getElementById("tf-abc").innerHTML="<td colspan='"+(nCol-3)+"'>Total ("+r.itens.length+" itens)</td><td class='mono tr'>"+fmt(r.total)+"</td><td class='mono tr'>"+(r.total>0?"100,00%":"-")+"</td><td></td>";
   var pc=function(v){return r.total>0?fmtPctBR(v/r.total*100)+"%":"-";};
   document.getElementById("abc-cards").innerHTML=card("bl","Valor Total",fmt(r.total),r.itens.length+" itens")+
     card("re","Classe A",fmt(res.A.v),res.A.n+" itens \u2014 "+pc(res.A.v)+" do valor (at\u00e9 "+cfg.limA+"%)")+
     card("or","Classe B",fmt(res.B.v),res.B.n+" itens \u2014 "+pc(res.B.v)+" do valor (at\u00e9 "+cfg.limB+"%)")+
     card("gr","Classe C",fmt(res.C.v),res.C.n+" itens \u2014 "+pc(res.C.v)+" do valor (restante)");
 }
-async function exportarCurvaAbcExcel(comPrevisto,wbExterno){
+// Excel de uma curva (sem mesclagem; formulas: valor, %, acumulado, classe e resumo)
+async function exportarCurvaAbcExcel(comPrevisto,wbExterno,fonteArg){
   try{
     await carregarExcelJS();
-    var r=abcLista(),cfg=r.cfg,MOE='"R$" #,##0.00',PCT="0.00%";
-    var wb=wbExterno||new ExcelJS.Workbook(),ws=wb.addWorksheet("Curva ABC");
-    ws.getCell(1,1).value="Curva ABC - "+(S.projNome||"Obra")+" - "+new Date().toLocaleDateString("pt-BR");ws.getCell(1,1).font={bold:true,size:13};
-    ws.getCell(2,1).value="Abas: "+cfg.cats.map(function(c){return CAT_CFG[c].label;}).join(", ")+"  |  Classe pelo % acumulado antes do item. Altere os limites abaixo e a planilha reclassifica.";ws.getCell(2,1).font={size:9,color:{argb:"FF64748B"}};
-    // limites e resumo (formulas)
+    var fonte=fonteArg||ABC_FONTE,F=ABC_FONTES[fonte],r=abcItensFonte(fonte),cfg=r.cfg,MOE='"R$" #,##0.00',PCT="0.00%",colAba=(fonte==="total");
+    var wb=wbExterno||new ExcelJS.Workbook(),ws=wb.addWorksheet(F.aba.substring(0,31));
+    ws.properties.outlineProperties={summaryBelow:false,summaryRight:false};
+    ws.getCell(1,1).value=F.titulo+" - "+(S.projNome||"Obra")+" - "+new Date().toLocaleDateString("pt-BR");ws.getCell(1,1).font={bold:true,size:13};
+    ws.getCell(2,1).value="Origem: "+F.desc+"  |  Classe pelo % acumulado antes do item. Altere os limites abaixo e a planilha reclassifica.";ws.getCell(2,1).font={size:9,color:{argb:"FF64748B"}};
     ws.getCell("A4").value="Limite Classe A";ws.getCell("B4").value=cfg.limA/100;ws.getCell("A5").value="Limite Classe B";ws.getCell("B5").value=cfg.limB/100;
     ["B4","B5"].forEach(function(a){var c=ws.getCell(a);c.numFmt="0%";c.font={bold:true,color:{argb:"FF1D4ED8"}};xlFill(c,"#eff6ff");});
     ["A4","A5"].forEach(function(a){ws.getCell(a).font={bold:true,color:{argb:"FF334155"}};});
-    var h0=10,n=r.itens.length,linhas=[],rr0=h0+1;
-    r.itens.forEach(function(x){linhas.push(rr0);rr0+=1+abcFilhos(x.it).length;});
-    var ult=Math.max(rr0-1,h0+1);
-    ws.properties.outlineProperties={summaryBelow:false,summaryRight:false}; // botao +/- na linha da composicao
-    ["Classe","Qtd Itens","Valor","% do Valor"].forEach(function(t,i){xlHdr(ws.getCell(4,4+i),t);});
+    // colunas: 1 N, 2 Classe, [3 Aba], Desc, Forn, Unit, Qtd, Unid, Valor, %Item, %Acum
+    var o=colAba?1:0,cD=3+o,cF=4+o,cU=5+o,cQ=6+o,cUn=7+o,cV=8+o,cP=9+o,cA=10+o,nCols=cA;
+    var L=function(c){return ws.getColumn(c).letter;},LV=L(cV),LP=L(cP),LA=L(cA),LU=L(cU),LQ=L(cQ);
+    var h0=10,linhas=[],rr0=h0+1;r.itens.forEach(function(x){linhas.push(rr0);rr0+=1+(x.it?abcFilhos(x.it).length:0);});
+    var ult=Math.max(rr0-1,h0+1),rT=ult+1;
+    ["Classe","Qtd Itens","Valor","% do Valor"].forEach(function(t,i){xlHdr(ws.getCell(4,4+i),t,"FF334155");});
     ["A","B","C"].forEach(function(k,i){var rr=5+i,cor=ABC_COR[k];
       ws.getCell(rr,4).value=k;ws.getCell(rr,4).font={bold:true,color:{argb:"FF"+cor[0].slice(1).toUpperCase()}};xlFill(ws.getCell(rr,4),cor[1]);ws.getCell(rr,4).alignment={horizontal:"center"};
       ws.getCell(rr,5).value=xlF('COUNTIF($B$'+(h0+1)+':$B$'+ult+',"'+k+'")');
-      ws.getCell(rr,6).value=xlF('SUMIF($B$'+(h0+1)+':$B$'+ult+',"'+k+'",$I$'+(h0+1)+':$I$'+ult+')');ws.getCell(rr,6).numFmt=MOE;
-      ws.getCell(rr,7).value=xlF('IF($I$'+(ult+1)+'>0,F'+rr+'/$I$'+(ult+1)+',0)');ws.getCell(rr,7).numFmt=PCT;
+      ws.getCell(rr,6).value=xlF('SUMIF($B$'+(h0+1)+':$B$'+ult+',"'+k+'",$'+LV+'$'+(h0+1)+':$'+LV+'$'+ult+')');ws.getCell(rr,6).numFmt=MOE;
+      ws.getCell(rr,7).value=xlF('IF($'+LV+'$'+rT+'>0,F'+rr+'/$'+LV+'$'+rT+',0)');ws.getCell(rr,7).numFmt=PCT;
     });
     ws.getCell(8,4).value="Total";ws.getCell(8,5).value=xlF("SUM(E5:E7)");ws.getCell(8,6).value=xlF("SUM(F5:F7)");ws.getCell(8,6).numFmt=MOE;ws.getCell(8,7).value=xlF("SUM(G5:G7)");ws.getCell(8,7).numFmt=PCT;
     for(var c0=4;c0<=7;c0++){var ct=ws.getCell(8,c0);xlFill(ct,"#f1f5f9");ct.font={bold:true,color:{argb:"FF1E293B"}};}
-    // tabela
-    ["#","Classe","Aba","Descri\u00e7\u00e3o","Fornecedor","Valor Unit.","Qtd Total","Unid.","Valor Total","% Item","% Acumulado"].forEach(function(t,i){xlHdr(ws.getCell(h0,i+1),t);});
+    var hd=["N\u00ba da Linha","Classe"].concat(colAba?["Aba"]:[]).concat([fonte==="mod"?"Fun\u00e7\u00e3o":fonte==="moi"?"Colaborador":"Descri\u00e7\u00e3o",fonte==="moi"?"Cargo":"Fornecedor","Valor Unit.","Qtd Total","Unid.","Valor Total","% Item","% Acumulado"]);
+    hd.forEach(function(t,i){xlHdr(ws.getCell(h0,i+1),t,"FF334155");});
     r.itens.forEach(function(x,i){
-      var rr=linhas[i],it=x.it,row=ws.getRow(rr),cor=ABC_COR[x.classe],ant=i===0?null:linhas[i-1];
+      var rr=linhas[i],row=ws.getRow(rr),cor=ABC_COR[x.classe],ant=i===0?null:linhas[i-1],it=x.it;
       row.getCell(1).value=i+1;row.getCell(1).alignment={horizontal:"center"};
-      var antes=i===0?"0":"K"+ant;
-      row.getCell(2).value=xlF('IF('+antes+'<$B$4,"A",IF('+antes+'<$B$5,"B","C"))',x.classe);row.getCell(2).alignment={horizontal:"center"};
+      row.getCell(2).value=xlF('IF('+(i===0?"0":LA+ant)+'<$B$4,"A",IF('+(i===0?"0":LA+ant)+'<$B$5,"B","C"))',x.classe);row.getCell(2).alignment={horizontal:"center"};
       row.getCell(2).font={bold:true,color:{argb:"FF"+cor[0].slice(1).toUpperCase()}};xlFill(row.getCell(2),cor[1]);
-      row.getCell(3).value=x.aba;row.getCell(4).value=(it.isComposicao?"\ud83d\udd17 ":"")+(it.descricao||"-");row.getCell(5).value=it.fornecedor||"-";
-      row.getCell(6).value=it.valorUnit||0;row.getCell(6).numFmt=MOE;
-      row.getCell(7).value=x.qtd;row.getCell(7).numFmt="#,##0.00";
-      row.getCell(8).value=it.unidade||"-";row.getCell(8).alignment={horizontal:"center"};
-      row.getCell(9).value=xlF("F"+rr+"*G"+rr,x.valor);row.getCell(9).numFmt=MOE;row.getCell(9).font={bold:true};
-      row.getCell(10).value=xlF("IF($I$"+(ult+1)+">0,I"+rr+"/$I$"+(ult+1)+",0)",x.pct/100);row.getCell(10).numFmt=PCT;
-      row.getCell(11).value=xlF((i===0?"":"K"+ant+"+")+"J"+rr,x.acum/100);row.getCell(11).numFmt=PCT;
-      if(it.isComposicao){for(var c=1;c<=11;c++)if(c!==2)xlFill(row.getCell(c),"#eff6ff");}
-      else if(i%2)for(var c=1;c<=11;c++)if(c!==2)xlFill(row.getCell(c),"#fafbfc");
-      abcFilhos(it).forEach(function(ch,k){ // itens da composicao: agrupados e recolhidos (clique no + do Excel para abrir)
+      if(colAba)row.getCell(3).value=x.aba;
+      row.getCell(cD).value=(it&&it.isComposicao?"\ud83d\udd17 ":"")+x.desc+(x.desmob?" (desmobilizado)":"");row.getCell(cF).value=x.forn;
+      row.getCell(cU).value=x.unit;row.getCell(cU).numFmt=MOE;
+      row.getCell(cQ).value=x.qtd;row.getCell(cQ).numFmt="#,##0.00";
+      row.getCell(cUn).value=x.unidade||"-";row.getCell(cUn).alignment={horizontal:"center"};
+      row.getCell(cV).value=xlF(LU+rr+"*"+LQ+rr,x.valor);row.getCell(cV).numFmt=MOE;row.getCell(cV).font={bold:true};
+      row.getCell(cP).value=xlF("IF($"+LV+"$"+rT+">0,"+LV+rr+"/$"+LV+"$"+rT+",0)",x.pct/100);row.getCell(cP).numFmt=PCT;
+      row.getCell(cA).value=xlF((i===0?"":LA+ant+"+")+LP+rr,x.acum/100);row.getCell(cA).numFmt=PCT;
+      var fundo=(it&&it.isComposicao)?"#eff6ff":(i%2?"#fafbfc":null);if(fundo)for(var c=1;c<=nCols;c++)if(c!==2)xlFill(row.getCell(c),fundo);
+      (it?abcFilhos(it):[]).forEach(function(ch,k){
         normIndireto(ch);var qv=abcQtdValor(ch),rf=rr+1+k,rw=ws.getRow(rf);
-        rw.getCell(3).value=x.aba;rw.getCell(4).value="   \u21b3 "+(ch.descricao||"-");rw.getCell(5).value=ch.fornecedor||"-";
-        rw.getCell(6).value=ch.valorUnit||0;rw.getCell(6).numFmt=MOE;
-        rw.getCell(7).value=qv.q;rw.getCell(7).numFmt="#,##0.00";
-        rw.getCell(8).value=ch.unidade||"-";rw.getCell(8).alignment={horizontal:"center"};
-        rw.getCell(9).value=xlF("F"+rf+"*G"+rf,qv.v);rw.getCell(9).numFmt=MOE;
-        rw.getCell(10).value=xlF("IF($I$"+rr+">0,I"+rf+"/$I$"+rr+",0)",x.valor>0?qv.v/x.valor:0);rw.getCell(10).numFmt='0.00%" comp."';
-        for(var c=1;c<=11;c++)xlFill(rw.getCell(c),COR_COMP_FILHO);
-        rw.font={size:10,color:{argb:"FF475569"}};rw.outlineLevel=1;rw.hidden=true;
+        if(colAba)rw.getCell(3).value=x.aba;rw.getCell(cD).value="   \u21b3 "+(ch.descricao||"-");rw.getCell(cF).value=ch.fornecedor||"-";
+        rw.getCell(cU).value=ch.valorUnit||0;rw.getCell(cU).numFmt=MOE;rw.getCell(cQ).value=qv.q;rw.getCell(cQ).numFmt="#,##0.00";
+        rw.getCell(cUn).value=ch.unidade||"-";rw.getCell(cUn).alignment={horizontal:"center"};
+        rw.getCell(cV).value=xlF(LU+rf+"*"+LQ+rf,qv.v);rw.getCell(cV).numFmt=MOE;
+        rw.getCell(cP).value=xlF("IF($"+LV+"$"+rr+">0,"+LV+rf+"/$"+LV+"$"+rr+",0)",x.valor>0?qv.v/x.valor:0);rw.getCell(cP).numFmt='0.00%" comp."';
+        for(var c=1;c<=nCols;c++)xlFill(rw.getCell(c),COR_COMP_FILHO);rw.font={size:10,color:{argb:"FF475569"}};rw.outlineLevel=1;rw.hidden=true;
       });
     });
-    if(!n)ws.getCell(h0+1,1).value="Nenhum item com valor nas abas selecionadas";
-    var tr=ws.getRow(ult+1);tr.getCell(1).value="Total ("+n+" itens)";tr.getCell(9).value=xlF(xlSomaLinhas("I",linhas),r.total);tr.getCell(9).numFmt=MOE; // so linhas principais; NAO depende da coluna Classe (evita referencia circular)
-    pintarLinha(ws,ult+1,11,"FFF1F5F9","FF1E293B",true);
-    [6,14,16,46,26,16,16,8,18,10,12].forEach(function(w,i){ws.getColumn(i+1).width=w;});ws.getColumn(1).width=16;
+    if(!r.itens.length)ws.getCell(h0+1,1).value="Nenhum item com valor";
+    var tr=ws.getRow(rT);tr.getCell(1).value="Total ("+r.itens.length+" itens)";
+    tr.getCell(cV).value=xlF(xlSomaLinhas(LV,linhas),r.total);tr.getCell(cV).numFmt=MOE; // so linhas principais; sem referencia circular
+    pintarLinha(ws,rT,nCols,"FFF1F5F9","FF1E293B",true);
+    var larg=[16,14].concat(colAba?[16]:[]).concat([46,26,16,16,12,18,10,12]);larg.forEach(function(w,i){ws.getColumn(i+1).width=w;});
     ws.views=[{state:"frozen",ySplit:h0}];
     if(wbExterno)return;
     var buf=await wb.xlsx.writeBuffer();
     var blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
     var url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download="Curva_ABC_"+(S.projNome||"obra").replace(/\s+/g,"_")+".xlsx";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    a.href=url;a.download=F.titulo.replace(/\s+/g,"_").normalize("NFD").replace(/[\u0300-\u036f]/g,"")+"_"+(S.projNome||"obra").replace(/\s+/g,"_")+".xlsx";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   }catch(ex){if(wbExterno)throw ex;alert("Erro ao exportar: "+ex.message);}
 }
 // ===================== Rev53: CURVA ABC DE MOD =====================
@@ -5364,7 +5472,7 @@ async function exportarCurvaAbcModExcel(comPrevisto,wbExterno){
 // ===================== Rev53: TRANSFERENCIA DE CUSTO entre abas (Custo Indireto / Servico / Material / Equipamento / Seguros) =====================
 // Move a linha inteira (descricao, pedido, fornecedor, valores, permanencia mes a mes, previsto, contratos, observacoes, composicao com os itens)
 // de uma aba para outra: so muda a "aba" (categoria) da linha. Exige novo login do Engenheiro de Custos para confirmar.
-var TRANSF_CATS=["Indireto","Servico","Material","Equipamento","Seguro"],_transfSel={};
+var TRANSF_CATS=["Indireto","Servico","Material","Equipamento"],_transfSel={}; // Rev53: aba Seguros retirada
 function transfLinhasOrigem(cat){return S.indiretoData.filter(function(it){normIndireto(it);return it.categoria===cat&&!it.composicaoPai&&!it.contingenciaSync;});}
 function transfFilhos(it){return it.isComposicao?S.indiretoData.filter(function(ch){return ch.composicaoPai===it.compId;}):[];}
 function abrirTransferenciaCusto(){
@@ -5465,11 +5573,10 @@ async function exportarCompiladoExcel(comPrevisto){
     montarAbasReceita(wb);
     await exportarMoiExcel(comPrevisto,wb);
     await exportarModExcel(comPrevisto,wb);
-    var cats=["Indireto","Servico","Material","Equipamento","Seguro"];
+    var cats=["Indireto","Servico","Material","Equipamento"]; // Rev53: aba Seguros retirada
     for(var i=0;i<cats.length;i++)await exportarIndiretoExcel(cats[i],comPrevisto,wb);
     await exportarContingenciaExcel(comPrevisto,wb);
-    await exportarCurvaAbcExcel(comPrevisto,wb); // Rev53
-    await exportarCurvaAbcModExcel(comPrevisto,wb); // Rev53
+    for(var ai=0;ai<ABC_ORDEM.length;ai++)await exportarCurvaAbcExcel(comPrevisto,wb,ABC_ORDEM[ai]); // Rev53: todas as Curvas ABC
     montarAbaDashboard(wsDash,wb);
     var buf=await wb.xlsx.writeBuffer();
     var blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
@@ -5949,7 +6056,7 @@ function renderIndiretoCards(categoria){
   el.innerHTML=
     card("bl","Total "+cfg.label,fmt(totGeral),meses.length+" meses de obra")+
     card("pu","Itens Cadastrados",qtdItens,"Pedidos/Fornecedores")+
-    card("or","Custo no Mes Selecionado",fmt(totMesSel),mesSel?mlbl(mesSel):"-");
+    (categoria==="Servico"?"":card("or","Custo no Mes Selecionado",fmt(totMesSel),mesSel?mlbl(mesSel):"-")); // Rev53: card retirado da aba Servico
 }
 // Rev53: recalcula o "left" das 3 colunas fixas (N. Pedido / Descricao / Fornecedor) pela largura real
 // do cabecalho, para que nao fiquem sobrepostas/transparentes ao rolar os meses na horizontal.
@@ -5972,20 +6079,60 @@ function ajustarStickyMatriz(tbl){
     c.setAttribute("data-left0",orig);c.style.left=mapa[orig]+"px";
   });
 }
+// ===================== Rev53: Filtro por descricao / fornecedor (Custo Indireto, Servico, Material, Equipamento) =====================
+var FILTRO_IND={},_filtroIndTimer=null;
+function filtroNorm(t){return String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();}
+function filtroIndAtivo(cat){var f=FILTRO_IND[cat];return !!(f&&(f.desc||f.forn));}
+function filtroIndCasa(it,f){return (!f.desc||filtroNorm(it.descricao).indexOf(f.desc)>=0)&&(!f.forn||filtroNorm(it.fornecedor).indexOf(f.forn)>=0);}
+// Linha principal passa no filtro se ela, ou algum item da composicao dela, contem o texto
+function indiretoPassaFiltro(it){
+  var f=FILTRO_IND[it.categoria];if(!f||(!f.desc&&!f.forn))return true;
+  if(filtroIndCasa(it,f))return true;
+  if(it.isComposicao)return S.indiretoData.some(function(ch){return ch.composicaoPai===it.compId&&filtroIndCasa(ch,f);});
+  return false;
+}
+function filtroIndiretoDigitar(cat){
+  clearTimeout(_filtroIndTimer);
+  _filtroIndTimer=setTimeout(function(){
+    var eD=document.getElementById("filt-desc-"+cat),eF=document.getElementById("filt-forn-"+cat),ativo=document.activeElement;
+    var foco=(ativo===eD||ativo===eF)?ativo.id:null,pos=foco?ativo.selectionStart:0;
+    var rd=eD?eD.value:"",rf=eF?eF.value:"";
+    FILTRO_IND[cat]={desc:filtroNorm(rd),forn:filtroNorm(rf),rawDesc:rd,rawForn:rf};
+    document.getElementById("filt-limpar-"+cat).style.display=filtroIndAtivo(cat)?"inline-block":"none";
+    renderIndiretoTab(cat);
+    if(foco){var el=document.getElementById(foco);if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}} // o cabecalho e redesenhado: devolve o cursor ao campo
+  },250);
+}
+function filtroIndiretoLimpar(cat){
+  FILTRO_IND[cat]={desc:"",forn:"",rawDesc:"",rawForn:""};
+  document.getElementById("filt-limpar-"+cat).style.display="none";renderIndiretoTab(cat);
+}
+// ===================== Rev53: Grupos EAP recolhiveis nas abas de custo =====================
+var GRP_EAP_RECOLHIDO={};
+function grupoEapId(prefix,chave){return "grptot-"+prefix+"-"+(chave?String(chave).replace(/[^A-Za-z0-9]/g,"_"):"sem");}
+function grupoEapToggle(cat,chave){var k=cat+"|"+chave;GRP_EAP_RECOLHIDO[k]=!GRP_EAP_RECOLHIDO[k];renderIndiretoTab(cat);}
+function grupoEapAtualizarTotal(it){
+  if(!it)return;var base=it.composicaoPai?S.indiretoData.find(function(x){return x.isComposicao&&x.compId===it.composicaoPai;}):it;if(!base)return;
+  var cfg=CAT_CFG[base.categoria];if(!cfg)return;var chave=base.itemEAP||"",t=0;
+  S.indiretoData.forEach(function(x,i){if(x.categoria===base.categoria&&!x.composicaoPai&&(x.itemEAP||"")===chave&&indiretoPassaFiltro(x))t+=calcTotalIndiretoItem(i);});
+  var el=document.getElementById(grupoEapId(cfg.prefix,chave));if(el)el.textContent=fmt(t);
+}
 function renderIndiretoMatrix(categoria){
+  aplicarEapAbas();if(categoria==="Seguro")atualizarBotoesEapMo(); // Rev53
   var cfg=CAT_CFG[categoria];if(!cfg)return;
   var prefix=cfg.prefix,corHead=cfg.cor;
   var thead=document.getElementById(prefix+"-thead"),tbody=document.getElementById(prefix+"-tbody"),tfoot=document.getElementById(prefix+"-tfoot");
   if(!thead||!tbody||!tfoot)return;
   var meses=mesesObra();
-  var comQtd=(categoria!=="Seguro"),QX=comQtd?1:0; // Rev53: coluna "Qtd Total" (Indireto/Servico/Material/Equipamento)
+  var comQtd=(categoria!=="Seguro"),QX=comQtd?1:0;
+  var comFiltro=(categoria!=="Seguro"),fAtual=FILTRO_IND[categoria]||{}; // Rev53: filtro no cabecalho (Descricao / Fornecedor) // Rev53: coluna "Qtd Total" (Indireto/Servico/Material/Equipamento)
   var L=[0,110,230];
   var sC=function(i,bg){return "position:sticky;left:"+L[i]+"px;z-index:2;background:"+(bg||"#fff")+";";};
   // Cabecalho em 2 linhas: linha 1 = nome do mes (colspan 2), linha 2 = Qtd / Valor
   var th1="<tr style='color:#fff'>";
   th1+="<th rowspan='2' style='position:sticky;left:0;z-index:11;background:"+corHead+";min-width:110px'>N&ordm; Pedido</th>";
-  th1+="<th rowspan='2' style='position:sticky;left:110px;z-index:11;background:"+corHead+";min-width:200px'>Descri&ccedil;&atilde;o</th>";
-  th1+="<th rowspan='2' style='position:sticky;left:230px;z-index:11;background:"+corHead+";min-width:120px;border-right:2px solid rgba(255,255,255,.35)'>Fornecedor</th>";
+  th1+="<th rowspan='2' style='position:sticky;left:110px;z-index:11;background:"+corHead+";min-width:200px'>Descri&ccedil;&atilde;o"+(comFiltro?"<input type='text' id='filt-desc-"+categoria+"' value='"+String(fAtual.rawDesc||"").replace(/'/g,"&#39;")+"' placeholder='&#128269; Filtrar descri&ccedil;&atilde;o' oninput=\"filtroIndiretoDigitar('"+categoria+"')\" onclick='event.stopPropagation()' style='display:block;width:100%;box-sizing:border-box;margin-top:4px;border:1px solid #94a3b8;border-radius:5px;padding:3px 6px;font-size:11.5px;font-weight:400;color:#1e293b;background:#fff'>":"")+"</th>";
+  th1+="<th rowspan='2' style='position:sticky;left:230px;z-index:11;background:"+corHead+";min-width:120px;border-right:2px solid rgba(255,255,255,.35)'>Fornecedor"+(comFiltro?"<input type='text' id='filt-forn-"+categoria+"' value='"+String(fAtual.rawForn||"").replace(/'/g,"&#39;")+"' placeholder='&#128269; Filtrar fornecedor' oninput=\"filtroIndiretoDigitar('"+categoria+"')\" onclick='event.stopPropagation()' style='display:block;width:100%;box-sizing:border-box;margin-top:4px;border:1px solid #94a3b8;border-radius:5px;padding:3px 6px;font-size:11.5px;font-weight:400;color:#1e293b;background:#fff'>":"")+"</th>";
   th1+="<th rowspan='2' style='min-width:100px;text-align:right;background:"+corHead+"'>Valor Unit.</th>";
   th1+="<th rowspan='2' style='min-width:110px;text-align:center;background:"+corHead+";border-right:2px solid rgba(255,255,255,.35)' title='Situacao juridica: soma dos contratos e aditivos, ou Distratado'>Juridico</th>";
   var th2="<tr style='color:#fff'>";
@@ -6004,7 +6151,7 @@ function renderIndiretoMatrix(categoria){
   // Agrupa os itens desta categoria pela classificacao EAP (itemEAP), na ordem em que aparecem na arvore da EAP.
   // Itens sem vinculo EAP ficam agrupados por ultimo, sob "Sem classificacao EAP".
   var indices=[];
-  for(var idx=0;idx<S.indiretoData.length;idx++){var it0=S.indiretoData[idx];normIndireto(it0);if(it0.categoria===categoria&&!it0.composicaoPai)indices.push(idx);}
+  for(var idx=0;idx<S.indiretoData.length;idx++){var it0=S.indiretoData[idx];normIndireto(it0);if(it0.categoria===categoria&&!it0.composicaoPai&&indiretoPassaFiltro(it0))indices.push(idx);} // Rev53: filtro
   var grupos={};
   indices.forEach(function(idx){var key=S.indiretoData[idx].itemEAP||"";if(!grupos[key])grupos[key]=[];grupos[key].push(idx);});
   function posEAP(cod){if(!cod)return 999999;var i=S.coletorEAP.findIndex(function(x){return x.item===cod;});return i<0?999998:i;}
@@ -6110,30 +6257,19 @@ function renderIndiretoMatrix(categoria){
   chaves.forEach(function(chave){
     var eapItem=chave?S.coletorEAP.find(function(x){return x.item===chave;}):null;
     var labelGrupo=chave?(chave+" - "+(eapItem?eapItem.descricao:"(codigo nao encontrado na EAP)")):"Sem classificacao EAP";
-    tb+="<tr><td colspan='"+colspanTotal+"' style='padding:6px 10px;background:"+corHead+";color:#fff;font-weight:700;font-size:12px'><span style='position:sticky;left:10px'>"+labelGrupo+"</span></td></tr>";
-    // Na aba Equipamento: conta quantos itens (ainda nao compilados) de cada fornecedor existem neste grupo EAP,
-    // para saber onde exibir o botao "Compilar em uma composicao"
-    var fornecedorCount={},fornecedorBannerFeito={};
-    if(ehEquip){
-      grupos[chave].forEach(function(idx){
-        var it=S.indiretoData[idx];
-        if(it.isComposicao)return;
-        var f=(it.fornecedor||"").trim();
-        if(f)fornecedorCount[f]=(fornecedorCount[f]||0)+1;
-      });
-    }
+    // Rev53: grupo EAP com seta para recolher/expandir e o total das linhas do grupo na coluna Total
+    var gKey=categoria+"|"+chave,gRec=!!GRP_EAP_RECOLHIDO[gKey],gId=grupoEapId(prefix,chave),gTot=0;
+    grupos[chave].forEach(function(ix){gTot+=calcTotalIndiretoItem(ix);});
+    var gSeta="<span onclick=\"grupoEapToggle('"+categoria+"','"+String(chave).replace(/'/g,"&#39;")+"')\" title='"+(gRec?"Expandir":"Recolher")+" grupo' style='cursor:pointer;display:inline-block;width:16px;margin-right:6px;font-size:12px'>"+(gRec?"&#9654;":"&#9660;")+"</span>";
+    tb+="<tr><td colspan='"+(colspanTotal-1-QX)+"' style='padding:6px 10px;background:"+corHead+";color:#fff;font-weight:700;font-size:12px'><span style='position:sticky;left:10px'>"+gSeta+labelGrupo+" <span style='font-weight:400;font-size:11px;opacity:.8'>("+grupos[chave].length+" linha"+(grupos[chave].length>1?"s":"")+")</span></span></td>"+
+      (comQtd?"<td data-r1='1' style='position:sticky;right:110px;z-index:2;background:"+corHead+";border-left:2px solid rgba(255,255,255,.35)'></td>":"")+
+      "<td id='"+gId+"' class='mono tr' style='position:sticky;right:0;z-index:2;background:"+corHead+";color:#fff;font-weight:800;font-size:12px;border-left:2px solid rgba(255,255,255,.35)'>"+fmt(gTot)+"</td></tr>";
+    var gIni=tb.length; // linhas do grupo comecam aqui (se recolhido, ficam ocultas no fim do grupo)
+    // Rev53: removida a sugestao automatica "Compilar em uma composicao" por fornecedor igual; composicao so pela selecao (flag) + botao Compilar
     grupos[chave].forEach(function(idx){
       var it=S.indiretoData[idx];normIndireto(it);
       var rowBg=it.validado?"#f0fdf4":(idx%2===0?"#fff":"#fafbfc");
       var f=(it.fornecedor||"").trim();
-      // Banner "Compilar em uma composicao" - aparece uma unica vez, antes do primeiro item de um fornecedor com 2+ itens ainda separados
-      if(ehEquip&&!it.isComposicao&&f&&fornecedorCount[f]>=2&&!fornecedorBannerFeito[f]){
-        fornecedorBannerFeito[f]=true;
-        tb+="<tr><td colspan='"+colspanTotal+"' style='padding:5px 10px;background:#fffbeb;border:1px dashed #f59e0b'>"+
-          "<span style='font-size:11.5px;color:#92400e'>"+fornecedorCount[f]+" itens de <b>"+f+"</b> ainda separados.</span> "+
-          "<button onclick=\"equipComposicaoIniciar('"+f.replace(/'/g,"&#39;")+"','"+chave.replace(/'/g,"&#39;")+"','"+categoria+"')\" style='margin-left:8px;padding:3px 10px;background:#f59e0b;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-weight:600'>&#128279; Compilar em uma composicao</button>"+
-          "</td></tr>";
-      }
       if(ehEquip&&it.isComposicao){
         // Linha-mae da composicao: SEMPRE somente-leitura, sempre = soma dos filhos (nunca editada direto aqui)
         var menuComp=[
@@ -6196,6 +6332,7 @@ function renderIndiretoMatrix(categoria){
       tb+="<td id='indirow-tot-"+idx+"' style='position:sticky;right:0;z-index:2;background:"+rowBg+";border-left:2px solid #e2e8f0;font-weight:700;color:"+corHead+"' class='mono tr'>"+fmt(totRow)+"</td>";
       tb+="</tr>";
     });
+    if(gRec)tb=tb.slice(0,gIni)+tb.slice(gIni).replace(/<tr\b/g,"<tr class='grp-oculto'"); // Rev53: grupo recolhido (linhas continuam somando no rodape)
   });
   tbody.innerHTML=tb||"<tr><td colspan='"+(5+meses.length*2+1+QX)+"' style='text-align:center;padding:20px;color:#94a3b8'>Nenhum item de "+cfg.label.toLowerCase()+" cadastrado</td></tr>";
   var tf="";
@@ -6208,7 +6345,7 @@ function renderIndiretoMatrix(categoria){
     tf+="</tr>";
   }
   tf+="<tr style='background:#f1f5f9;font-weight:700'>";
-  tf+="<td style='"+sC(0,"#f1f5f9")+"'>TOTAL"+(ehEquip?" REAL":"")+"</td><td style='"+sC(1,"#f1f5f9")+"'></td><td style='"+sC(2,"#f1f5f9")+"border-right:2px solid #e2e8f0'></td><td></td><td style='border-right:2px solid #e2e8f0'></td>";
+  tf+="<td style='"+sC(0,"#f1f5f9")+"'>TOTAL"+(ehEquip?" REAL":"")+(filtroIndAtivo(categoria)?" <span style='font-size:10px;color:#b45309'>(filtrado: "+indices.length+" linha(s))</span>":"")+"</td><td style='"+sC(1,"#f1f5f9")+"'></td><td style='"+sC(2,"#f1f5f9")+"border-right:2px solid #e2e8f0'></td><td></td><td style='border-right:2px solid #e2e8f0'></td>";
   meses.forEach(function(m){tf+="<td colspan='2' id='"+prefix+"-col-tot-"+m+"' class='mono tr' style='font-size:11px;border-left:1px solid #e2e8f0'>"+(totMes[m]>0?fmt(totMes[m]):"-")+"</td>";});
   tf+=(comQtd?("<td data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+"#f1f5f9"+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;font-size:11.5px;color:#334155'>"+""+"</td>"):"");
   tf+="<td id='"+prefix+"-grand-total' style='position:sticky;right:0;z-index:2;background:#f1f5f9;border-left:2px solid #e2e8f0;color:"+corHead+"'>"+fmt(totGeral)+"</td>";
@@ -8171,7 +8308,9 @@ function coletorRowHtml(it,nv,mostrarToggle,temFilhos,colapsado,realAgregado,rao
   var toggleHtml=mostrarToggle&&temFilhos?"<span onclick=\"toggleColetorNode('"+it.item.replace(/'/g,"&#39;")+"')\" style='cursor:pointer;display:inline-block;width:14px;color:"+cor.text+";font-weight:700;user-select:none'>"+(colapsado?"&#9656;":"&#9662;")+"</span>":"<span style='display:inline-block;width:14px'></span>";
   var h="<tr style='background:"+cor.bg+";border-left:3px solid "+cor.border+"'>";
   h+="<td style='padding-left:"+((nv-1)*12+6)+"px;font-family:monospace;font-size:11px;white-space:nowrap;color:"+cor.text+";font-weight:"+cor.peso+"'>"+toggleHtml+it.item+"</td>";
-  h+="<td style='max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer' onclick=\"abrirDescColetor('"+it.item.replace(/'/g,"&#39;")+"')\">"+it.descricao+"</td>";
+  // Rev53: icone de composicao em toda linha com Real (abre o que forma o valor e de quais abas vem)
+  var iconeComp=(realExibir||0)>0?"<span onclick=\"event.stopPropagation();abrirComposicaoReal('"+it.item.replace(/'/g,"&#39;")+"')\" title='Ver composi\u00e7\u00e3o do Real (linhas e abas de origem)' style='cursor:pointer;display:inline-block;margin-right:6px;padding:0 4px;border:1px solid #93c5fd;border-radius:4px;background:#eff6ff;font-size:11px;line-height:16px'>&#128202;</span>":"";
+  h+="<td style='max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer' onclick=\"abrirDescColetor('"+it.item.replace(/'/g,"&#39;")+"')\">"+iconeComp+obsIconeColetor(it).replace(/^ /,"")+" "+it.descricao+"</td>";
   h+="<td class='mono tr'>"+fmt(it.orcado)+"</td>";
   if(subtotalOnly){
     h+="<td style='padding:3px 4px'><input type='text' class='inp-sm' style='width:130px;background:#f8fafc;border-color:#cbd5e1;color:#475569;font-weight:700;cursor:not-allowed' value='"+coletorFmtMoeda(raoExibir)+"' disabled title='Subtotal automatico (soma dos itens abaixo)'></td>";
@@ -8182,12 +8321,12 @@ function coletorRowHtml(it,nv,mostrarToggle,temFilhos,colapsado,realAgregado,rao
     h+="<td style='padding:3px 4px'><input type='text' class='inp-sm' style='width:130px;background:#f8fafc;border-color:#cbd5e1;color:#475569;font-weight:700;cursor:not-allowed' value='"+coletorFmtMoeda(realExibir)+"' disabled title='Subtotal automatico (soma dos itens abaixo)'></td>";
   }else if(moTiposDoCodigo(it.item).length){
     var tituloVinculo=moRotuloCodigo(it.item)+(indiretoQtdVinculos(it.item)>0?" + "+indiretoQtdVinculos(it.item)+" linha(s) vinculada(s)":""); // Rev53
-    h+="<td style='padding:3px 4px'><input type='text' class='inp-sm' style='width:130px;background:#f0fdf4;border-color:#86efac;color:#15803d;font-weight:700;cursor:not-allowed' value='"+coletorFmtMoeda(it.real)+"' disabled title='Vinculado automaticamente ao card "+tituloVinculo+" (aba RESUMO M.O.)'>"+(nv===4&&temFilhos?"<span onclick=\"abrirComposicaoReal('"+it.item.replace(/'/g,"&#39;")+"')\" title='Ver composicao do Real' style='cursor:pointer;margin-left:4px;font-size:13px'>&#128202;</span>":"")+"</td>";
+    h+="<td style='padding:3px 4px'><input type='text' class='inp-sm' style='width:130px;background:#f0fdf4;border-color:#86efac;color:#15803d;font-weight:700;cursor:not-allowed' value='"+coletorFmtMoeda(it.real)+"' disabled title='Vinculado automaticamente ao card "+tituloVinculo+" (aba RESUMO M.O.)'>"+"</td>";
   }else if(indiretoQtdVinculos(it.item)>0){
     var qtdVinc=indiretoQtdVinculos(it.item);
-    h+="<td style='padding:3px 4px'><input type='text' class='inp-sm' style='width:130px;background:#f0fdf9;border-color:#5eead4;color:#0f766e;font-weight:700;cursor:not-allowed' value='"+coletorFmtMoeda(it.real)+"' disabled title='Vinculado automaticamente a "+qtdVinc+" item(ns) das abas Custo Indireto/Servico/Material/Equipamento (soma de todas as linhas com esta numeracao)'>"+(nv===4&&temFilhos?"<span onclick=\"abrirComposicaoReal('"+it.item.replace(/'/g,"&#39;")+"')\" title='Ver composicao do Real' style='cursor:pointer;margin-left:4px;font-size:13px'>&#128202;</span>":"")+"</td>";
+    h+="<td style='padding:3px 4px'><input type='text' class='inp-sm' style='width:130px;background:#f0fdf9;border-color:#5eead4;color:#0f766e;font-weight:700;cursor:not-allowed' value='"+coletorFmtMoeda(it.real)+"' disabled title='Vinculado automaticamente a "+qtdVinc+" item(ns) das abas Custo Indireto/Servico/Material/Equipamento (soma de todas as linhas com esta numeracao)'>"+"</td>";
   }else{
-    h+="<td style='padding:3px 4px'><input type='text' inputmode='decimal' class='inp-sm' style='width:130px' value='"+coletorFmtMoeda(it.real)+"' oninput=\"coletorInputLive(this,'"+it.item.replace(/'/g,"&#39;")+"','real')\" onblur=\"coletorInputBlur()\" title='"+(temFilhos?"Este valor soma com o total dos itens filhos abaixo":"")+"'>"+(nv===4&&temFilhos?"<span onclick=\"abrirComposicaoReal('"+it.item.replace(/'/g,"&#39;")+"')\" title='Ver composicao do Real' style='cursor:pointer;margin-left:4px;font-size:13px'>&#128202;</span>":"")+"</td>";
+    h+="<td style='padding:3px 4px'><input type='text' inputmode='decimal' class='inp-sm' style='width:130px' value='"+coletorFmtMoeda(it.real)+"' oninput=\"coletorInputLive(this,'"+it.item.replace(/'/g,"&#39;")+"','real')\" onblur=\"coletorInputBlur()\" title='"+(temFilhos?"Este valor soma com o total dos itens filhos abaixo":"")+"'>"+"</td>";
   }
   if(linhaMeses){
     linhaMeses.forEach(function(v){h+="<td class='mono tr' style='font-size:11px;color:"+(v===0?"#cbd5e1":"#334155")+"'>"+(v?fmt(v):"-")+"</td>";});
@@ -8558,7 +8697,7 @@ document.getElementById("inp-classificacao").onchange=function(e){
       var linhas=XLSX.utils.sheet_to_json(ws,{defval:""});
       if(!linhas.length){alert("Planilha vazia ou sem dados reconheciveis.");return;}
       S.classificacaoColunas=Object.keys(linhas[0]);
-      S.classificacaoLinhas=linhas.map(function(r,i){return{id:gerarId("cls"),dados:r,classificadoIdx:null};});
+      S.classificacaoLinhas=linhas.map(function(r,i){return{id:gerarId("cls"),dados:r,classificadoIdx:null,classificadoId:null};});
       renderClassificacao();
       registrarHistoricoEngCustos("Importou relatorio de Classificacao (\""+f.name+"\", "+linhas.length+" linhas)");
     }catch(ex){alert("Erro ao importar o relatorio: "+ex.message);}
@@ -8568,7 +8707,7 @@ document.getElementById("inp-classificacao").onchange=function(e){
 };
 function classificarLinha(li,val){
   var linha=S.classificacaoLinhas&&S.classificacaoLinhas[li];if(!linha)return;
-  linha.classificadoIdx=(val===""?null:parseInt(val));
+  var itV=(val==="")?null:S.indiretoData[parseInt(val)];linha.classificadoId=itV?itV.id:null;linha.classificadoIdx=itV?parseInt(val):null; // Rev53: guarda o ID
   renderClassificacao();
 }
 // ===================== ABA CONTINGENCIA =====================
@@ -8586,13 +8725,75 @@ function sincronizarContingenciaNoIndireto(){
     item.valorUnit=soma;
   }
 }
+// ===================== Rev53: Contingencia - Replans salvos e redistribuicao no prazo restante =====================
+function contgSalvarReplan(){
+  if(S.modoAcesso==="visualizador")return;
+  if(!(S.contingenciaData||[]).length){alert("N\u00e3o h\u00e1 conting\u00eancias cadastradas para salvar.");return;}
+  var nome=prompt("Nome do Replan (ex.: Replan 01 - Out/26):");if(nome===null)return;nome=String(nome).trim();
+  if(!nome){alert("Informe um nome para o Replan.");return;}
+  if(!Array.isArray(S.contingenciaReplans))S.contingenciaReplans=[];
+  var itens=S.contingenciaData.map(function(c){return {descricao:c.descricao||"",valorServico:parseFloat(c.valorServico)||0,percentual:parseFloat(c.percentual)||0,valorTotal:contingenciaValorTotal(c),observacao:c.observacao||""};});
+  var tot=0;itens.forEach(function(x){tot+=x.valorTotal;});
+  S.contingenciaReplans.push({id:"rp-"+Date.now(),nome:nome,data:new Date().toISOString(),itens:itens,total:tot});
+  if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Salvou Replan de Conting\u00eancia \""+nome+"\" ("+fmt(tot)+")");
+  renderContingencia();
+}
+function contgExcluirReplan(id){
+  var r=(S.contingenciaReplans||[]).find(function(x){return x.id===id;});if(!r)return;
+  exigirLoginParaSalvar(function(){
+    S.contingenciaReplans=S.contingenciaReplans.filter(function(x){return x.id!==id;});
+    if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Excluiu Replan de Conting\u00eancia \""+r.nome+"\"");
+    renderContingencia();
+  },{titulo:"&#128274; Confirmar exclus\u00e3o de Replan",texto:"Por seguran\u00e7a, informe novamente o login e a senha do Engenheiro de Custos para excluir o Replan.",rotulo:"A\u00e7\u00e3o:",acao:"Excluir o Replan \""+r.nome+"\" da Conting\u00eancia ("+fmt(r.total)+")"});
+}
+function renderReplansContingencia(){
+  var el=document.getElementById("cg-replans");if(!el)return;
+  var esc=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;");};
+  var l=(S.contingenciaReplans||[]).slice().reverse(),h="";
+  l.forEach(function(r){
+    var dt=new Date(r.data),dts=isNaN(dt)?"":dt.toLocaleDateString("pt-BR")+" "+dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+    h+="<div class='box' style='margin-top:12px;border-left:4px solid #0f766e'><div class='bh' style='display:flex;justify-content:space-between;align-items:center'>"+
+      "<h3>&#128204; "+esc(r.nome)+" <span style='font-size:11.5px;font-weight:400;color:#64748b'>\u2014 salvo em "+dts+" \u2014 Total "+fmt(r.total)+"</span></h3>"+
+      (S.modoAcesso==="visualizador"?"":"<button class='btn b-sm' title='Excluir Replan (pede login do Engenheiro de Custos)' onclick=\"contgExcluirReplan('"+r.id+"')\" style='background:#fee2e2;color:#b91c1c;border:1px solid #fecaca'>&#128465; Excluir</button>")+"</div>"+
+      "<div class='bp'><div class='tw'><table><thead><tr><th>Descricao da Contingencia</th><th class='tr'>Valor do Servico</th><th class='tc'>% Adotada</th><th class='tr'>Valor Total</th></tr></thead><tbody>";
+    var ts=0;
+    r.itens.forEach(function(c){ts+=c.valorServico||0;h+="<tr><td>"+esc(c.descricao)+(c.observacao?" <span title='"+escAttrObs(obsTextoSemImagens(c.observacao).slice(0,300))+"'>&#128221;</span>":"")+"</td><td class='mono tr'>"+fmt(c.valorServico)+"</td><td class='tc'>"+(c.percentual||0)+"%</td><td class='mono tr' style='font-weight:700;color:#0c4a6e'>"+fmt(c.valorTotal)+"</td></tr>";});
+    h+="</tbody><tfoot><tr style='background:#f1f5f9;font-weight:700'><td>Total ("+r.itens.length+" contingencia(s))</td><td class='mono tr'>"+fmt(ts)+"</td><td></td><td class='mono tr'>"+fmt(r.total)+"</td></tr></tfoot></table></div></div></div>";
+  });
+  el.innerHTML=h;
+}
+// Distribui o valor da contingencia (soma da aba) igualmente do mes SEGUINTE ao atual ate o fim da obra.
+// O que ja estiver lancado ate o mes atual (inclusive) e mantido; so o saldo e distribuido.
+function contgRedistribuir(){
+  if(S.modoAcesso==="visualizador")return;
+  sincronizarContingenciaNoIndireto();var l=contgLinhaSync();
+  if(!l||!(l.valorUnit>0)){alert("N\u00e3o h\u00e1 valor de conting\u00eancia para distribuir.");return;}
+  var ma0=getMA(),dm=new Date(parseInt(ma0.slice(0,4)),parseInt(ma0.slice(5,7)),1); // Rev53: comeca no mes SEGUINTE ao atual
+  var meses=mesesObra(),ma=dm.getFullYear()+"-"+String(dm.getMonth()+1).padStart(2,"0"),rest=meses.filter(function(m){return m>=ma;});
+  if(!rest.length){alert("N\u00e3o h\u00e1 meses restantes na obra a partir de "+mlbl(ma)+".");return;}
+  var qPass=0;meses.forEach(function(m){if(m<ma)qPass+=(l.qtdPorMes[m]||0);});
+  var vTot=l.valorUnit,vPass=qPass*vTot,vRest=Math.max(0,vTot-vPass),qMes=Math.max(0,1-qPass)/rest.length;
+  if(!confirm("Redistribuir a conting\u00eancia no prazo restante?\n\nValor total da conting\u00eancia: "+fmt(vTot)+
+    (vPass>0?"\nJ\u00e1 lan\u00e7ado at\u00e9 "+mlbl(ma0)+" (mantido): "+fmt(vPass):"")+
+    "\nA distribuir: "+fmt(vRest)+" em "+rest.length+" meses ("+mlbl(rest[0])+" a "+mlbl(rest[rest.length-1])+")\nValor por m\u00eas: "+fmt(vRest/rest.length)+
+    "\n\nOs valores atuais desses meses na linha Conting\u00eancia (Custo Indireto) ser\u00e3o substitu\u00eddos."))return;
+  rest.forEach(function(m){l.qtdPorMes[m]=qMes;});
+  if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Redistribuiu a Conting\u00eancia ("+fmt(vRest)+") em "+rest.length+" meses a partir de "+mlbl(rest[0]));
+  renderTodasCategoriasIndireto();syncIndiretoNoColetor();renderContingencia();
+}
+function contgInfoDistribuicao(){
+  var el=document.getElementById("cg-distrib-info");if(!el)return;var l=contgLinhaSync();if(!l){el.innerHTML="";return;}
+  var meses=mesesObra(),usados=meses.filter(function(m){return (l.qtdPorMes[m]||0)>0;}),tot=0;usados.forEach(function(m){tot+=(l.qtdPorMes[m]||0)*l.valorUnit;});
+  el.innerHTML=usados.length?("&#128197; Distribui\u00e7\u00e3o atual na linha Conting\u00eancia (Custo Indireto): <b>"+fmt(tot)+"</b> em "+usados.length+" m\u00eas(es), de "+mlbl(usados[0])+" a "+mlbl(usados[usados.length-1])+"."):"&#128197; A linha Conting\u00eancia (Custo Indireto) ainda n\u00e3o tem valores distribu\u00eddos nos meses.";
+}
 function renderContingencia(){
   var tbody=document.getElementById("tb-contingencia");if(!tbody)return;
+  atualizarBotoesEapMo(); // Rev53
   var h="",totServico=0,totContingencia=0;
   S.contingenciaData.forEach(function(c,idx){
     var vt=contingenciaValorTotal(c);
     totServico+=parseFloat(c.valorServico)||0;totContingencia+=vt;
-    h+="<tr><td style='max-width:320px'>"+(c.descricao||"").replace(/</g,"&lt;")+"</td><td class='mono tr'>"+fmt(c.valorServico)+"</td><td class='tc'>"+(parseFloat(c.percentual)||0)+"%</td><td class='mono tr' style='font-weight:700;color:#0c4a6e'>"+fmt(vt)+"</td><td class='tc'><span onclick='abrirEditContingencia("+idx+")' style='cursor:pointer;color:#1d4ed8;margin-right:8px' title='Editar'>&#9998;</span><span onclick='excluirContingencia("+idx+")' style='cursor:pointer;color:#dc2626' title='Excluir'>&#128465;</span></td></tr>";
+    h+="<tr><td style='max-width:320px'>"+(c.descricao||"").replace(/</g,"&lt;")+obsIconeContingencia(idx,c)+"</td><td class='mono tr'>"+fmt(c.valorServico)+"</td><td class='tc'>"+(parseFloat(c.percentual)||0)+"%</td><td class='mono tr' style='font-weight:700;color:#0c4a6e'>"+fmt(vt)+"</td><td class='tc'><span onclick='abrirEditContingencia("+idx+")' style='cursor:pointer;color:#1d4ed8;margin-right:8px' title='Editar'>&#9998;</span><span onclick='excluirContingencia("+idx+")' style='cursor:pointer;color:#dc2626' title='Excluir'>&#128465;</span></td></tr>";
   });
   tbody.innerHTML=h||"<tr><td colspan='5' style='text-align:center;padding:20px;color:#94a3b8'>Nenhuma contingencia cadastrada</td></tr>";
   document.getElementById("tf-contingencia").innerHTML="<td>Total ("+S.contingenciaData.length+" contingencia(s))</td><td class='mono tr'>"+fmt(totServico)+"</td><td></td><td class='mono tr'>"+fmt(totContingencia)+"</td><td></td>";
@@ -8600,6 +8801,7 @@ function renderContingencia(){
     card("bl","Valor Total dos Servicos",fmt(totServico),S.contingenciaData.length+" contingencia(s) cadastrada(s)")+
     card("or","Valor Total de Contingencia",fmt(totContingencia),"Soma de todas as contingencias")+
     card("pu","% Media Adotada",(totServico>0?(totContingencia/totServico*100).toFixed(2):"0.00")+"%","Contingencia / Servico");
+  contgInfoDistribuicao();renderReplansContingencia(); // Rev53
 }
 function abrirNovaContingencia(){
   document.getElementById("cg-idx").value=-1;
@@ -8647,7 +8849,42 @@ function excluirContingencia(idx){
   renderContingencia();
   renderTodasCategoriasIndireto();
 }
+// ===================== Rev53: Aba Classificacao - linhas das abas de custo =====================
+// Lista montada na hora a partir de Custo Indireto / Servico / Material / Equipamento (sem os itens de dentro de composicao):
+// linha apagada/incluida/renomeada la aparece aqui assim que a aba e aberta (ou no botao Atualizar).
+var CLSL_CATS=["Indireto","Servico","Material","Equipamento"];
+function renderClassifLinhasCusto(){
+  var tb=document.getElementById("tb-clsl");if(!tb)return;
+  var aba=(document.getElementById("clsl-aba")||{}).value||"",busca=filtroNorm((document.getElementById("clsl-busca")||{}).value||"");
+  var esc=function(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;");};
+  var cods={};S.coletorEAP.forEach(function(e){cods[e.item]=e.descricao;});
+  var h="",n=0,semEap=0;
+  S.indiretoData.forEach(function(it){
+    normIndireto(it);
+    if(CLSL_CATS.indexOf(it.categoria)<0||it.composicaoPai)return;
+    if(aba&&it.categoria!==aba)return;
+    if(busca&&filtroNorm(it.descricao||"").indexOf(busca)<0)return;
+    n++;var ok=!!(it.itemEAP&&cods[it.itemEAP]);if(!ok)semEap++;
+    var eap=it.itemEAP?(it.itemEAP+(cods[it.itemEAP]?" - "+cods[it.itemEAP]:" (n\u00e3o encontrado na EAP)")):"(sem Item EAP)";
+    h+="<tr><td style='font-size:11.5px;color:#475569;white-space:nowrap'>"+esc(CAT_CFG[it.categoria].label)+"</td>"+
+      "<td style='font-weight:600;font-size:12px;white-space:normal'>"+(it.isComposicao?"&#128279; ":"")+esc(it.descricao||"-")+"</td>"+
+      "<td style='font-size:11.5px;white-space:normal;color:"+(ok?"#334155":"#b45309")+"'>"+esc(eap)+"</td></tr>";
+  });
+  tb.innerHTML=h||"<tr><td colspan='3' style='padding:20px;text-align:center;color:#94a3b8'>Nenhuma linha encontrada</td></tr>";
+  document.getElementById("tf-clsl").innerHTML="<td colspan='2'>Total ("+n+" linha(s))</td><td style='font-size:11.5px;color:"+(semEap?"#b45309":"#15803d")+"'>"+(semEap?semEap+" sem Item EAP v\u00e1lido":"todas com Item EAP v\u00e1lido")+"</td>";
+  document.getElementById("clsl-cnt").textContent="\u2014 "+n+" linha(s)";
+}
+function classifLinhaCusto(idx,val){
+  if(S.modoAcesso==="visualizador")return;var it=S.indiretoData[idx];if(!it)return;
+  it.classificacao=val||"";
+  if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Classifica\u00e7\u00e3o de \""+(it.descricao||"")+"\" ("+CAT_CFG[it.categoria].label+"): "+(val?nomeClassif(it.categoria,val):"sem classifica\u00e7\u00e3o"));
+  renderClassifLinhasCusto();
+}
+// Vinculo do relatorio importado: passa a ser pelo ID da linha (antes era pela posicao, que muda ao apagar/reordenar linhas)
+function clsMigrarVinculos(){(S.classificacaoLinhas||[]).forEach(function(l){if(l.classificadoId===undefined){var it=(l.classificadoIdx!==null&&l.classificadoIdx!==undefined)?S.indiretoData[l.classificadoIdx]:null;l.classificadoId=it?it.id:null;}});}
 function renderClassificacao(){
+  renderClassifLinhasCusto(); // Rev53
+  clsMigrarVinculos(); // Rev53
   var thead=document.getElementById("thead-classificacao"),tbody=document.getElementById("tb-classificacao");
   if(!thead||!tbody)return;
   var elMcvCampo=document.getElementById("mes-custo-vigente");
@@ -8680,12 +8917,12 @@ function renderClassificacao(){
     cols.forEach(function(c){h+="<td style='font-size:12px;white-space:nowrap'>"+(linha.dados[c]!==undefined&&linha.dados[c]!==null?linha.dados[c]:"")+"</td>";});
     h+="<td><select onchange=\"classificarLinha("+li+",this.value)\" style='width:100%;border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 6px;font-size:12px'>";
     h+="<option value=''>-- nao classificado --</option>";
-    itensDisponiveis.forEach(function(op){h+="<option value='"+op.idx+"'"+(linha.classificadoIdx===op.idx?" selected":"")+">"+op.label+"</option>";});
+    itensDisponiveis.forEach(function(op){var itO=S.indiretoData[op.idx];h+="<option value='"+op.idx+"'"+(linha.classificadoId&&itO&&itO.id===linha.classificadoId?" selected":"")+">"+op.label+"</option>";});
     h+="</select></td>";
     h+="</tr>";
   });
   tbody.innerHTML=h;
-  var classificadas=linhas.filter(function(l){return l.classificadoIdx!==null&&l.classificadoIdx!==undefined;}).length;
+  var classificadas=linhas.filter(function(l){return l.classificadoId&&S.indiretoData.some(function(x){return x.id===l.classificadoId;});}).length;
   var cntEl2=document.getElementById("classificacao-cnt");if(cntEl2)cntEl2.textContent=classificadas+" de "+linhas.length+" linhas classificadas";
 }
 // ===== IMPORTAÇÃO RAZÃO CONTÁBIL =====
@@ -8754,7 +8991,7 @@ document.getElementById("inp-razao").onchange=function(e){
 };
 document.getElementById("inp-crono").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array",cellDates:false}),sn=wb.SheetNames[0];for(var i=0;i<wb.SheetNames.length;i++){var n=wb.SheetNames[i].toLowerCase();if(n.indexOf("task")>=0||n.indexOf("tarefa")>=0){sn=wb.SheetNames[i];break;}}var rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:""}),hi=0;for(var i=0;i<Math.min(8,rows.length);i++){if(rows[i].filter(function(c){return String(c).trim().length>1;}).length>=2){hi=i;break;}}var FMP={nome:["nome","name","task name"],inicio:["inicio","start"],fim:["termino","fim","finish"],pct:["concluido","complete"],nivel:["nivel","level","outline"],duracao:["duracao","duration","dias"],custo:["custo","cost","baseline"],pedido:["pedido","pc","ordem"]},hdrs=rows[hi].map(function(h){return String(h).trim();}),hmap={};for(var h2=0;h2<hdrs.length;h2++){var h=hdrs[h2].toLowerCase(),fks=Object.keys(FMP);for(var fi=0;fi<fks.length;fi++){if(hmap[fks[fi]]===undefined){var ks=FMP[fks[fi]];for(var ki=0;ki<ks.length;ki++){if(h.indexOf(ks[ki])>=0){hmap[fks[fi]]=h2;break;}}}}}var pDate=function(v){if(!v)return null;if(typeof v==="number"){var d=XLSX.SSF.parse_date_code(v);if(d)return new Date(d.y,d.m-1,d.d);}var s=String(v).trim(),m1=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m1)return new Date(+m1[3],+m1[2]-1,+m1[1]);var m2=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m2)return new Date(+m2[1],+m2[2]-1,+m2[3]);return null;},ts=[];for(var ri=hi+1;ri<rows.length;ri++){var row=rows[ri],nm=hmap.nome!==undefined?String(row[hmap.nome]||"").trim():"";if(!nm)continue;var ini=hmap.inicio!==undefined?pDate(row[hmap.inicio]):null,fim=hmap.fim!==undefined?pDate(row[hmap.fim]):null,pct=parseFloat(String(hmap.pct!==undefined?row[hmap.pct]:0).replace("%","").replace(",","."))||0;if(pct>1)pct=pct/100;var nv=hmap.nivel!==undefined?parseInt(row[hmap.nivel])||1:1,dur=parseFloat(String(hmap.duracao!==undefined?row[hmap.duracao]:"").replace(/[^0-9.]/g,""))||0;if(!dur&&ini&&fim)dur=Math.round((fim-ini)/86400000);var custo=hmap.custo!==undefined?parseFloat(row[hmap.custo])||0:0,pedido=hmap.pedido!==undefined?String(row[hmap.pedido]||"").trim():"",mesIni=ini?mkM(ini.getFullYear(),ini.getMonth()+1):null,mesFim=fim?mkM(fim.getFullYear(),fim.getMonth()+1):null,st="Nao Iniciado";if(pct>=1)st="Concluido";else if(pct>0)st="Em Andamento";else if(ini&&ini<=TODAY)st="Atrasado";ts.push({nome:nm,inicio:ini?ini.toLocaleDateString("pt-BR"):"-",fim:fim?fim.toLocaleDateString("pt-BR"):"-",mesIni:mesIni,mesFim:mesFim,duracao:dur,pct:pct,nivel:nv,status:st,custo:custo,pedido:pedido});}S.cronograma=ts;renderCrono();renderDRE();renderDash();renderImportStatus();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
 document.getElementById("inp-pedidos").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array"}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:""}),norm=function(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,"");},get=function(r){var terms=[].slice.call(arguments,1);var k=Object.keys(r).find(function(k){return terms.some(function(t){return norm(k).indexOf(t)>=0;});});return k?r[k]:"";},pd=[];for(var i=0;i<rows.length;i++){var r=rows[i];pd.push({id:i,pedido:String(get(r,"pedido","pc","numero","order")||"").trim(),descricao:String(get(r,"descricao","desc","item","material")||"").trim(),fornecedor:String(get(r,"fornecedor","supplier")||"").trim(),etapa:String(get(r,"etapa","fase","atividade","tarefa","task")||"").trim(),valor:parseFloat(String(get(r,"valor","value","custo","cost","total")||"0").replace(/[^\d.,]/g,"").replace(",","."))||0,status:String(get(r,"status","situacao")||"").trim(),data:String(get(r,"data","date","emissao")||"").trim()});}S.pedidos=pd.filter(function(p){return p.pedido||p.descricao;});renderCrono();renderDRE();renderDash();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
-function montarDadosCompletos(){sincronizarAlojamentoIndireto();return {version:52,exportadoEm:new Date().toISOString(),projetoId:S.projetoId||"legado",projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,receitaEAP:S.receitaEAP||[],eapMOD:S.eapMOD||"",eapMOI:S.eapMOI||"",coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[],mesCustoVigente:S.mesCustoVigente||null,classificacaoColunas:S.classificacaoColunas||[],classificacaoLinhas:S.classificacaoLinhas||[],receitaVenda:S.receitaVenda||{},receitaMedicoes:S.receitaMedicoes||[],receitaValoresMedicao:S.receitaValoresMedicao||{},receitaFaturamentoDireto:S.receitaFaturamentoDireto||{},receitaProxId:S.receitaProxId||1,avancoFisicoPct:(S.avancoFisicoPct===undefined?null:S.avancoFisicoPct),fdPrevisto:(S.fdPrevisto===undefined?null:S.fdPrevisto),fdConsumido:(S.fdConsumido===undefined?null:S.fdConsumido),adtValor:(S.adtValor===undefined?null:S.adtValor),adtDescontado:(S.adtDescontado===undefined?null:S.adtDescontado),obraDataInicio:S.obraDataInicio||"",obraPrazoDias:(S.obraPrazoDias===undefined?null:S.obraPrazoDias),dreGer:S.dreGer||null,classificacoes:S.classificacoes||{},unidadesMedida:S.unidadesMedida||[],abcCfg:S.abcCfg||null,abcModCfg:S.abcModCfg||null,takeInOut:S.takeInOut||[],receitaImportadoDeArquivo:!!S.receitaImportadoDeArquivo,contingenciaData:S.contingenciaData||[]};}
+function montarDadosCompletos(){sincronizarAlojamentoIndireto();return {version:52,exportadoEm:new Date().toISOString(),projetoId:S.projetoId||"legado",projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,receitaEAP:S.receitaEAP||[],eapMOD:S.eapMOD||"",eapMOI:S.eapMOI||"",eapSEG:S.eapSEG||"",contingenciaReplans:S.contingenciaReplans||[],eapCONTG:(typeof S.eapCONTG==="string"?S.eapCONTG:null),coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[],mesCustoVigente:S.mesCustoVigente||null,classificacaoColunas:S.classificacaoColunas||[],classificacaoLinhas:S.classificacaoLinhas||[],receitaVenda:S.receitaVenda||{},receitaMedicoes:S.receitaMedicoes||[],receitaValoresMedicao:S.receitaValoresMedicao||{},receitaFaturamentoDireto:S.receitaFaturamentoDireto||{},receitaProxId:S.receitaProxId||1,avancoFisicoPct:(S.avancoFisicoPct===undefined?null:S.avancoFisicoPct),fdPrevisto:(S.fdPrevisto===undefined?null:S.fdPrevisto),fdConsumido:(S.fdConsumido===undefined?null:S.fdConsumido),adtValor:(S.adtValor===undefined?null:S.adtValor),adtDescontado:(S.adtDescontado===undefined?null:S.adtDescontado),obraDataInicio:S.obraDataInicio||"",obraPrazoDias:(S.obraPrazoDias===undefined?null:S.obraPrazoDias),dreGer:S.dreGer||null,classificacoes:S.classificacoes||{},unidadesMedida:S.unidadesMedida||[],abcCfg:S.abcCfg||null,abcCfgs:S.abcCfgs||null,abcModCfg:S.abcModCfg||null,takeInOut:S.takeInOut||[],receitaImportadoDeArquivo:!!S.receitaImportadoDeArquivo,contingenciaData:S.contingenciaData||[]};}
 function salvarJSON(){var data=montarDadosCompletos();var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="custos_"+S.projNome.replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);registrarHistoricoEngCustos("Baixou o arquivo JSON de dados");}
 // Firestore tem um limite rigido de 1 MB por documento. Anexos de contrato (PDF/imagem em base64) podem
 // facilmente estourar isso sozinhos, entao para a NUVEM eles sao removidos (fica so o nome do arquivo, como aviso).
@@ -8989,7 +9226,7 @@ function migrarHEParaFimSemana(he){
   });
   return he;
 }
-function aplicarDadosImportados(d){S.projetoId=d.projetoId||"legado";S.avancoFisicoPct=(d.avancoFisicoPct===undefined||d.avancoFisicoPct===null||d.avancoFisicoPct==="")?null:Number(d.avancoFisicoPct);S.fdPrevisto=(d.fdPrevisto===undefined||d.fdPrevisto===null||d.fdPrevisto==="")?null:Number(d.fdPrevisto);S.fdConsumido=(d.fdConsumido===undefined||d.fdConsumido===null||d.fdConsumido==="")?null:Number(d.fdConsumido);S.adtValor=(d.adtValor===undefined||d.adtValor===null||d.adtValor==="")?null:Number(d.adtValor);S.adtDescontado=(d.adtDescontado===undefined||d.adtDescontado===null||d.adtDescontado==="")?null:Number(d.adtDescontado);S.obraDataInicio=d.obraDataInicio||"";S.dreGer=(d.dreGer&&Array.isArray(d.dreGer.linhas))?d.dreGer:null;S.classificacoes=(d.classificacoes&&typeof d.classificacoes==="object")?d.classificacoes:{};S.unidadesMedida=Array.isArray(d.unidadesMedida)?d.unidadesMedida:[];S.abcCfg=(d.abcCfg&&typeof d.abcCfg==="object")?d.abcCfg:null;S.abcModCfg=(d.abcModCfg&&typeof d.abcModCfg==="object")?d.abcModCfg:null;S.takeInOut=Array.isArray(d.takeInOut)?d.takeInOut:[];S.obraPrazoDias=(d.obraPrazoDias===undefined||d.obraPrazoDias===null||d.obraPrazoDias==="")?null:parseInt(d.obraPrazoDias,10);if(d.projNome)S.projNome=d.projNome;if(d.projSub!==undefined)S.projSub=d.projSub;if(d.projLocal!==undefined)S.projLocal=d.projLocal;if(d.logoB64)S.logoB64=d.logoB64;if(d.obraIni)S.obraIni=d.obraIni;if(d.obraFim)S.obraFim=d.obraFim;if(d.mult)S.mult=d.mult;if(d.he)S.he=migrarHEParaFimSemana(d.he);if(d.aloj)S.aloj=d.aloj;if(d.salMOD)S.salMOD=d.salMOD;if(d.modData)S.modData=d.modData;if(d.moiData)S.moiData=d.moiData;if(d.indiretoData)S.indiretoData=d.indiretoData;if(d.cronograma)S.cronograma=d.cronograma;if(d.pedidos)S.pedidos=d.pedidos;if(d.pedidosCompra){S.pedidosCompra=d.pedidosCompra;var ccoSet={};S.pedidosCompra.forEach(function(p){ccoSet[p.ccoInfo.full]=p.ccoInfo;});S.ccosPed=Object.values(ccoSet);buildFiltroCCOPed();if(S.pedidosCompra.length){document.getElementById("ped-compra-empty").style.display="none";document.getElementById("ped-compra-content").style.display="block";}}if(d.distPedidos)S.distPedidos=d.distPedidos;if(d.distMensal)S.distMensal=d.distMensal;if(d.medicoes)S.medicoes=d.medicoes;if(d.escopos)S.escopos=d.escopos;if(d.razaoMO)S.razaoMO=d.razaoMO;if(d.coletorEAP)S.coletorEAP=d.coletorEAP;S.receitaEAP=(Array.isArray(d.receitaEAP)&&d.receitaEAP.length)?d.receitaEAP:JSON.parse(JSON.stringify(S.coletorEAP||[]));S.eapMOD=d.eapMOD||"";S.eapMOI=d.eapMOI||"";garantirItensEAPReceita();if(d.coletorColapso)S.coletorColapso=d.coletorColapso;if(d.coletorNivelAtivo!==undefined)S.coletorNivelAtivo=d.coletorNivelAtivo;if(d.coletorSyncedCodes)S.coletorSyncedCodes=d.coletorSyncedCodes;if(d.encargos)S.encargos=d.encargos;if(d.equipeEng)S.equipeEng=d.equipeEng;if(d.coletorSubtotais)S.coletorSubtotais=d.coletorSubtotais;if(d.dreReceitaData)S.dreReceitaData=d.dreReceitaData;if(d.dreImpostoPct)S.dreImpostoPct=d.dreImpostoPct;if(d.previstosSalvos)S.previstosSalvos=d.previstosSalvos;if(d.previstoVisualizandoId!==undefined)S.previstoVisualizandoId=d.previstoVisualizandoId;if(d.historicoEngCustos)S.historicoEngCustos=d.historicoEngCustos;if(d.mesCustoVigente!==undefined)S.mesCustoVigente=d.mesCustoVigente;if(d.classificacaoColunas)S.classificacaoColunas=d.classificacaoColunas;if(d.classificacaoLinhas)S.classificacaoLinhas=d.classificacaoLinhas;
+function aplicarDadosImportados(d){S.projetoId=d.projetoId||"legado";S.avancoFisicoPct=(d.avancoFisicoPct===undefined||d.avancoFisicoPct===null||d.avancoFisicoPct==="")?null:Number(d.avancoFisicoPct);S.fdPrevisto=(d.fdPrevisto===undefined||d.fdPrevisto===null||d.fdPrevisto==="")?null:Number(d.fdPrevisto);S.fdConsumido=(d.fdConsumido===undefined||d.fdConsumido===null||d.fdConsumido==="")?null:Number(d.fdConsumido);S.adtValor=(d.adtValor===undefined||d.adtValor===null||d.adtValor==="")?null:Number(d.adtValor);S.adtDescontado=(d.adtDescontado===undefined||d.adtDescontado===null||d.adtDescontado==="")?null:Number(d.adtDescontado);S.obraDataInicio=d.obraDataInicio||"";S.dreGer=(d.dreGer&&Array.isArray(d.dreGer.linhas))?d.dreGer:null;S.classificacoes=(d.classificacoes&&typeof d.classificacoes==="object")?d.classificacoes:{};S.unidadesMedida=Array.isArray(d.unidadesMedida)?d.unidadesMedida:[];S.abcCfg=(d.abcCfg&&typeof d.abcCfg==="object")?d.abcCfg:null;S.abcCfgs=(d.abcCfgs&&typeof d.abcCfgs==="object")?d.abcCfgs:null;S.abcModCfg=(d.abcModCfg&&typeof d.abcModCfg==="object")?d.abcModCfg:null;S.takeInOut=Array.isArray(d.takeInOut)?d.takeInOut:[];S.obraPrazoDias=(d.obraPrazoDias===undefined||d.obraPrazoDias===null||d.obraPrazoDias==="")?null:parseInt(d.obraPrazoDias,10);if(d.projNome)S.projNome=d.projNome;if(d.projSub!==undefined)S.projSub=d.projSub;if(d.projLocal!==undefined)S.projLocal=d.projLocal;if(d.logoB64)S.logoB64=d.logoB64;if(d.obraIni)S.obraIni=d.obraIni;if(d.obraFim)S.obraFim=d.obraFim;if(d.mult)S.mult=d.mult;if(d.he)S.he=migrarHEParaFimSemana(d.he);if(d.aloj)S.aloj=d.aloj;if(d.salMOD)S.salMOD=d.salMOD;if(d.modData)S.modData=d.modData;if(d.moiData)S.moiData=d.moiData;if(d.indiretoData)S.indiretoData=d.indiretoData;if(d.cronograma)S.cronograma=d.cronograma;if(d.pedidos)S.pedidos=d.pedidos;if(d.pedidosCompra){S.pedidosCompra=d.pedidosCompra;var ccoSet={};S.pedidosCompra.forEach(function(p){ccoSet[p.ccoInfo.full]=p.ccoInfo;});S.ccosPed=Object.values(ccoSet);buildFiltroCCOPed();if(S.pedidosCompra.length){document.getElementById("ped-compra-empty").style.display="none";document.getElementById("ped-compra-content").style.display="block";}}if(d.distPedidos)S.distPedidos=d.distPedidos;if(d.distMensal)S.distMensal=d.distMensal;if(d.medicoes)S.medicoes=d.medicoes;if(d.escopos)S.escopos=d.escopos;if(d.razaoMO)S.razaoMO=d.razaoMO;if(d.coletorEAP)S.coletorEAP=d.coletorEAP;S.receitaEAP=(Array.isArray(d.receitaEAP)&&d.receitaEAP.length)?d.receitaEAP:JSON.parse(JSON.stringify(S.coletorEAP||[]));S.eapMOD=d.eapMOD||"";S.eapMOI=d.eapMOI||"";S.eapSEG=d.eapSEG||"";S.contingenciaReplans=Array.isArray(d.contingenciaReplans)?d.contingenciaReplans:[];S.eapCONTG=(typeof d.eapCONTG==="string")?d.eapCONTG:null;garantirItensEAPReceita();if(d.coletorColapso)S.coletorColapso=d.coletorColapso;if(d.coletorNivelAtivo!==undefined)S.coletorNivelAtivo=d.coletorNivelAtivo;if(d.coletorSyncedCodes)S.coletorSyncedCodes=d.coletorSyncedCodes;if(d.encargos)S.encargos=d.encargos;if(d.equipeEng)S.equipeEng=d.equipeEng;if(d.coletorSubtotais)S.coletorSubtotais=d.coletorSubtotais;if(d.dreReceitaData)S.dreReceitaData=d.dreReceitaData;if(d.dreImpostoPct)S.dreImpostoPct=d.dreImpostoPct;if(d.previstosSalvos)S.previstosSalvos=d.previstosSalvos;if(d.previstoVisualizandoId!==undefined)S.previstoVisualizandoId=d.previstoVisualizandoId;if(d.historicoEngCustos)S.historicoEngCustos=d.historicoEngCustos;if(d.mesCustoVigente!==undefined)S.mesCustoVigente=d.mesCustoVigente;if(d.classificacaoColunas)S.classificacaoColunas=d.classificacaoColunas;if(d.classificacaoLinhas)S.classificacaoLinhas=d.classificacaoLinhas;
 // So aplica os dados de Receita da base carregada se ela ja tiver sido salva DEPOIS da correcao dos valores reais
 // da BMM (marcada por receitaImportadoDeArquivo=true). Uma base salva ANTES dessa correcao ainda tem os valores
 // antigos (do seed desatualizado) - nesse caso mantem os dados corretos que ja vem de fabrica no arquivo, em vez
