@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Controle de Custos de Obra — Rev53</title>
+<title>Controle de Custos de Obra — Rev68</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Segoe UI,system-ui,sans-serif}
@@ -381,6 +381,91 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
 .rzc-select optgroup{background:#1f3f67;color:#ffffff;font-weight:800;font-style:normal;}
 .rzc-select option{background:#ffffff;color:#0f172a;font-weight:400;}
 </style>
+
+<style id="ctc-padrao">
+/* ===== Rev66: aparencia do padrao CTC App Standard v1.6.1 (tokens e regras de design-system.css)
+   aplicada sobre as classes deste arquivo. Fica por ultimo para prevalecer sobre o CSS antigo. ===== */
+:root{
+  --ctc-brand-950:#13263f;--ctc-brand-900:#1e3a5f;--ctc-brand-800:#2d4f7c;--ctc-brand-600:#4a7fb5;--ctc-brand-300:#93c5fd;--ctc-brand-200:#bfdbfe;
+  --ctc-neutral-950:#0f172a;--ctc-neutral-900:#1e293b;--ctc-neutral-700:#334155;--ctc-neutral-600:#475569;--ctc-neutral-500:#64748b;--ctc-neutral-400:#94a3b8;--ctc-neutral-300:#cbd5e1;--ctc-neutral-200:#e2e8f0;--ctc-neutral-100:#f1f5f9;--ctc-neutral-50:#f8fafc;
+  --ctc-success-strong:#15803d;--ctc-success-dark:#14532d;--ctc-danger-solid:#dc2626;--ctc-danger-strong:#b91c1c;--ctc-warning-strong:#b45309;--ctc-warning-dark:#92400e;--ctc-info-solid:#2563eb;
+  --ctc-color-overlay:rgba(15,23,42,.6);
+  --ctc-font-sans:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ctc-radius-md:8px;--ctc-radius-lg:12px;
+  --ctc-shadow-1:0 1px 3px rgba(15,23,42,.10);--ctc-shadow-3:0 20px 60px rgba(15,23,42,.30);
+  --ctc-dur-fast:.12s;--ctc-dur-base:.2s;--ctc-ease:cubic-bezier(.2,.7,.3,1);
+}
+*{font-family:var(--ctc-font-sans)}
+body{background:var(--ctc-neutral-100);color:var(--ctc-neutral-900);line-height:1.45;-webkit-font-smoothing:antialiased}
+
+/* Cabecalho: logo com o botao Menu embaixo, titulo e subtitulo, acoes a direita */
+#hdr{position:sticky;top:0;z-index:120;background:var(--ctc-brand-900);padding:10px 20px;box-shadow:0 1px 0 rgba(255,255,255,.06)}
+#hdr .brand{gap:20px;align-items:center}
+.hdr-brand-stack{display:flex;flex-direction:column;gap:6px;width:150px;flex:0 0 auto}
+#logo-wrap{width:100%;height:64px;padding:4px 8px;border-radius:var(--ctc-radius-md);background:transparent;border:1px dashed rgba(255,255,255,.25)}
+#logo-wrap:has(img[style*="block"]){border-color:transparent}
+#logo-hint{color:var(--ctc-brand-300)}
+.hdr-titles{min-width:0}
+#proj-name{font-size:20px;font-weight:700;line-height:1.15;border-bottom:none}
+#proj-name:hover{text-decoration:underline;text-decoration-color:var(--ctc-brand-600);text-underline-offset:3px}
+#proj-sub-el{font-size:12px;color:var(--ctc-brand-300);margin-top:3px}
+.hdr-pagina{display:inline-block;margin-top:6px;padding:2px 10px;border-radius:999px;background:rgba(255,255,255,.08);color:var(--ctc-brand-200);font-size:11px;font-weight:600}
+.hdr-pagina:empty{display:none}
+.hdr-btns .btn{display:inline-flex;align-items:center;height:28px;padding:0 10px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}
+.hdr-btns .btn:hover{background:rgba(255,255,255,.10)}
+#cfg-box{background:var(--ctc-brand-800);border-radius:var(--ctc-radius-lg)}
+
+/* Botao Menu e menu em cascata escuro */
+.ctl-wrap{display:block}
+.ctl-btn{width:100%;height:28px;padding:0 10px;justify-content:center;border-radius:var(--ctc-radius-md);border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);font-size:12px;font-weight:600}
+.ctl-btn:hover{background:rgba(255,255,255,.18)}
+.ctl-dropdown{top:calc(100% + 6px);min-width:260px;padding:8px;background:var(--ctc-neutral-900);border:1px solid rgba(255,255,255,.08);border-radius:var(--ctc-radius-lg);box-shadow:var(--ctc-shadow-3);z-index:400}
+.ctl-dropdown.on{animation:ctc-menu-abrir var(--ctc-dur-base) var(--ctc-ease)}
+.ctl-item{min-height:36px;padding:8px 12px;border-radius:var(--ctc-radius-md);color:var(--ctc-neutral-300);font-size:13px;font-weight:600;transition:background var(--ctc-dur-fast),color var(--ctc-dur-fast)}
+.ctl-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.ctl-item.active{background:rgba(74,127,181,.22);color:#fff}
+.ctl-item.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:999px;background:var(--ctc-brand-300)}
+.ctl-item>span:last-child{opacity:.7}
+.ctl-sub{left:100%;top:-8px;min-width:220px;padding:8px;background:var(--ctc-neutral-900);border:1px solid rgba(255,255,255,.08);border-radius:var(--ctc-radius-lg);box-shadow:var(--ctc-shadow-3)}
+.ctl-item.has-sub:hover>.ctl-sub{animation:ctc-flyout var(--ctc-dur-base) var(--ctc-ease)}
+.ctl-sub .ctl-item{min-height:32px;font-size:12px;font-weight:400}
+@keyframes ctc-menu-abrir{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes ctc-flyout{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+
+/* Botoes */
+.btn{border-radius:var(--ctc-radius-md);border:1px solid transparent;line-height:1.2;transition:background var(--ctc-dur-fast),border-color var(--ctc-dur-fast)}
+.btn:active{transform:translateY(1px)}
+.b-blue{background:var(--ctc-brand-900);color:#fff}.b-blue:hover{background:var(--ctc-brand-800)}
+.b-gray,.b-green,.b-purple{background:var(--ctc-neutral-700);color:#fff}.b-gray:hover,.b-green:hover,.b-purple:hover{background:var(--ctc-neutral-600)}
+.b-yellow{background:var(--ctc-neutral-500);color:#fff}.b-yellow:hover{background:var(--ctc-neutral-600)}
+.b-red{background:var(--ctc-danger-solid)}.b-red:hover{background:var(--ctc-danger-strong)}
+.b-orange{background:var(--ctc-warning-strong)}.b-orange:hover{background:var(--ctc-warning-dark)}
+.b-outline{background:#fff;color:var(--ctc-neutral-700);border-color:var(--ctc-neutral-300)}.b-outline:hover{background:var(--ctc-neutral-50)}
+
+/* Paineis e cards */
+.box{border-radius:var(--ctc-radius-lg);box-shadow:var(--ctc-shadow-1)}
+.card{border-radius:var(--ctc-radius-lg);box-shadow:var(--ctc-shadow-1)}
+
+/* Tabelas */
+tbody tr:hover>td{background-color:var(--ctc-neutral-50)}
+
+/* Formularios */
+.fg label{font-size:11px;font-weight:600;color:var(--ctc-neutral-600);text-transform:none}
+.fg input,.fg select,.fg textarea{border:1px solid var(--ctc-neutral-300);border-radius:var(--ctc-radius-md);transition:border-color var(--ctc-dur-fast),box-shadow var(--ctc-dur-fast)}
+.fg input:hover,.fg select:hover,.fg textarea:hover{border-color:var(--ctc-neutral-400)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info-solid);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+
+/* Modais */
+.modal-bg{background:var(--ctc-color-overlay)}
+.modal{box-shadow:var(--ctc-shadow-3);animation:ctc-pop var(--ctc-dur-base) var(--ctc-ease)}
+.mh{background:var(--ctc-neutral-900);z-index:2}
+.mc{width:28px;height:28px;padding:0;background:rgba(255,255,255,.18);font-size:13px;line-height:1}
+.mc:hover{background:rgba(255,255,255,.30)}
+@keyframes ctc-pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+
+@media (max-width:640px){.hdr-brand-stack{width:120px}#proj-name{font-size:16px}}
+@media (prefers-reduced-motion:reduce){.ctl-dropdown.on,.ctl-item.has-sub:hover>.ctl-sub,.modal{animation:none}}
+</style>
 </head>
 <body>
 <div id="landing-screen" style="position:fixed;inset:0;z-index:150;background:linear-gradient(135deg,#0f172a,#1e293b);display:flex;align-items:center;justify-content:center;padding:20px">
@@ -394,7 +479,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
 
     <div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px">
       <label style="font-size:12px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.4px">1. Importar dados da obra (JSON)</label>
-      <p style="font-size:11px;color:#94a3b8;margin:4px 0 10px">Necessario para acessar como Visualizador. Para Engenheiro de Custos, tambem e possivel comecar do zero.</p>
+      <p style="font-size:11px;color:#94a3b8;margin:4px 0 10px">Necessario para acessar como Visualizador. Para Controlador, tambem e possivel comecar do zero.</p>
       <button class="btn b-outline" style="width:100%" onclick="document.getElementById('inp-json').click()">&#128193; Importar base de dados</button>
       <button class="btn b-outline" style="width:100%;margin-top:8px" onclick="abrirModalVersoes()">&#9729; Abrir Versao (Nuvem)</button>
       <div id="landing-json-status" style="font-size:12px;color:#94a3b8;margin-top:8px">Nenhum arquivo carregado ainda.</div>
@@ -410,11 +495,11 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       <label style="font-size:12px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.4px">2. Como voce vai acessar?</label>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
         <button class="btn" style="width:100%;background:#334155;color:#fff;padding:12px" onclick="landingEntrarVisualizador()">&#128065; Visualizador <span style="font-weight:400;opacity:.8">(somente leitura)</span></button>
-        <button class="btn" style="width:100%;background:#64748b;color:#fff;padding:12px" onclick="landingEntrarEngenheiro()">&#128295; Engenheiro de Custos <span style="font-weight:400;opacity:.8">(edicao completa)</span></button>
+        <button class="btn" style="width:100%;background:#64748b;color:#fff;padding:12px" onclick="landingEntrarEngenheiro()">&#128295; Controlador <span style="font-weight:400;opacity:.8">(edicao completa)</span></button>
         <button class="btn b-outline" style="width:100%;padding:12px" onclick="landingAbrirAdmin()">&#128737; Administrador <span style="font-weight:400;opacity:.8">(gerenciar acessos)</span></button>
       </div>
       <div style="text-align:center;margin-top:12px">
-        <a href="javascript:void(0)" onclick="landingComecarDoZero()" style="font-size:11px;color:#94a3b8;text-decoration:underline">Comecar obra do zero, sem importar JSON (Engenheiro de Custos)</a>
+        <a href="javascript:void(0)" onclick="landingComecarDoZero()" style="font-size:11px;color:#94a3b8;text-decoration:underline">Comecar obra do zero, sem importar JSON (Controlador)</a>
       </div>
     </div>
   </div>
@@ -446,7 +531,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
         <ul style="font-size:12px;color:#475569;margin:0 0 12px 18px;line-height:1.7">
           <li>Com o JSON j&aacute; carregado (confirma&ccedil;&atilde;o em verde na tela), v&aacute; at&eacute; &ldquo;2. Como voc&ecirc; vai acessar?&rdquo;.</li>
           <li>Clique em &ldquo;Visualizador (somente leitura)&rdquo; para consultar os dados da obra.</li>
-          <li>Use &ldquo;Engenheiro de Custos (edi&ccedil;&atilde;o completa)&rdquo; caso precise editar os dados.</li>
+          <li>Use &ldquo;Controlador (edi&ccedil;&atilde;o completa)&rdquo; caso precise editar os dados.</li>
         </ul>
         <img src="data:image/jpeg;base64,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FLSUtABRRRQAUUUUAFFFAoAKKWigBKWiigBKWiigAooooAKKKKACig0uKAEopaKAEpaKKACiiigAooooAKKKUUAFFFFACUtFLQAlFLRQAUUUUAFFFFABRRRQAUUtFACUtFFABRRRQAUUUUAFFKKKAEopaKAAUUUUAFFFFABRS0lABRS4ooASlFFFAC0UUUAFFFFABRRRQAUUtFACUtFFABRRRQAUUUUAFFFLQAlFLRQACiiigAooooAKKKKACilFFAhKWiloAKKKKBhRRRQAUUUUAUKXNJSigAooooAKKKKACiiigAooooAKXNJRQAuaM0lLQAUtFFABRRRQAUUUUAFFFFABRRRQAuaM0UlAC0UUUAFFFFABRRRQAUuaSigBaM0lFAC0UUUAFFFFABRRRQAUUUUAFLRSUALmjNFFAC0UgpaACiiigAooooAKKKKAClpKO9AC0UUUAFFFFABRRRQAUtJRQAuaKSloAKKKKACiiigApaSigBc0UlFAC5ooFLQAUUUUAFFFFABRRRQAUZoooAWiiigAooooAKKKKACiiigApc0lKKACiiigAooooAKKKKBC0UlFAC5ooFLQMSiiloAKKKKACiiigQZooooAo0UUUDCiiigAooooAKKKKAFxRRRQAYoopaAEopaKACiiigAooooAKKKKAClxSUtABiijNFABRRRQAUUUUAFFFFABRS0UAGKMUZooAKKKKACiiigAooooAKKKKAFooozQAYoopaACkpaKACiiigAooooAKKWkoAMUuKKKACiiigAooooAKKKKACloozQAUYoooAKKKKACiiigApaKKAEpcUUUAGKKKKACloooAKKKKACiiigApcUUUAGKKKKACiiigAooooAKKKKAFxRiiigAooooAKKKKACiiloASloozQAYoxRRQAUtJS0AFFFFABRRRQIKXFJS0AGKKKKBlCiiigAooooAKKKXFACUUuKMUAJS0YoxQAUtJS0AFFFFABRRRQAUUUYoAKKMUYoAKKXFFACUtFFABRRRQAUUUUAFFFLigBKKXFGKACiiigAooooAKKKKAClpKXFACUtGKMUAFFGKKACgUYpaACiiigAooooAKKKMUAFFLijFACCloooAKKKKACiiigAooxS4oASilxRigAooooAKKKKACilpKACilxRigBKUUYooAWiiigAooooAKKKKACijFGKACloooAKKKKACiiigAoopcUAJRS4oxQAUUUUAFFFFABRRRQAUUuKMUCEpRRiigBaSlooGFFFFABRRRQAUUYoxQIKWiigAooooGUKKKKACiiigBRRSUUALRSUvegBaKKKACiiigAooooAKKKKAClpKKAFopKKAFooooAKKKKACiiigApaSigBaKSloAKKKKACiiigAooooAKKWkoAKWiigBaKSigBaKKKQBRRRTAKKKKAClpKKAClpKKAFooopAFFFFMAooooAWikooAWikpaQBRRRQAUUUUwClpKWgAooooAKKBS0AFFFFABRRRQAUUUUAFLSUUALRRRQAUUUUAFFFFABQaKKAFopKWgAooooAKKKKACiiloEFFJRQAtLSCloGJS0lLQAUUUUAFFFFAgooooAWiiigAooooGFFFFAFCiilFABijFFFABijFFLQAmKKKWgAooooAKKKKACiiigAxRilooATFLRRQAUUUUAFFFFABRRRQAYopaMUAGKMUUUAGKMUUUAFFFFABRRRQAUUUUALijFLRQAmKMUtJmkAUZpK7Tw98GfH/imwTUNJ8MXktpIN0c0rJCsg9V3sCR7jihtLcaOMzRmvR/+GdPil/0Ksn/gZb//AByj/hnT4pf9CrJ/4GW//wAcqeZdwszzjNGa9H/4Z0+KX/Qqyf8AgZb/APxyj/hnT4pf9CrJ/wCBlv8A/HKOddwszzijNej/APDOnxS/6FWT/wADLf8A+OUf8M6fFL/oVZP/AAMt/wD45RzruHKzziivR/8AhnT4pf8AQqyf+Blv/wDHKP8AhnT4pf8AQqSf+Bdv/wDHKOddwszzmivRv+GdPil/0Kkn/gXb/wDxyj/hnX4pf9CrJ/4F2/8A8co513CzPOaK9H/4Z1+KX/Qqyf8AgXb/APxyj/hnX4pf9CrJ/wCBdv8A/HKOddwszzijNej/APDOvxS/6FWT/wAC7f8A+OUf8M6/FL/oVZP/AAMt/wD45RzruHKzzjNGa9H/AOGdfil/0Ksn/gZb/wDxyj/hnX4pf9CrJ/4GW/8A8co513CzPOKK9H/4Z1+KX/Qqyf8AgZb/APxyj/hnX4pf9CrJ/wCBlv8A/HKOddwszzmivRv+Gdfil/0Ksn/gXb//AByj/hnX4o/9Cq//AIF2/wD8co513CzPOc0V6N/wzr8Uv+hVk/8AAu3/APjlH/DOvxS/6FV//Au3/wDjlHOu4WZ5zRXo/wDwzr8Uf+hVk/8AAu3/APi6P+Gdfij/ANCrJ/4F2/8A8co513CzPOKK9H/4Z1+KP/Qqyf8AgXb/APxyj/hnX4o/9CrJ/wCBdv8A/HKOddwszzilr0b/AIZ1+KP/AEKsn/gXb/8Axyj/AIZ1+KP/AEKsn/gXb/8AxyjnXcLM85pc16N/wzt8Uf8AoVZP/Au3/wDjlcz4r+H3irwO0Y8RaHd6ekp2xyuA0bn0DqSufbOaakmFmc/S02lqhC0UUUAGKMUtFACYpaKKACiiigAooooAKKKXFABijFFFABiiiigAooooFcKKKWgYlLijFLQAmKMUtJQAUtFFABRRRQAUUUUCCjFKKKAExS0UUDCiiigAooooEFFKKKAM+ilxRigYlLRijFAAKWkpaACiiigAooooAKKKMUAFFGKMUAFFLRQAlLRRQAUUUUAFFFFABRRRigAopcUYoABRRRQAUUUUAFFFFABRRS4oASlooxQAlLRiigApKWkpAdv8FPDll4s+KOgaTqMay2jzPNLEwyJBHG0m0+xKjPtX3wqhVAAAAGAB2r4c/Zr/AOS0aB/u3P8A6TyV9yVzVtzWGwUUUVkWFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABWP4w8N2Hi3w1qOi6jCktvdwsh3D7rY+Vh6EHBB9q2KZN/qX/3T/KhAfmtyOCckcGlppPzH6mlruOcdRQKMUwCloooAKKKKACiiigAoopcUAJRS4oxQAUUUUAFFFFABRRRQAtJS4oxQISlFGKKAFpKWigYUUUUAFFFFABRRijFAgpaKKACiiigAooooGFFFGKBBRRiigCjRRQKBhS0UUAFFFFABRRRQAUUUUAFLSUUALRSUUALRRRQAUUUUAFFFFABS0lFAC0UlLQAUUUUAFFFFABRRRQAUUtJQAtLSUUALRSUUALRRRSAbQaKQ0MZ6Z+zWf+L06B/u3P8A6TyV9y18Nfs1f8lp0D/duf8A0nkr7lrmq7mkNjkvijq2paL4SlutNlmtibiCO5uoY/Me1t2kVZZVXB5VCTnBx17Vyet/ERPCNtFB4d1W11Wza2ur0X+p3j3K3EsezFpE6n/WNuyBk47Keg9UubmG0jEk0gRSQoJ7k9BSebbKuN8IC5OMjjHX8qhOyKZ5kPiX4ludbe0isNOtrd9SGlIkySGeKR7H7QrNg7Ttb5Soxn1FY/hr4r+LptGsZDb6drckHh+TWL0xq6TyOrunkqq5AkyADwMc8dBXsKX9lJcPAs0Rlj+Zl6EcdfyqbfCgVt0Y3jIOR83f/wCvTuu39W/pis+54zc/EXWNZutGIeC5S01u3H2jR3kEF8r2c0hg5JyysoBGSMlcgHiuk+H3xK1fxV4d1bVr3SIM2dutxDFaShmkYxsxgK7mKupUDJ2k5+6vSvQVlt/lVXi5wygEc57ika4toIHnMkaxDJZ8jHvQ2rNJAk7q7PBrT4t63DqWoa2JLG/+02WlpstpHNpYGV5ixcO4G5cBWO5QTtyV6V23iTxdrM/w+0HV5N+jDULu3j1S4tHWX7HbMSHkRxuABwo387Q+e2a9DEtsV+/Fg5B5HPGSP605ZoXIjV1JI4HqMA8eo5FDkuwJPueT+IPiengqOW10e9ttXshprXlnd3d09w1zP9pWNolkB+cKrZwOR9Kp698VfEko1iC0udK01tM1S0ieZYzcRJavceWWeUPtB4yykKyjPs1exeZbBQN8QUZA5GOOv/16XzLcbl3xDJ5GRzkZ/lQpLTQGnseVP8XtaGoX9vFYaTI0Qv1W1knaGS1Nv/q5bh2+VY5TjBwMBlwW5I1P+Fm3p+G9r4ljhtTcz3iWcks0TxW1tum8tpXG5iY167gxB6hgDkeg+ZAVZt8RG0Fjkfd7Z9qa11ao3kNNCrbSdhYfdGM8egyPzpXXYLHhek/FbxBolksUENtqz3uqanILmecrDII7hVWGJpHXbkMSuS2ABhW5I7jx3rDw+K9LsNW1q78P+H5bGedruCbyPMulZQsbS/w4QswXjcR3xiu/d4F4doxj58Ej8/8A69BlhcN86MFPIyDgihy20BLc8BsPiP4q0bULTUNQmjuL2XRLJv7PvN6SXpa8lQGKNcBZmj2MePTjHToNX+MOv6Xo9/qMtppSY1G8srGPZIxlFsZN3mMWVUJCrjBJ64Vug9e8yE7G3JlsbScZP+eafsXGNoxnPSm5J9ASKmi6j/a+j2Oo+X5X2u3jn2Zzt3KGxn2zVygDAwKKl76DWwUUUUhhRRRQAUUUUAFFFFABRRRQAUyb/Uv/ALp/lT6ZN/qX/wB0/wAqAPzVP3j9TSimn7x+ppwrtRgOpaaKdTEFFFFMAooooAKKKKAFopKWgAooooAKKKKACiiloEFFFFAXFopKKBi0UlLQAUUUUAFFFFAgpaSigBaKKKACiiigYUUUUAFFFFAgFLSUtABRRRQFyhiilooGFFFFABRRRQAUUUUAGKMUtFACYpaKKACiiigAooooAKKKKACilNFABijFFFABiiiigAooooAKKKKAClpKUUAFGKKWgBMUYpaKAExRS0UAFFFFADaQ0tIaTGel/s1f8lp8P/7tz/6TyV9zV8M/s1f8lp8P/wC7df8ApPJX3NXLV3NIbFXUbBdRhSNnZNkiyAgA8j61nnwvB82J5BuOcbEIU7twwCOBnqO/etqjNRcqxijwpZruKyzByAA/ykrgEccd804+Gbc21vb+dLthjaIEhTkE57jjn07cGtjIoyKLsLIxR4Tsc72Zy5O4sAoOcqeMDj7vbpk09vDVu1h9k86QDfv3BU/ubPu4x932681r5FGRRdhZGD/wh9mEZFmnUMWywI3EEdCfSnWHhlLW7iuWmb9y5aONPu42bcnIznHPp+VbmRRkUXYWRg/8IhbbZQbqdjMSWJC5zkEY446c4696kHha3QgxzyxY6bFUY+XaeoPXv64FbWRRkUXYWRjxeGLSHTZrFZJdsxVmfjdlcY7dOOlRP4RtHQoJZEXnaFC4X7vtnqgJ555rdyKMii7CyMm58N211NayPJJstkVEjGNuAe+R7VXTwpGHkzdSCNsABVUEqMHBOOeVHPWt7IoyKLsLIxl8LWiMjLLKNrZwdp444HHHK5yOfmPrWzRkUZFFwsFFGRRkUhhRRkUZFABRRkUZFABRRkUZFABRRkUZFABRRkUUAFMm/wBS/wDun+VPpk3+pf8A3T/KgD80z94/U08Uw/eP1NPFdqMBadTadTEFFFFMAoopRQAmKMUtFABRRRQAUUUUAFFFLQAlLiiloATFGKWkoAWiiigAooooAKKKKBBRilooATFLRRQMKKKKACiiigQUUUUAGKXFFFABiiiigAooooAo0UUUDCiiigAooooAKKKMUAFFLSGgApaKKACiiigAooooAKKKMUAFGaMUtABRRRQAUUUUAFFFFABS0UUAJRS0YoAM0ZoxRigApaSloAKKKKACiiigBtIaWkNJjPS/2av+S0+H/wDduf8A0nkr7mr4a/Zq/wCS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/wBDtr3/AIE//Wo/4XD8Rf8Aodte/wDAn/61cjtpdtHKgudb/wALh+Iv/Q7a7/4E/wD1qP8AhcPxF/6HbXf/AAJ/+tXJbaNtHKgudd/wuL4i/wDQ7a7/AOBP/wBaj/hcPxF/6HbXf/An/wCtXI7aXbRyoLnXD4w/EX/oddd/8Cf/AK1YuueJ9c8TzpPrmsX+pyRjCNdTNJs+gPA/CswLTgKpJCuAFPApAKdVCFpaQUtABRRRTAKKKKACiiigQuKKSlFABRRRQAUUUUDCiiigBaKKKBBS0lFAC0UlLQAUUUUBcKKKKAClpKKAFoopKAFooooAKKKKACiiigApaSloAKKKKAM+lpKUUDCilooATFGKWigBKKWigAooooAKKKKACig0UAGKMUtFACYpaKKACiiigAoopaAEoopaADFJilooABRRRQAUUUUAFFLQaAEpcUUtACYopaSgBaKKKAEopaKAG0mKdijFIBuKMU7FGKAGYoxT8UYosA3bSYp+KMUWAbto207FGKLAN20Yp2KXFFhjMUYp+KMUhDMUu2nYoxQAzbS7adijFMBu2jbT8UYpAM20Yp+KMUwGYoxT8UYoAbijFOxRikA3FGKdijFMBuKMU/FGKAGgUuKdiigAxSgUUtABRRRTAKKKKBBRRSigBKMUtFABRRRQAUUUUDCiiloEJS0lOoATFGKWigAooooAKKKKACiiigAooFLQAmKUUUUAFFFFABRRRQAUUUUAFGKWigBMUtFFABRRRQBn0tFFAwzRRRQAUtIKWgAooooAKKKKACiiigAooooAWiiigAooooAKKKKACiiigApaSlFABRRRQAUUUUAFFFFAC0UUUAFLSd6WgAooooAKKKKACiiigAooooAMUYpaKAExRilooATFGKWigAxRRRQAYoxRSigBMUYpaKAExS4oooAMUYoooAMUYpaKBCUuKKWgYmKMUtFIBMUYpaKAExRilooAMUmKWigQYpcUCimAUUUUAFFFFAwooooEFFFLQAUUUUAFFFFAwooooAWikpaBBRRS0AJRS0UAFFFFABRRRQAUUUUDCloFFAhKWiigAooooAKKKKACiiigBaKKKACiiigAooooAo0UmaKBi0UUUAFFFFABRRRQAUUUZoABS0maWgAooooAKKKKACiiigBaSjNGaAFooooAKKKKACiiigApRSUuaAEpRRRQAUtFJQAUtFFABRRRQAUUUUAFLSZpaACiiigAooooAKKKKBBRRRQMUUUZooAKKKKACiiigAoopaBCUtFGaBi0UlFABS0UUAFFFFABRRRQIKWkooAWiiigYUUUUAFFFFABRRRQIUUUZooAKKKKACiiigYUUUtAhKWiigBaKSigApaSloAKKKKBhRRRQIKWkozQAtFFJQAtFFFABRRRQAUUUUAApaTNLQAUUUUAFFFFABRRRQAUUtFAXM+gUtFAwooooAKKKKACiiigAopaKAEpaKKACiiigAooooAKKKWgBKKWigAFFFFABRRRQAUUtJQAUUtLQA2lFLRQAUUUUAFFFFABRRRQAUUtFACUtFFABRRRQAUUUUAFFFLQAlFLRQACiiigAooooAKKKKACilFLQKw2lpaSgBaKKKBhRRRQAUUUUCuFFLRQFhKWiigAooooGFFFFAgoopRQFxKKWigAFFFFAWCiiigAooooC4UUtLQFxtLS0UAFFFFAWCiiigAooooAKKWigLiUooooAKKKKACiiigAoopRQAlFLRQAlLRRQAUUUUAFFFFABRRS0AJRS0UAUKKKKBhRRRQAUUUUAFGaKKAFooooAKKKKACiiigAooooAXNFJS0AFFFFABRRRQAUUUUALmikooAWlpBS0AJS0UUAFFFFABRRRQAUZoooAWiiigAooooAKKKKACiiigApc0lKKACiiigAooooAKKKKAFopKKBC5oopaBiUtFFABRRRQAUUUUCCiiigBaKKKACiiigYUUUUAFFFFAgpc0lKKACiiigAooooGFFFFAC0UlFAhaKKWgBKKWigAooooAKKKKACiiigYZpaKKBBRRRQAUUUUAFFFFABRmiigBaKKKACiiigAooooAKKKKAFozSUtABRS0UAZ9FFFAwopaKAEpaKKACiiigAooooAKKKWgBKKWigAooooAKKKKACiiigApaKKAEpRQKKAFoopKAFooooAKKKKACiijvQAUtFFABRRRQAUUUUAFFFFABRS0CgAooooAKKKKACiiigQUUUtAxKUUUUALRSUUALRRRQAUUUUAFFFBoEFLSCloAKKKKBhRRRQAUUUUCCiloFABRRRQAUUUUAFFFFAwoopaBCUooooAKWkooAWiiigAooooGFFFFAgpaQUtABRRRQAUUUUAFFFFABRS0lAC0UUUAFFFFABRRRQAUUUUAFLSUooAKKKKAClpKWgAooooA/9k=" style="width:100%;border-radius:8px;border:1px solid #e2e8f0;display:block"/>
       </div>
@@ -467,26 +552,11 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
 <div id="hdr">
   <div class="hdr-row">
     <div class="brand">
+      <!-- Rev66 (padrao CTC): logo com o botao Menu embaixo -->
+      <div class="hdr-brand-stack">
       <div id="logo-wrap" title="Trocar logo"><div id="logo-hint">Logo</div><img id="logo-img" alt=""></div>
-      <div>
-        <div id="proj-name">Controle de Custos de Obra</div>
-        <div id="proj-sub-el">Lucro Presumido - Grau de Risco 3 - <span id="hdr-meses">0</span> meses</div>
-      </div>
-    </div>
-    <div class="hdr-btns">
-      <button class="btn b-yellow b-sm" id="btn-eng-custos" onclick="abrirEng()">Eng. Custos</button>
-      <button class="btn b-outline b-sm" onclick="landingSairTrocar()" title="Volta a tela inicial para trocar de papel ou importar outro JSON">&#8630; Sair/Trocar</button>
-    </div>
-  </div>
-  <div id="cfg-box">
-    <div><label>Inicio da Obra</label><input type="month" id="obra-ini" value="2024-01" onchange="recalc()"></div>
-    <div><label>Termino Previsto</label><input type="month" id="obra-fim" value="2035-12" onchange="recalc()"></div>
-    <div id="cfg-info" style="color:#bfdbfe;font-size:11px;line-height:1.8"></div>
-  </div>
-</div>
-<div id="tabs">
   <div class="ctl-wrap" id="ctl-wrap">
-    <button class="ctl-btn" onclick="toggleControlesMenu()">&#9776; Controles <span id="ctl-atual" style="font-weight:400;opacity:.8"></span></button>
+    <button class="ctl-btn" onclick="toggleControlesMenu()">&#9776; Menu</button>
     <div class="ctl-dropdown" id="ctl-dropdown">
       <!-- Rev50: ordem do menu - Dados da Obra, Visao Gerencial, Receita, Custos, Planejamento, Sistema de Compras -->
       <div class="ctl-item" data-idx="9" onclick="setTabAndClose(9)">&#128204; Dados da Obra</div>
@@ -543,6 +613,23 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       <div class="ctl-item" data-idx="2" onclick="setTabAndClose(2)">Planejamento</div>
       <div class="ctl-item" data-idx="5" onclick="setTabAndClose(5)">Sistema de Compras</div>
     </div>
+  </div>
+      </div>
+      <div class="hdr-titles">
+        <div id="proj-name">Controle de Custos de Obra</div>
+        <div id="proj-sub-el">Lucro Presumido - Grau de Risco 3 - <span id="hdr-meses">0</span> meses</div>
+        <div id="ctl-atual" class="hdr-pagina"></div>
+      </div>
+    </div>
+    <div class="hdr-btns">
+      <button class="btn b-yellow b-sm" id="btn-eng-custos" onclick="abrirEng()">Controlador</button>
+      <button class="btn b-outline b-sm" onclick="landingSairTrocar()" title="Volta a tela inicial para trocar de papel ou importar outro JSON">&#8630; Sair/Trocar</button>
+    </div>
+  </div>
+  <div id="cfg-box">
+    <div><label>Inicio da Obra</label><input type="month" id="obra-ini" value="2024-01" onchange="recalc()"></div>
+    <div><label>Termino Previsto</label><input type="month" id="obra-fim" value="2035-12" onchange="recalc()"></div>
+    <div id="cfg-info" style="color:#bfdbfe;font-size:11px;line-height:1.8"></div>
   </div>
 </div>
 <div class="sec wrap" id="sec0">
@@ -653,6 +740,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       <h3>Planilha Detalhada Custo Indireto - Quantidade e Valor por Mes</h3>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Indireto')">&#10133; Novo Item</button>
+        <button class="btn b-sm b-blue" onclick="saldoColAbrirNova('Indireto')" title="Cria uma coluna a direita para guardar o saldo a gastar de cada linha">&#128274; Nova Coluna de Saldo</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Indireto')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Indireto')">&#128065; Reexibir Previsto</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Indireto')">&#128190; Exportar Excel</button>
@@ -679,6 +767,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       <h3>Planilha Detalhada Servico - Quantidade e Valor por Mes</h3>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Servico')">&#10133; Novo Item</button>
+        <button class="btn b-sm b-blue" onclick="saldoColAbrirNova('Servico')" title="Cria uma coluna a direita para guardar o saldo a gastar de cada linha">&#128274; Nova Coluna de Saldo</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Servico')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Servico')">&#128065; Reexibir Previsto</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Servico')">&#128190; Exportar Excel</button>
@@ -705,6 +794,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       <h3>Planilha Detalhada Material - Quantidade e Valor por Mes</h3>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Material')">&#10133; Novo Item</button>
+        <button class="btn b-sm b-blue" onclick="saldoColAbrirNova('Material')" title="Cria uma coluna a direita para guardar o saldo a gastar de cada linha">&#128274; Nova Coluna de Saldo</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Material')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Material')">&#128065; Reexibir Previsto</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Material')">&#128190; Exportar Excel</button>
@@ -731,6 +821,7 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       <h3>Planilha Detalhada Equipamento - Quantidade e Valor por Mes</h3>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Equipamento')">&#10133; Novo Item</button>
+        <button class="btn b-sm b-blue" onclick="saldoColAbrirNova('Equipamento')" title="Cria uma coluna a direita para guardar o saldo a gastar de cada linha">&#128274; Nova Coluna de Saldo</button>
         <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Equipamento')">&#128065; Ocultar Previsto</button>
         <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Equipamento')">&#128065; Reexibir Previsto</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Equipamento')">&#128190; Exportar Excel</button>
@@ -837,7 +928,8 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="abrirSalvarPrevistoModal()" title="Guarda uma copia nomeada de todos os previstos atuais e fixa (trava) todos eles">&#128190; Salvar Previsto</button>
       <button class="btn b-sm" style="background:#1e40af;color:#fff;border:none" onclick="abrirVerPrevistoModal()" title="Escolhe um previsto salvo para visualizar nas tabelas e nos cards">&#128065; Ver Previsto Salvo</button>
-      <select class="ms" id="mes3" onchange="syncMes(this.value)"></select>
+      <select class="ms" id="mes3" onchange="razaoVigenciaDashboard(this.value);syncMes(this.value)" title="Mes de vigencia: ate este mes, Custo Indireto/Servico/Material/Equipamento usam o real do Razao"></select>
+      <button class="btn b-sm" id="razao-real-status" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac" onclick="razaoVigenciaDashboard(document.getElementById('mes3').value,true)" title="Aplica o real do Razao ate o mes selecionado ao lado"></button>
     </div>
   </div>
   <div class="cards dash-linha1" id="dash-cards"></div>
@@ -1613,11 +1705,37 @@ body.modo-view .tio-del,body.modo-view .tio-add{display:none}
       <div id="admin-equipe-err" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px"></div>
       <div id="admin-equipe-lista"></div>
       <div style="border-top:1px dashed #e2e8f0;margin:16px 0 12px"></div>
+      <p style="font-weight:700;font-size:13px;margin-bottom:4px">&#9729; Nuvem (Firebase)</p>
+      <p style="font-size:11px;color:#64748b;margin-bottom:10px">Cole o trecho <b>firebaseConfig</b> copiado do console do Firebase (Configuracoes do projeto &rarr; Seus apps). A configuracao fica salva neste navegador e vai junto no JSON exportado.</p>
+      <div id="nuvem-status" style="font-size:12px;margin-bottom:8px"></div>
+      <div class="fg"><label>firebaseConfig</label><textarea id="nuvem-config" rows="9" style="width:100%;font-family:monospace;font-size:11px" placeholder="const firebaseConfig = { apiKey: &quot;...&quot;, projectId: &quot;...&quot;, appId: &quot;...&quot; };"></textarea></div>
+      <div class="fg"><label>Colecao no Firestore</label><input type="text" id="nuvem-colecao" placeholder="Controle de Custo"></div>
+      <div id="nuvem-err" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn b-outline" style="flex:1" onclick="nuvemRestaurarPadrao()">Restaurar padrao do arquivo</button>
+        <button class="btn b-blue" style="flex:1" id="nuvem-btn-salvar" onclick="nuvemSalvarConfig()">Testar e salvar</button>
+      </div>
+      <div style="border-top:1px dashed #e2e8f0;margin:16px 0 12px"></div>
       <p style="font-weight:700;font-size:13px;margin-bottom:4px">&#128220; Historico de acoes</p>
       <p style="font-size:11px;color:#64748b;margin-bottom:10px">Data, hora e usuario de cada acao feita dentro da tela do Engenheiro de Custos (Configuracoes Avancadas).</p>
       <div id="admin-historico-lista" style="max-height:220px;overflow-y:auto"></div>
       <div style="padding-top:14px;text-align:right">
         <button class="btn b-outline" onclick="document.getElementById('modal-admin-equipe').classList.remove('on')">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="modal-saldo-col">
+  <div class="modal" style="max-width:440px">
+    <div class="mh"><h3>&#128274; Nova Coluna de Saldo</h3><button class="mc" onclick="document.getElementById('modal-saldo-col').classList.remove('on')">X</button></div>
+    <div class="mb">
+      <p style="font-size:12px;color:#64748b;margin-bottom:14px">Cria uma coluna a direita da tabela de <b id="saldo-col-cat"></b>, separada das demais. Depois clique em <b>Colar saldo</b> na propria coluna para travar, em cada linha, a <b>Qtd Total</b> e o <b>Valor Total</b> (o contrato). A coluna <b>A distribuir</b> mostra quanto falta (valor travado &minus; total atual da linha) para voce redistribuir nos meses futuros. Os valores travados nao podem ser digitados &mdash; so colados novamente.</p>
+      <div class="fg"><label>Nome da coluna</label><input type="text" id="saldo-col-nome" placeholder="Ex: Saldo Set/26"></div>
+      <div class="fg"><label>Mes de vigencia</label><input type="month" id="saldo-col-corte" onchange="document.getElementById('saldo-col-nome').value='Saldo '+mlbl(this.value)"></div>
+      <div id="saldo-col-err" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn b-outline" style="flex:1" onclick="document.getElementById('modal-saldo-col').classList.remove('on')">Cancelar</button>
+        <button class="btn b-blue" style="flex:1" onclick="saldoColCriar()">Criar coluna</button>
       </div>
     </div>
   </div>
@@ -2077,7 +2195,7 @@ function criarEstadoProjetoVazio(nome,local,ini,fim){
   S.obraIni=ini;S.obraFim=fim;S.mesSel="";
   S.aloj={vlrAlimentacao:0,diasMes:26,vlrMoradia:0,vlrVaVr:0};
   S.salMOD={};
-  S.modData=[];S.moiData=[];S.indiretoData=[];
+  S.modData=[];S.moiData=[];S.indiretoData=[];S.saldoColunas={};S.razaoDados=[];S.razaoArquivoNome="";S.razaoRealAte="";
   S.cronograma=[];S.pedidos=[];S.pedidosCompra=[];S.distPedidos={};S.ccosPed=[];S.distMensal={};S.medicoes={};S.escopos={};S.razaoMO={};
   S.filtPed={ccos:null,busca:"",saldo:"todos"};S.pagPed=0;
   S.coletorEAP=[];S.receitaEAP=[];S.eapMOD="";S.eapMOI="";S.eapSEG="";S.eapCONTG=null;S.contingenciaReplans=[];S.coletorColapso={};S.coletorNivelAtivo=null;S.coletorBusca="";S.coletorMostrarMeses=false;S.coletorSyncedCodes=[];S.coletorSubtotais=[];
@@ -2229,7 +2347,58 @@ function abrirPainelAdmin(){
   senhasVisiveis={};
   renderEquipeEng();
   renderHistoricoEngCustos();
+  nuvemRender();
   document.getElementById("modal-admin-equipe").classList.add("on");
+}
+// === Nuvem (Firebase): configuracao editavel pelo Administrador ===
+// Le o trecho copiado do console do Firebase (aceita "const firebaseConfig = {...}", JSON ou so os campos)
+function nuvemInterpretar(texto){
+  var config={},re=/["']?(apiKey|authDomain|projectId|storageBucket|messagingSenderId|appId|measurementId|databaseURL)["']?\s*:\s*["'`]([^"'`]+)["'`]/g,m;
+  while((m=re.exec(String(texto||""))))config[m[1]]=m[2].trim();
+  var erros=["apiKey","projectId","appId"].filter(function(k){return !config[k];}).map(function(k){return 'Campo "'+k+'" nao encontrado no texto colado.';});
+  if(!config.authDomain&&config.projectId)config.authDomain=config.projectId+".firebaseapp.com";
+  return {valido:!erros.length,config:config,erros:erros};
+}
+function nuvemRender(){
+  var st=document.getElementById("nuvem-status");if(!st)return;
+  document.getElementById("nuvem-err").style.display="none";
+  if(!window.firebaseNuvemAtual){st.innerHTML="<span style='color:#dc2626'>Firebase ainda nao carregou. Feche e abra o painel em alguns segundos.</span>";return;}
+  var n=window.firebaseNuvemAtual();
+  var origem={padrao:"padrao do arquivo",local:"configurado neste navegador",json:"veio da base importada"}[n.origem]||n.origem;
+  st.innerHTML="Em uso: projeto <b>"+n.config.projectId+"</b> &mdash; colecao <b>"+n.colecao+"</b> <span style='color:#64748b'>("+origem+")</span>";
+  document.getElementById("nuvem-config").value="const firebaseConfig = "+JSON.stringify(n.config,null,2)+";";
+  document.getElementById("nuvem-colecao").value=n.colecao;
+}
+async function nuvemSalvarConfig(){
+  var err=document.getElementById("nuvem-err"),btn=document.getElementById("nuvem-btn-salvar");
+  if(!window.firebaseConfigurar){err.textContent="Firebase ainda nao carregou. Aguarde e tente de novo.";err.style.display="block";return;}
+  var r=nuvemInterpretar(document.getElementById("nuvem-config").value);
+  if(!r.valido){err.textContent=r.erros.join(" ");err.style.display="block";return;}
+  var colecao=(document.getElementById("nuvem-colecao").value||"").trim()||"Controle de Custo";
+  err.style.display="none";btn.disabled=true;btn.textContent="Testando conexao...";
+  try{
+    await window.firebaseConfigurar(r.config,colecao);
+    registrarHistoricoEngCustos("Alterou a nuvem (Firebase) para o projeto "+r.config.projectId+" / colecao "+colecao);
+    nuvemRender();
+    document.getElementById("nuvem-status").innerHTML+=" <span style='color:#16a34a;font-weight:700'>&#10003; conexao testada e salva</span>";
+  }catch(e){
+    var msg=String((e&&(e.code||e.message))||e);
+    if(/permission-denied|insufficient permissions/i.test(msg))msg="Sem permissao no Firestore: ajuste as regras de seguranca do banco para permitir leitura e escrita.";
+    else if(/invalid-api-key|api-key-not-valid|API key not valid/i.test(msg))msg="A apiKey da configuracao nao e valida.";
+    err.textContent="Nao foi possivel conectar: "+msg+" A configuracao anterior continua em uso.";err.style.display="block";
+  }finally{btn.disabled=false;btn.textContent="Testar e salvar";}
+}
+function nuvemRestaurarPadrao(){
+  if(!window.firebaseRestaurarPadrao)return;
+  window.firebaseRestaurarPadrao();
+  registrarHistoricoEngCustos("Restaurou a nuvem (Firebase) padrao do arquivo");
+  nuvemRender();
+}
+// Vai no JSON exportado so quando difere da configuracao de fabrica
+function nuvemParaExportar(){
+  if(!window.firebaseNuvemAtual)return null;
+  var n=window.firebaseNuvemAtual();
+  return n.origem==="padrao"?null:{config:n.config,colecao:n.colecao};
 }
 // Nome exibido para quem esta fazendo a acao agora: nome cadastrado na equipe (se logado por e-mail), senao o proprio e-mail, senao "Administrador"
 function usuarioAtualLabel(){
@@ -2527,6 +2696,7 @@ function sincronizarAlojamentoIndireto(){
   });
   Object.keys(compsAfetadas).forEach(function(cid){recalcularComposicaoMacro(cid);});
   _alimTodosAtiva=temTodos;_alimAlojAtiva=temAloj;
+  if(S.razaoRealAte)razaoAplicarReal(); // Rev68: quantidades automaticas recalculadas acima - meses vigentes voltam ao real do Razao
 }
 // ===== Alimentacao (EAP 001.003.002) =====
 var ALIM_EAP_CODE="001.003.002",_alimTodosAtiva=false,_alimAlojAtiva=false;
@@ -2926,7 +3096,7 @@ document.addEventListener("click",function(e){
   var wrap=document.getElementById("ctl-wrap");
   if(wrap&&!wrap.contains(e.target))fecharControlesMenu();
 });
-function setTab(i){sincronizarAlojamentoIndireto();document.querySelectorAll(".ctl-item[data-idx]").forEach(function(t){t.classList.toggle("active",t.getAttribute("data-idx")===String(i));});var lbl=document.getElementById("ctl-atual");if(lbl)lbl.textContent="\u2014 "+(CTL_LABELS[i]||"");for(var j=0;j<26;j++){var s=document.getElementById("sec"+j);if(s)s.className="sec wrap"+(i===j?" on":"");}if(i===5)renderPedCompraMatrix();if(i===6)renderFluxoMateriais();if(i===7)renderImportStatus();if(i===8)renderColetorTotal();if(i===9)popularDadosObra();if(i===10)renderCustoModTab();if(i===3)renderDRE();if(i===11)renderIndiretoTab("Indireto");if(i===12)renderIndiretoTab("Servico");if(i===13)renderIndiretoTab("Material");if(i===14)renderIndiretoTab("Equipamento");if(i===19)renderIndiretoTab("Seguro");if(i===20)renderDreGer();if(i===21)renderTakeInOut();if(i===15)receitaRenderTudo();if(i===16){aplicarNivelColetor(4);renderPrevReal();}if(i===17)renderClassificacao();if(i===18)renderContingencia();if(i===22)renderCurvaAbc();if(i===23)renderCurvaAbcMod();if(i===24)renderRazao();if(i===25)renderClassificarRazao();if(i===4)renderDash();if(i===1)renderCustoMO();if(i===0)renderEfetivo();}
+function setTab(i){sincronizarAlojamentoIndireto();document.querySelectorAll(".ctl-item[data-idx]").forEach(function(t){t.classList.toggle("active",t.getAttribute("data-idx")===String(i));});var lbl=document.getElementById("ctl-atual");if(lbl)lbl.textContent=(CTL_LABELS[i]||"");for(var j=0;j<26;j++){var s=document.getElementById("sec"+j);if(s)s.className="sec wrap"+(i===j?" on":"");}if(i===5)renderPedCompraMatrix();if(i===6)renderFluxoMateriais();if(i===7)renderImportStatus();if(i===8)renderColetorTotal();if(i===9)popularDadosObra();if(i===10)renderCustoModTab();if(i===3)renderDRE();if(i===11)renderIndiretoTab("Indireto");if(i===12)renderIndiretoTab("Servico");if(i===13)renderIndiretoTab("Material");if(i===14)renderIndiretoTab("Equipamento");if(i===19)renderIndiretoTab("Seguro");if(i===20)renderDreGer();if(i===21)renderTakeInOut();if(i===15)receitaRenderTudo();if(i===16){aplicarNivelColetor(4);renderPrevReal();}if(i===17)renderClassificacao();if(i===18)renderContingencia();if(i===22)renderCurvaAbc();if(i===23)renderCurvaAbcMod();if(i===24)renderRazao();if(i===25)renderClassificarRazao();if(i===4)renderDash();if(i===1)renderCustoMO();if(i===0)renderEfetivo();}
 function popularDadosObra(){
   document.getElementById("obra2-nome").value=S.projNome||"";
   document.getElementById("obra2-local").value=S.projLocal||"";
@@ -4752,6 +4922,7 @@ function parseValorIndiretoBR(v){
 }
 function updIndiretoMatQtd(idx,mes,val){
   var it=S.indiretoData[idx];if(!it)return;normIndireto(it);if(it.qtdAuto)return; // permanencia automatica (vem de M.O.I./M.O.D.)
+  if(razaoRealMesAplicado(it,mes))return; // Rev68: mes vigente vem do Razao
   var v=parseValorIndiretoBR(val)||0;
   if(v>0)it.qtdPorMes[mes]=v;else delete it.qtdPorMes[mes];
   if(it.composicaoPai){recalcularComposicaoMacro(it.composicaoPai);renderIndiretoMatrix(it.categoria);syncIndiretoNoColetor();renderIndiretoCards(it.categoria);return;}
@@ -4763,6 +4934,7 @@ function updIndiretoMatQtd(idx,mes,val){
 }
 function updIndiretoMatValor(idx,mes,val){
   var it=S.indiretoData[idx];if(!it)return;normIndireto(it);if(it.qtdAuto)return; // permanencia automatica (vem de M.O.I./M.O.D.)
+  if(razaoRealMesAplicado(it,mes))return; // Rev68: mes vigente vem do Razao
   var v=parseValorIndiretoBR(val)||0;
   var qtd=(it.valorUnit>0)?(v/it.valorUnit):0;
   if(v>0)it.qtdPorMes[mes]=qtd;else delete it.qtdPorMes[mes];
@@ -6114,7 +6286,7 @@ function renderIndiretoCards(categoria){
 // Rev53: posiciona a coluna "Qtd Total" (fixa a direita) colada na coluna Total, pela largura real dela
 function ajustarStickyDireita(tbl){
   if(!tbl||!tbl.tHead||!tbl.tHead.rows.length)return;
-  var r=tbl.tHead.rows[0].cells,tot=r[r.length-1];if(!tot)return;
+  var r=tbl.tHead.rows[0].cells,tot=tbl.tHead.querySelector("[data-rtot]")||r[r.length-1];if(!tot)return; // Rev67: colunas de saldo ficam depois do Total
   var w=tot.getBoundingClientRect().width;if(!w)return;
   tbl.querySelectorAll("[data-r1]").forEach(function(c){c.style.right=w+"px";});
 }
@@ -6168,6 +6340,177 @@ function grupoEapAtualizarTotal(it){
   S.indiretoData.forEach(function(x,i){if(x.categoria===base.categoria&&!x.composicaoPai&&(x.itemEAP||"")===chave&&indiretoPassaFiltro(x))t+=calcTotalIndiretoItem(i);});
   var el=document.getElementById(grupoEapId(cfg.prefix,chave));if(el)el.textContent=fmt(t);
 }
+// ===================== Rev67: Colunas de Saldo (Custo Indireto, Servico, Material, Equipamento) =====================
+// Rev68: cada coluna TRAVA, por linha, a Qtd Total e o Valor Total da linha Real (soma de todos os meses) no momento
+// do "Colar saldo" - a foto do contrato. A 3a coluna ("A distribuir") e calculada ao vivo: valor travado - total atual
+// da linha (que muda quando o Real do Razao substitui o previsto), para o usuario redistribuir a mao nos meses futuros.
+// Os valores travados nao sao digitaveis: so mudam colando novamente. Ficam em S.saldoColunas[categoria].
+function saldoColLista(cat){if(!S.saldoColunas)S.saldoColunas={};if(!Array.isArray(S.saldoColunas[cat]))S.saldoColunas[cat]=[];return S.saldoColunas[cat];}
+function saldoColEsc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function saldoColNumRazao(v){if(typeof v==="number")return v;var s=String(v||"").replace(/[^\d,.-]/g,"");if(!s)return 0;return Number(s.replace(/\./g,"").replace(",","."))||0;}
+// Competencia do Razao vem como "MM/AAAA"; os meses do controle sao "AAAA-MM"
+function saldoColMesRazao(comp){var m=String(comp||"").trim().match(/^(\d{1,2})\/(\d{4})$/);return m?(m[2]+"-"+("0"+m[1]).slice(-2)):"";}
+function saldoColQtdCelulas(cat){var n=saldoColLista(cat).length;return n?1+n*3:0;}
+function saldoColTotalAtual(it){var t=0;mesesObra().forEach(function(m){t+=(it.qtdPorMes[m]||0)*it.valorUnit;});return t;}
+// Valor travado da linha (aceita colunas coladas na Rev67, que guardavam o total em "total")
+function saldoColTravado(v){return v?(v.total!==undefined?v.total:v.valor)||0:0;}
+function saldoColQtdTravada(v){return v?(v.qtdTotal!==undefined?v.qtdTotal:v.qtd)||0:0;}
+function saldoColCabecalho(cat){
+  var cols=saldoColLista(cat);if(!cols.length)return {th1:"",th2:""};
+  var th1="<th rowspan='2' style='min-width:14px;background:#e2e8f0' title='Colunas de saldo'></th>",th2="";
+  cols.forEach(function(c){
+    var info=c.coladoEm?("Colado em "+new Date(c.coladoEm).toLocaleString("pt-BR")+(c.coladoPor?" por "+c.coladoPor:"")):"Saldo ainda nao colado";
+    th1+="<th colspan='3' style='background:#1e3a5f;text-align:center;border-left:2px solid rgba(255,255,255,.35);white-space:nowrap' title='"+saldoColEsc(info)+"'>&#128274; "+saldoColEsc(c.nome)+
+      "<div style='font-weight:400;font-size:10px;opacity:.85'>vigencia "+mlbl(c.corte)+(c.coladoEm?" &middot; colado "+new Date(c.coladoEm).toLocaleDateString("pt-BR"):" &middot; nao colado")+"</div>"+
+      "<div style='margin-top:4px;display:flex;gap:4px;justify-content:center'><button class='btn b-sm' style='background:#fff;color:#1e3a5f;padding:2px 8px' onclick=\"saldoColColar('"+cat+"','"+c.id+"')\">&#128203; "+(c.coladoEm?"Colar novamente":"Colar saldo")+"</button>"+
+      (c.coladoEm?"<button class='btn b-sm' style='background:#0f766e;color:#fff;padding:2px 8px' title='Recalcula a coluna A distribuir com os valores atuais da linha (depois de redistribuir nos meses)' onclick=\"saldoColAtualizar('"+cat+"')\">&#128260; Atualizar</button>":"")+
+      "<button class='btn b-sm' style='background:rgba(255,255,255,.18);color:#fff;padding:2px 6px' title='Excluir esta coluna' onclick=\"saldoColExcluir('"+cat+"','"+c.id+"')\">&#128465;</button></div></th>";
+    th2+="<th style='background:#1e3a5f;opacity:.85;font-size:10px;min-width:64px;text-align:center;border-left:2px solid rgba(255,255,255,.35)'>Qtd Total</th><th style='background:#1e3a5f;opacity:.85;font-size:10px;min-width:100px;text-align:center'>Valor Total (R$)</th><th style='background:#0f766e;font-size:10px;min-width:104px;text-align:center' title='Valor travado - Total atual da linha'>A distribuir (R$)</th>";
+  });
+  return {th1:th1,th2:th2};
+}
+// Celulas de uma linha: so a linha Real (principal) mostra o saldo; Previsto e itens de dentro da composicao ficam vazios
+function saldoColCelulas(cat,it,ehPrevisto,bg){
+  var cols=saldoColLista(cat);if(!cols.length)return "";
+  var h="<td style='background:#e2e8f0'></td>";
+  cols.forEach(function(c){
+    var v=(!ehPrevisto&&!it.composicaoPai&&c.valores)?c.valores[it.id]:null;
+    if(!v){h+="<td style='border-left:2px solid #cbd5e1;background:"+bg+"'></td><td style='background:"+bg+"'></td><td style='background:"+bg+"'></td>";return;}
+    var trav=saldoColTravado(v),atual=saldoColTotalAtual(it),dif=Math.round((trav-atual)*100)/100;
+    var tit="Travado em "+(c.coladoEm?new Date(c.coladoEm).toLocaleDateString("pt-BR"):"-")+": "+fmt(trav)+" | Total atual da linha: "+fmt(atual)+" | A distribuir: "+fmt(dif);
+    h+="<td class='mono tr' title='"+tit+"' style='border-left:2px solid #cbd5e1;background:#f8fafc;color:#1e3a5f;font-size:11px;text-align:center'>"+(saldoColQtdTravada(v)?fmtQtdBR(saldoColQtdTravada(v))+unidadeTxt(it):"-")+"</td>";
+    h+="<td class='mono tr' title='"+tit+"' style='background:#f8fafc;color:#1e3a5f;font-weight:700;font-size:11px'>"+(trav?fmt(trav):"-")+"</td>";
+    h+="<td class='mono tr' title='"+tit+"' style='background:"+(Math.abs(dif)<0.01?"#f8fafc":dif>0?"#f0fdfa":"#fef2f2")+";color:"+(Math.abs(dif)<0.01?"#94a3b8":dif>0?"#0f766e":"#dc2626")+";font-weight:800;font-size:11px'>"+(Math.abs(dif)<0.01?"-":fmt(dif))+"</td>";
+  });
+  return h;
+}
+function saldoColGrupo(cat,idxs,corHead){
+  var cols=saldoColLista(cat);if(!cols.length)return "";
+  var h="<td style='background:#e2e8f0'></td>";
+  cols.forEach(function(c){
+    var t=0,d=0;idxs.forEach(function(ix){var it=S.indiretoData[ix],v=(c.valores&&it)?c.valores[it.id]:null;if(v){t+=saldoColTravado(v);d+=saldoColTravado(v)-saldoColTotalAtual(it);}});
+    h+="<td style='background:"+corHead+";border-left:2px solid rgba(255,255,255,.35)'></td><td class='mono tr' style='background:"+corHead+";color:#fff;font-weight:800;font-size:12px'>"+(c.coladoEm?fmt(t):"")+"</td><td class='mono tr' style='background:"+corHead+";color:#fff;font-weight:800;font-size:12px'>"+(c.coladoEm&&Math.abs(d)>=0.01?fmt(d):"")+"</td>";
+  });
+  return h;
+}
+// Rodape: soma do saldo das linhas da tabela (respeita o filtro, como o TOTAL ao lado)
+function saldoColRodape(cat,ehPrevisto){
+  var cols=saldoColLista(cat);if(!cols.length)return "";
+  var bg=ehPrevisto?"#fefce8":"#f1f5f9",h="<td style='background:#e2e8f0'></td>";
+  cols.forEach(function(c){
+    var t=0,d=0;
+    if(!ehPrevisto&&c.valores)S.indiretoData.forEach(function(it){var v=c.valores[it.id];if(it.categoria===cat&&!it.composicaoPai&&indiretoPassaFiltro(it)&&v){t+=saldoColTravado(v);d+=saldoColTravado(v)-saldoColTotalAtual(it);}});
+    h+="<td style='background:"+bg+";border-left:2px solid #cbd5e1'></td><td class='mono tr' style='background:"+bg+";color:#1e3a5f'>"+(!ehPrevisto&&c.coladoEm?fmt(t):"")+"</td><td class='mono tr' style='background:"+bg+";color:"+(d<0?"#dc2626":"#0f766e")+"'>"+(!ehPrevisto&&c.coladoEm&&Math.abs(d)>=0.01?fmt(d):"")+"</td>";
+  });
+  return h;
+}
+function saldoColAbrirNova(cat){
+  if(document.body.classList.contains("modo-view"))return;
+  window._saldoColCat=cat;
+  var t=getToday(),ant=new Date(t.getFullYear(),t.getMonth()-1,1),corte=mkM(ant.getFullYear(),ant.getMonth()+1); // sugere o mes anterior (ultimo fechado)
+  document.getElementById("saldo-col-cat").textContent=CAT_CFG[cat]?CAT_CFG[cat].label:cat;
+  document.getElementById("saldo-col-corte").value=corte;
+  document.getElementById("saldo-col-nome").value="Saldo "+mlbl(corte);
+  document.getElementById("saldo-col-err").style.display="none";
+  document.getElementById("modal-saldo-col").classList.add("on");
+}
+function saldoColCriar(){
+  var cat=window._saldoColCat,err=document.getElementById("saldo-col-err");
+  var nome=(document.getElementById("saldo-col-nome").value||"").trim(),corte=document.getElementById("saldo-col-corte").value||"";
+  if(!nome||!/^\d{4}-\d{2}$/.test(corte)){err.textContent="Informe o nome e o mes de vigencia.";err.style.display="block";return;}
+  var lista=saldoColLista(cat);
+  if(lista.some(function(c){return c.corte===corte;})){err.textContent="Ja existe uma coluna de saldo ate "+mlbl(corte)+" nesta aba.";err.style.display="block";return;}
+  lista.push({id:gerarId("sld"),nome:nome,corte:corte,criadoEm:new Date().toISOString(),criadoPor:usuarioAtualLabel(),valores:null,coladoEm:null,coladoPor:""});
+  lista.sort(function(a,b){return a.corte<b.corte?-1:a.corte>b.corte?1:0;});
+  registrarHistoricoEngCustos("Criou a coluna de saldo \""+nome+"\" (ate "+mlbl(corte)+") em "+(CAT_CFG[cat]?CAT_CFG[cat].label:cat));
+  document.getElementById("modal-saldo-col").classList.remove("on");
+  renderIndiretoMatrix(cat);
+}
+function saldoColColar(cat,colId){
+  if(document.body.classList.contains("modo-view"))return;
+  var c=saldoColLista(cat).find(function(x){return x.id===colId;});if(!c)return;
+  if(c.coladoEm&&!confirm("A coluna \""+c.nome+"\" ja tem saldo colado em "+new Date(c.coladoEm).toLocaleString("pt-BR")+".\nColar novamente substitui pelos valores de agora. Continuar?"))return;
+  var meses=mesesObra(),val={},n=0;
+  S.indiretoData.forEach(function(it,idx){
+    normIndireto(it);if(it.categoria!==cat||it.composicaoPai)return;
+    var qtdTot=0;meses.forEach(function(m){qtdTot+=it.qtdPorMes[m]||0;});
+    var total=calcTotalIndiretoItem(idx);
+    val[it.id]={qtdTotal:Math.round(qtdTot*10000)/10000,total:Math.round(total*100)/100};n++;
+  });
+  c.valores=val;c.coladoEm=new Date().toISOString();c.coladoPor=usuarioAtualLabel();
+  registrarHistoricoEngCustos("Colou o saldo na coluna \""+c.nome+"\" (ate "+mlbl(c.corte)+") em "+(CAT_CFG[cat]?CAT_CFG[cat].label:cat)+" - "+n+" linha(s)");
+  renderIndiretoMatrix(cat);
+}
+// Redesenha a tabela para recalcular "A distribuir" (valor travado - total atual da linha) depois da redistribuicao;
+// os valores travados nao mudam. Mantem a posicao da rolagem horizontal da tabela.
+function saldoColAtualizar(cat){
+  var cfg=CAT_CFG[cat],th=cfg?document.getElementById(cfg.prefix+"-thead"):null,wrap=th?th.closest("table").parentElement:null,x=wrap?wrap.scrollLeft:0;
+  renderIndiretoMatrix(cat);renderIndiretoCards(cat);
+  if(wrap)wrap.scrollLeft=x;
+}
+function saldoColExcluir(cat,colId){
+  if(document.body.classList.contains("modo-view"))return;
+  var lista=saldoColLista(cat),i=lista.findIndex(function(x){return x.id===colId;});if(i<0)return;
+  if(!confirm("Excluir a coluna de saldo \""+lista[i].nome+"\"? Os valores colados nela serao perdidos."))return;
+  registrarHistoricoEngCustos("Excluiu a coluna de saldo \""+lista[i].nome+"\" (ate "+mlbl(lista[i].corte)+") em "+(CAT_CFG[cat]?CAT_CFG[cat].label:cat));
+  lista.splice(i,1);
+  renderIndiretoMatrix(cat);
+}
+// ===================== Rev68: Real do Razao ate o mes de vigencia (seletor de mes do Dashboard) =====================
+// Ao escolher no Dashboard um mes de vigencia posterior ao ja aplicado (S.razaoRealAte), Custo Indireto/Servico/Material/
+// Equipamento passam a usar, em todos os meses ate ele, so as NFs classificadas no Razao (custo = -valor: debito vem
+// negativo, credito estorna). Mes sem NF classificada fica zerado. Depois de aplicado, o mes continua real mesmo que a
+// vigencia recue. O previsto digitado antes de virar real fica guardado em it.qtdDigitadoPorMes (registro).
+var RAZAO_REAL_CATS={Indireto:1,Servico:1,Material:1,Equipamento:1};
+function razaoRealElegivel(it){return !!it&&!!RAZAO_REAL_CATS[it.categoria]&&!it.composicaoPai&&!it.contingenciaSync;}
+function razaoRealMesAplicado(it,m){return !!S.razaoRealAte&&m<=S.razaoRealAte&&razaoRealElegivel(it);}
+// {idDaLinha:{"AAAA-MM":custo}} somando as NFs classificadas
+function razaoMapaCusto(){
+  var mapa={};
+  (S.razaoDados||[]).forEach(function(r){var id=r.classificacaoRazaoId;if(!id)return;var mm=saldoColMesRazao(r.competencia);if(!mm)return;var o=mapa[id]||(mapa[id]={});o[mm]=(o[mm]||0)-saldoColNumRazao(r.valor);});
+  return mapa;
+}
+function razaoAplicarRealItem(it,mapa){
+  if(!S.razaoRealAte||!razaoRealElegivel(it))return;
+  normIndireto(it);if(!it.qtdDigitadoPorMes)it.qtdDigitadoPorMes={};
+  var nf=(mapa||razaoMapaCusto())[String(it.id)]||{};
+  mesesObra().forEach(function(m){
+    if(m>S.razaoRealAte)return;
+    if(!(m in it.qtdDigitadoPorMes))it.qtdDigitadoPorMes[m]=it.qtdPorMes[m]||0;
+    var v=Math.round((nf[m]||0)*100)/100;
+    if(Math.abs(v)<0.005||!(it.valorUnit>0))delete it.qtdPorMes[m];else it.qtdPorMes[m]=v/it.valorUnit;
+  });
+}
+function razaoAplicarReal(){
+  var semVU=[];if(!S.razaoRealAte)return {semVU:semVU};
+  var mapa=razaoMapaCusto();
+  S.indiretoData.forEach(function(it){
+    if(!razaoRealElegivel(it))return;
+    razaoAplicarRealItem(it,mapa);
+    var nf=mapa[String(it.id)];
+    if(nf&&!(it.valorUnit>0)&&Object.keys(nf).some(function(m){return m<=S.razaoRealAte&&Math.abs(nf[m])>=0.005;}))semVU.push(it.descricao||"(sem nome)");
+  });
+  return {semVU:semVU};
+}
+// Classificacao mudou ou Razao reimportado: re-aplica nos meses ja vigentes (as abas se redesenham ao abrir)
+function razaoRealAtualizar(){if(!S.razaoRealAte)return;razaoAplicarReal();syncIndiretoNoColetor();}
+function razaoRealStatus(){
+  var b=document.getElementById("razao-real-status");if(!b)return;
+  b.innerHTML=S.razaoRealAte?("&#9989; Real do Razao ate "+mlbl(S.razaoRealAte)):"&#9744; Real do Razao: nao aplicado";
+}
+// Chamado pelo seletor de mes do Dashboard (e pelo botao ao lado dele, porClique=true)
+function razaoVigenciaDashboard(v,porClique){
+  if(!/^\d{4}-\d{2}$/.test(v||""))return;
+  if(S.razaoRealAte&&v<=S.razaoRealAte){if(porClique)alert("O real do Razao ja esta aplicado ate "+mlbl(S.razaoRealAte)+".\nPara avancar, escolha um mes posterior no seletor.");return;}
+  if(document.body.classList.contains("modo-view"))return;
+  if(!(S.razaoDados||[]).length){if(porClique)alert("Importe o relatorio na aba Razao antes de aplicar o real.");return;}
+  if(!confirm("Aplicar o REAL do Razao ate "+mlbl(v)+"?\n\nEm Custo Indireto, Servico, Material e Equipamento, todos os meses ate "+mlbl(v)+" deixam de usar o previsto digitado e passam a mostrar so as NFs classificadas no Razao (mes sem NF fica zerado).\nDepois de aplicado, esses meses continuam como real mesmo que voce volte o mes do Dashboard.\n\nDica: antes, trave os totais com \"Nova Coluna de Saldo\" em cada aba."))return;
+  S.razaoRealAte=v;
+  var r=razaoAplicarReal();syncIndiretoNoColetor();
+  registrarHistoricoEngCustos("Aplicou o real do Razao ate "+mlbl(v));
+  razaoRealStatus();renderDash();
+  if(r.semVU.length)alert("Atencao: "+r.semVU.length+" linha(s) com NF classificada estao sem Valor Unitario, entao o real delas nao pode ser lancado:\n- "+r.semVU.slice(0,10).join("\n- ")+(r.semVU.length>10?"\n...":""));
+}
 function renderIndiretoMatrix(categoria){
   aplicarEapAbas();if(categoria==="Seguro")atualizarBotoesEapMo(); // Rev53
   var cfg=CAT_CFG[categoria];if(!cfg)return;
@@ -6194,8 +6537,9 @@ function renderIndiretoMatrix(categoria){
     th2+="<th style='background:"+mbg+";opacity:.85;font-size:10px;min-width:86px;text-align:center'>Valor (R$)</th>";
   }
   if(comQtd)th1+="<th rowspan='2' data-r1='1' style='position:sticky;right:110px;z-index:11;background:"+corHead+";min-width:70px;text-align:center;border-left:2px solid rgba(255,255,255,.35)' title='Soma da quantidade de todos os meses'>Qtd<br>Total</th>";
-  th1+="<th rowspan='2' style='position:sticky;right:0;z-index:11;background:"+corHead+";min-width:110px;text-align:right;border-left:2px solid rgba(255,255,255,.35)'>Total</th>";
-  th1+="</tr>";th2+="</tr>";
+  th1+="<th rowspan='2' data-rtot='1' style='position:sticky;right:0;z-index:11;background:"+corHead+";min-width:110px;text-align:right;border-left:2px solid rgba(255,255,255,.35)'>Total</th>";
+  var sCab=saldoColCabecalho(categoria); // Rev67: colunas de saldo a direita, separadas das demais
+  th1+=sCab.th1+"</tr>";th2+=sCab.th2+"</tr>";
   thead.innerHTML=th1+th2;
   var totMes={};meses.forEach(function(m){totMes[m]=0;});var totGeral=0;
   var tb=bannerPrevistoSalvoHtml(5+meses.length*2+1+QX);
@@ -6241,8 +6585,12 @@ function renderIndiretoMatrix(categoria){
       var vP=qP*valorUnitPExibir;qtdRowP+=qP;
       totRowPrevisto+=vP;if(somaRodape)totMesPrevisto[m]+=vP;
       if(editavel){
+        if(razaoRealMesAplicado(it,m)){ // Rev68: mes ja vigente - valor vem das NFs classificadas no Razao (nao digitavel)
+          var tRz="Real do Razao (NFs classificadas)"+(it.qtdDigitadoPorMes&&it.qtdDigitadoPorMes[m]?" - previsto digitado era "+fmt(it.qtdDigitadoPorMes[m]*it.valorUnit):"");
+          mR+="<td class='mono tr' title='"+tRz+"' style='font-size:11px;border-left:1px solid #f1f5f9;background:#f0fdf4;color:#15803d;font-weight:700'>"+(qR?fmtQtdBR(qR):"-")+unSuf+"</td><td class='mono tr' title='"+tRz+"' style='font-size:11px;background:#f0fdf4;color:#15803d;font-weight:700'>"+(vR?fmt(vR):"-")+"</td>";
+        }else
         mR+=it.qtdAuto?("<td class='mono tr' title='Quantidade automatica (M.O.I./M.O.D.)' style='font-size:11px;border-left:1px solid #f1f5f9;background:#f0fdfa;color:#0f766e;font-weight:700'>"+(qR>0?fmtQtdBR(qR):"-")+unSuf+"</td>"):"<td style='padding:2px 3px;border-left:1px solid #f1f5f9'><input type='text' inputmode='decimal' class='mat-inp' id='indi-q-"+idx+"-"+m+"' style='width:52px;text-align:center' value='"+(qR>0?fmtQtdBR(qR):"")+"' placeholder='0' onchange=\"updIndiretoMatQtd("+idx+",'"+m+"',this.value)\">"+unSuf+"</td>";
-        mR+=it.qtdAuto?("<td class='mono tr' style='font-size:11px;background:#f0fdfa;color:#0f766e'>"+(vR>0?fmt(vR):"-")+"</td>"):"<td style='padding:2px 3px'><input type='text' inputmode='decimal' class='mat-inp' id='indi-v-"+idx+"-"+m+"' style='width:80px;text-align:right' value='"+(vR>0?fmtNumBR(vR):"")+"' placeholder='0,00' onchange=\"updIndiretoMatValor("+idx+",'"+m+"',this.value)\"></td>";
+        if(!razaoRealMesAplicado(it,m))mR+=it.qtdAuto?("<td class='mono tr' style='font-size:11px;background:#f0fdfa;color:#0f766e'>"+(vR>0?fmt(vR):"-")+"</td>"):"<td style='padding:2px 3px'><input type='text' inputmode='decimal' class='mat-inp' id='indi-v-"+idx+"-"+m+"' style='width:80px;text-align:right' value='"+(vR>0?fmtNumBR(vR):"")+"' placeholder='0,00' onchange=\"updIndiretoMatValor("+idx+",'"+m+"',this.value)\"></td>";
         if(!previstoEditavel){
           mP+="<td class='mono tr' style='font-size:11px;border-left:1px solid #f1f5f9;color:#94a3b8;background:#fef9ec'>"+(qP>0?fmtQtdBR(qP):"-")+unSuf+"</td><td class='mono tr' style='font-size:11px;color:#94a3b8;background:#fef9ec'>"+(vP>0?fmt(vP):"-")+"</td>";
         }else{
@@ -6286,6 +6634,7 @@ function renderIndiretoMatrix(categoria){
     h+=mR;
     h+=(comQtd?("<td id='indirow-qtd-"+idx+"' data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+bg+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;font-size:11.5px;color:#334155'>"+(qtdRowR>0?fmtQtdBR(qtdRowR)+unTxt:"-")+"</td>"):"");
     h+="<td id='indirow-tot-"+idx+"' style='position:sticky;right:0;z-index:2;background:"+bg+";border-left:2px solid #e2e8f0;font-weight:700;color:"+corHead+"' class='mono tr'>"+(totRowReal>0?fmt(totRowReal):"-")+"</td>";
+    h+=saldoColCelulas(categoria,it,false,bg);
     h+="</tr>";
     if(mostrarPrevisto){
       var bgP="#fffbeb";
@@ -6301,6 +6650,7 @@ function renderIndiretoMatrix(categoria){
       h+=mP;
       h+=(comQtd?("<td data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+bgP+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;font-size:11.5px;color:#b45309'>"+(qtdRowP>0?fmtQtdBR(qtdRowP)+unTxt:"-")+"</td>"):"");
       h+="<td class='mono tr' style='position:sticky;right:0;z-index:2;background:"+bgP+";border-left:2px solid #e2e8f0;font-weight:700;color:#b45309'>"+(totRowPrevisto>0?fmt(totRowPrevisto):"-")+"</td>";
+      h+=saldoColCelulas(categoria,it,true,bgP);
       h+="</tr>";
     }
     return {html:h,totRowReal:totRowReal,totRowPrevisto:totRowPrevisto};
@@ -6314,7 +6664,7 @@ function renderIndiretoMatrix(categoria){
     var gSeta="<span onclick=\"grupoEapToggle('"+categoria+"','"+String(chave).replace(/'/g,"&#39;")+"')\" title='"+(gRec?"Expandir":"Recolher")+" grupo' style='cursor:pointer;display:inline-block;width:16px;margin-right:6px;font-size:12px'>"+(gRec?"&#9654;":"&#9660;")+"</span>";
     tb+="<tr><td colspan='"+(colspanTotal-1-QX)+"' style='padding:6px 10px;background:"+corHead+";color:#fff;font-weight:700;font-size:12px'><span style='position:sticky;left:10px'>"+gSeta+labelGrupo+" <span style='font-weight:400;font-size:11px;opacity:.8'>("+grupos[chave].length+" linha"+(grupos[chave].length>1?"s":"")+")</span></span></td>"+
       (comQtd?"<td data-r1='1' style='position:sticky;right:110px;z-index:2;background:"+corHead+";border-left:2px solid rgba(255,255,255,.35)'></td>":"")+
-      "<td id='"+gId+"' class='mono tr' style='position:sticky;right:0;z-index:2;background:"+corHead+";color:#fff;font-weight:800;font-size:12px;border-left:2px solid rgba(255,255,255,.35)'>"+fmt(gTot)+"</td></tr>";
+      "<td id='"+gId+"' class='mono tr' style='position:sticky;right:0;z-index:2;background:"+corHead+";color:#fff;font-weight:800;font-size:12px;border-left:2px solid rgba(255,255,255,.35)'>"+fmt(gTot)+"</td>"+saldoColGrupo(categoria,grupos[chave],corHead)+"</tr>";
     var gIni=tb.length; // linhas do grupo comecam aqui (se recolhido, ficam ocultas no fim do grupo)
     // Rev53: removida a sugestao automatica "Compilar em uma composicao" por fornecedor igual; composicao so pela selecao (flag) + botao Compilar
     grupos[chave].forEach(function(idx){
@@ -6342,7 +6692,8 @@ function renderIndiretoMatrix(categoria){
             var menuFilho=[
               {icon:"&#9998;",label:"Editar item",onclick:"abrirEditIndireto("+ci+")"},
               {icon:"&#128196;",label:"Contratos / Aditivos",onclick:"abrirContratosModal("+ci+")"},
-              {icon:"&#128465;",label:"Remover da composicao",onclick:"excluirItemIndireto("+ci+")",danger:true}
+              {icon:"&#8689;",label:"Tirar da composicao (volta a ser linha)",onclick:"equipComposicaoSoltarItem("+ci+")"},
+              {icon:"&#128465;",label:"Excluir item",onclick:"excluirItemIndireto("+ci+")",danger:true}
             ];
             // "+"/"-" 2o nivel: mostra/esconde a linha PREVISTO deste equipamento especifico
             var togglePrevisto={expandido:!!child.mostrarPrevisto,onclick:"equipToggleChildPrevisto("+ci+")"};
@@ -6385,7 +6736,7 @@ function renderIndiretoMatrix(categoria){
     });
     if(gRec)tb=tb.slice(0,gIni)+tb.slice(gIni).replace(/<tr\b/g,"<tr class='grp-oculto'"); // Rev53: grupo recolhido (linhas continuam somando no rodape)
   });
-  tbody.innerHTML=tb||"<tr><td colspan='"+(5+meses.length*2+1+QX)+"' style='text-align:center;padding:20px;color:#94a3b8'>Nenhum item de "+cfg.label.toLowerCase()+" cadastrado</td></tr>";
+  tbody.innerHTML=tb||"<tr><td colspan='"+(5+meses.length*2+1+QX+saldoColQtdCelulas(categoria))+"' style='text-align:center;padding:20px;color:#94a3b8'>Nenhum item de "+cfg.label.toLowerCase()+" cadastrado</td></tr>";
   var tf="";
   if(ehEquip){
     tf+="<tr style='background:#fefce8;font-weight:700'>";
@@ -6393,6 +6744,7 @@ function renderIndiretoMatrix(categoria){
     meses.forEach(function(m){tf+="<td colspan='2' class='mono tr' style='font-size:11px;border-left:1px solid #e2e8f0;color:#b45309'>"+(totMesPrevisto[m]>0?fmt(totMesPrevisto[m]):"-")+"</td>";});
     tf+=(comQtd?("<td data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+"#fefce8"+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;font-size:11.5px;color:#b45309'>"+""+"</td>"):"");
     tf+="<td style='position:sticky;right:0;z-index:2;background:#fefce8;border-left:2px solid #e2e8f0;color:#b45309'>"+fmt(totGeralPrevisto)+"</td>";
+    tf+=saldoColRodape(categoria,true);
     tf+="</tr>";
   }
   tf+="<tr style='background:#f1f5f9;font-weight:700'>";
@@ -6400,6 +6752,7 @@ function renderIndiretoMatrix(categoria){
   meses.forEach(function(m){tf+="<td colspan='2' id='"+prefix+"-col-tot-"+m+"' class='mono tr' style='font-size:11px;border-left:1px solid #e2e8f0'>"+(totMes[m]>0?fmt(totMes[m]):"-")+"</td>";});
   tf+=(comQtd?("<td data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+"#f1f5f9"+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;font-size:11.5px;color:#334155'>"+""+"</td>"):"");
   tf+="<td id='"+prefix+"-grand-total' style='position:sticky;right:0;z-index:2;background:#f1f5f9;border-left:2px solid #e2e8f0;color:"+corHead+"'>"+fmt(totGeral)+"</td>";
+  tf+=saldoColRodape(categoria,false);
   tf+="</tr>";
   tfoot.innerHTML=tf;
   ajustarStickyMatriz(thead.parentNode); // Rev53
@@ -6512,6 +6865,7 @@ function recalcularComposicaoMacro(compId){
     });
   });
   comp.qtdPorMes=novoReal;comp.qtdPrevistoPorMes=novoPrev;
+  if(S.razaoRealAte)razaoAplicarRealItem(comp); // Rev68: meses vigentes da composicao = NFs classificadas nela
 }
 // Alterar composicao: mostra/esconde os equipamentos de baixo como linhas editaveis (Previsto/Real).
 // A linha de cima nunca e editada direto - ela sempre reflete a soma dos itens de baixo.
@@ -6528,6 +6882,23 @@ function equipComposicaoReverter(idx){
   S.indiretoData.forEach(function(x){if(x.composicaoPai===compId)delete x.composicaoPai;});
   S.indiretoData.splice(idx,1);
   renderTodasCategoriasIndireto();
+}
+// Rev68: tira UM item da composicao sem desfazer as demais - ele volta a ser uma linha independente, com os mesmos valores.
+// A linha da composicao e recalculada; se ficar sem nenhum item (e sem NF do Razao classificada nela), ela e removida.
+function equipComposicaoSoltarItem(ci){
+  var it=S.indiretoData[ci];if(!it||!it.composicaoPai)return;
+  var compId=it.composicaoPai,comp=S.indiretoData.find(function(x){return x.isComposicao&&x.compId===compId;});
+  if(!confirm("Tirar \""+(it.descricao||"item")+"\" da composicao"+(comp?" \""+(comp.descricao||"")+"\"":"")+"?\n\nEle volta a ser uma linha independente, com os mesmos valores de Previsto e Real e na mesma classificacao EAP da composicao"+(comp&&comp.itemEAP?" ("+comp.itemEAP+")":"")+". Os demais itens continuam na composicao."))return;
+  delete it.composicaoPai;
+  if(comp)it.itemEAP=comp.itemEAP||""; // fica na mesma EAP da composicao de onde saiu (o usuario altera depois, se precisar)
+  var restam=S.indiretoData.filter(function(x){return x.composicaoPai===compId;}).length;
+  if(comp&&!restam&&!(S.razaoDados||[]).some(function(r){return comp.id&&String(r.classificacaoRazaoId)===String(comp.id);})){
+    S.indiretoData.splice(S.indiretoData.indexOf(comp),1);
+  }else recalcularComposicaoMacro(compId);
+  if(S.razaoRealAte)razaoAplicarRealItem(it); // linha solta segue a regra dos meses vigentes (NFs classificadas nela)
+  registrarHistoricoEngCustos("Tirou \""+(it.descricao||"item")+"\" da composicao \""+(comp?comp.descricao:"")+"\"");
+  syncIndiretoNoColetor();
+  renderTodasCategoriasIndireto(); // indices podem mudar - atualiza todas as categorias
 }
 // Mostra/esconde so a LINHA (visual) do Previsto de um equipamento especifico dentro de uma composicao aberta (2o nivel do "+").
 function equipToggleChildPrevisto(idx){
@@ -7962,7 +8333,7 @@ function tioExcluir(i){var r=tioLista()[i];if(!r)return;if(!confirm("Excluir o i
   if(typeof registrarHistoricoEngCustos==="function")registrarHistoricoEngCustos("Take In/Out: excluiu item "+(r.numero||"")+" "+(r.descricao||""));renderTakeInOut();}
 function tioFiltrar(f){tioFiltro=f;renderTakeInOut();}
 
-function renderDash(){var cp=custoPorMes(),meses=mesesObra(),mAc=[],mFt=[];for(var i=0;i<meses.length;i++){if(meses[i]<=S.mesSel)mAc.push(meses[i]);else mFt.push(meses[i]);}function soma(c,l){var t=0;for(var i=0;i<l.length;i++)t+=(cp[l[i]]&&cp[l[i]][c])||0;return t;}var dm=cp[S.mesSel]||{total:0,qtd:0,aloj:0},acTot=soma("total",mAc),projTot=soma("total",meses),projAloj=soma("aloj",meses),projPJ=soma("pj",meses),projCLT=soma("clt",meses),dpm=drePorMes(cp),dreAc=0;for(var i=0;i<meses.length;i++){dreAc+=(dpm[meses[i]]&&dpm[meses[i]].total)||0;}document.getElementById("dash-tit").textContent="Visao Consolidada - "+mlbl(S.mesSel);var receitaTotal=receitaTotalContratado(),custoTotalReal=calcTotalRealGeral(),lucroPrejuizo=receitaTotal-custoTotalReal,pctLucro=receitaTotal>0?(lucroPrejuizo/receitaTotal*100):0;
+function renderDash(){razaoRealStatus();/* Rev68 */var cp=custoPorMes(),meses=mesesObra(),mAc=[],mFt=[];for(var i=0;i<meses.length;i++){if(meses[i]<=S.mesSel)mAc.push(meses[i]);else mFt.push(meses[i]);}function soma(c,l){var t=0;for(var i=0;i<l.length;i++)t+=(cp[l[i]]&&cp[l[i]][c])||0;return t;}var dm=cp[S.mesSel]||{total:0,qtd:0,aloj:0},acTot=soma("total",mAc),projTot=soma("total",meses),projAloj=soma("aloj",meses),projPJ=soma("pj",meses),projCLT=soma("clt",meses),dpm=drePorMes(cp),dreAc=0;for(var i=0;i<meses.length;i++){dreAc+=(dpm[meses[i]]&&dpm[meses[i]].total)||0;}document.getElementById("dash-tit").textContent="Visao Consolidada - "+mlbl(S.mesSel);var receitaTotal=receitaTotalContratado(),custoTotalReal=calcTotalRealGeral(),lucroPrejuizo=receitaTotal-custoTotalReal,pctLucro=receitaTotal>0?(lucroPrejuizo/receitaTotal*100):0;
 var pctBase=receitaTotal>0?pctLucro.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})+"%":"\u2014"; // lucro / valor total do contrato (sem contrato definido nao ha percentual)
   var pctDestaque=receitaTotal>0?((pctLucro>0?"+":"")+pctBase):"\u2014";
   var cardMargem="<div class='card destaque "+(lucroPrejuizo<0?"neg":"pos")+"' title='Margem de lucro = Lucro \u00f7 Valor Total do Contrato'><div class='clbl'>Margem de Lucro</div><div class='cval'>"+pctDestaque+"</div><div class='csub'>Lucro \u00f7 Valor Total do Contrato</div></div>";
@@ -9042,7 +9413,7 @@ document.getElementById("inp-razao-mo").onchange=function(e){
 };
 document.getElementById("inp-crono").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array",cellDates:false}),sn=wb.SheetNames[0];for(var i=0;i<wb.SheetNames.length;i++){var n=wb.SheetNames[i].toLowerCase();if(n.indexOf("task")>=0||n.indexOf("tarefa")>=0){sn=wb.SheetNames[i];break;}}var rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:""}),hi=0;for(var i=0;i<Math.min(8,rows.length);i++){if(rows[i].filter(function(c){return String(c).trim().length>1;}).length>=2){hi=i;break;}}var FMP={nome:["nome","name","task name"],inicio:["inicio","start"],fim:["termino","fim","finish"],pct:["concluido","complete"],nivel:["nivel","level","outline"],duracao:["duracao","duration","dias"],custo:["custo","cost","baseline"],pedido:["pedido","pc","ordem"]},hdrs=rows[hi].map(function(h){return String(h).trim();}),hmap={};for(var h2=0;h2<hdrs.length;h2++){var h=hdrs[h2].toLowerCase(),fks=Object.keys(FMP);for(var fi=0;fi<fks.length;fi++){if(hmap[fks[fi]]===undefined){var ks=FMP[fks[fi]];for(var ki=0;ki<ks.length;ki++){if(h.indexOf(ks[ki])>=0){hmap[fks[fi]]=h2;break;}}}}}var pDate=function(v){if(!v)return null;if(typeof v==="number"){var d=XLSX.SSF.parse_date_code(v);if(d)return new Date(d.y,d.m-1,d.d);}var s=String(v).trim(),m1=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m1)return new Date(+m1[3],+m1[2]-1,+m1[1]);var m2=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m2)return new Date(+m2[1],+m2[2]-1,+m2[3]);return null;},ts=[];for(var ri=hi+1;ri<rows.length;ri++){var row=rows[ri],nm=hmap.nome!==undefined?String(row[hmap.nome]||"").trim():"";if(!nm)continue;var ini=hmap.inicio!==undefined?pDate(row[hmap.inicio]):null,fim=hmap.fim!==undefined?pDate(row[hmap.fim]):null,pct=parseFloat(String(hmap.pct!==undefined?row[hmap.pct]:0).replace("%","").replace(",","."))||0;if(pct>1)pct=pct/100;var nv=hmap.nivel!==undefined?parseInt(row[hmap.nivel])||1:1,dur=parseFloat(String(hmap.duracao!==undefined?row[hmap.duracao]:"").replace(/[^0-9.]/g,""))||0;if(!dur&&ini&&fim)dur=Math.round((fim-ini)/86400000);var custo=hmap.custo!==undefined?parseFloat(row[hmap.custo])||0:0,pedido=hmap.pedido!==undefined?String(row[hmap.pedido]||"").trim():"",mesIni=ini?mkM(ini.getFullYear(),ini.getMonth()+1):null,mesFim=fim?mkM(fim.getFullYear(),fim.getMonth()+1):null,st="Nao Iniciado";if(pct>=1)st="Concluido";else if(pct>0)st="Em Andamento";else if(ini&&ini<=TODAY)st="Atrasado";ts.push({nome:nm,inicio:ini?ini.toLocaleDateString("pt-BR"):"-",fim:fim?fim.toLocaleDateString("pt-BR"):"-",mesIni:mesIni,mesFim:mesFim,duracao:dur,pct:pct,nivel:nv,status:st,custo:custo,pedido:pedido});}S.cronograma=ts;renderCrono();renderDRE();renderDash();renderImportStatus();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
 document.getElementById("inp-pedidos").onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:"array"}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:""}),norm=function(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,"");},get=function(r){var terms=[].slice.call(arguments,1);var k=Object.keys(r).find(function(k){return terms.some(function(t){return norm(k).indexOf(t)>=0;});});return k?r[k]:"";},pd=[];for(var i=0;i<rows.length;i++){var r=rows[i];pd.push({id:i,pedido:String(get(r,"pedido","pc","numero","order")||"").trim(),descricao:String(get(r,"descricao","desc","item","material")||"").trim(),fornecedor:String(get(r,"fornecedor","supplier")||"").trim(),etapa:String(get(r,"etapa","fase","atividade","tarefa","task")||"").trim(),valor:parseFloat(String(get(r,"valor","value","custo","cost","total")||"0").replace(/[^\d.,]/g,"").replace(",","."))||0,status:String(get(r,"status","situacao")||"").trim(),data:String(get(r,"data","date","emissao")||"").trim()});}S.pedidos=pd.filter(function(p){return p.pedido||p.descricao;});renderCrono();renderDRE();renderDash();}catch(ex){console.error(ex);}};reader.readAsArrayBuffer(f);e.target.value="";};
-function montarDadosCompletos(){sincronizarAlojamentoIndireto();return {version:52,exportadoEm:new Date().toISOString(),projetoId:S.projetoId||"legado",projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,receitaEAP:S.receitaEAP||[],eapMOD:S.eapMOD||"",eapMOI:S.eapMOI||"",eapSEG:S.eapSEG||"",contingenciaReplans:S.contingenciaReplans||[],eapCONTG:(typeof S.eapCONTG==="string"?S.eapCONTG:null),coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[],mesCustoVigente:S.mesCustoVigente||null,classificacaoColunas:S.classificacaoColunas||[],classificacaoLinhas:S.classificacaoLinhas||[],receitaVenda:S.receitaVenda||{},receitaMedicoes:S.receitaMedicoes||[],receitaValoresMedicao:S.receitaValoresMedicao||{},receitaFaturamentoDireto:S.receitaFaturamentoDireto||{},receitaProxId:S.receitaProxId||1,avancoFisicoPct:(S.avancoFisicoPct===undefined?null:S.avancoFisicoPct),fdPrevisto:(S.fdPrevisto===undefined?null:S.fdPrevisto),fdConsumido:(S.fdConsumido===undefined?null:S.fdConsumido),adtValor:(S.adtValor===undefined?null:S.adtValor),adtDescontado:(S.adtDescontado===undefined?null:S.adtDescontado),obraDataInicio:S.obraDataInicio||"",obraPrazoDias:(S.obraPrazoDias===undefined?null:S.obraPrazoDias),dreGer:S.dreGer||null,classificacoes:S.classificacoes||{},unidadesMedida:S.unidadesMedida||[],abcCfg:S.abcCfg||null,abcCfgs:S.abcCfgs||null,abcModCfg:S.abcModCfg||null,takeInOut:S.takeInOut||[],receitaImportadoDeArquivo:!!S.receitaImportadoDeArquivo,contingenciaData:S.contingenciaData||[]};}
+function montarDadosCompletos(){sincronizarAlojamentoIndireto();return {version:52,nuvemFirebase:nuvemParaExportar(),exportadoEm:new Date().toISOString(),projetoId:S.projetoId||"legado",projNome:S.projNome,projSub:S.projSub,projLocal:S.projLocal,logoB64:S.logoB64,obraIni:S.obraIni,obraFim:S.obraFim,mult:S.mult,he:S.he,aloj:S.aloj,salMOD:S.salMOD,modData:S.modData,moiData:S.moiData,indiretoData:S.indiretoData,cronograma:S.cronograma,pedidos:S.pedidos,pedidosCompra:S.pedidosCompra,distMensal:S.distMensal,medicoes:S.medicoes,escopos:S.escopos,razaoMO:S.razaoMO,coletorEAP:S.coletorEAP,receitaEAP:S.receitaEAP||[],eapMOD:S.eapMOD||"",eapMOI:S.eapMOI||"",eapSEG:S.eapSEG||"",contingenciaReplans:S.contingenciaReplans||[],eapCONTG:(typeof S.eapCONTG==="string"?S.eapCONTG:null),coletorColapso:S.coletorColapso,coletorNivelAtivo:S.coletorNivelAtivo,coletorSyncedCodes:S.coletorSyncedCodes,encargos:S.encargos,equipeEng:S.equipeEng,coletorSubtotais:S.coletorSubtotais,dreReceitaData:S.dreReceitaData,dreImpostoPct:S.dreImpostoPct,previstosSalvos:S.previstosSalvos||[],previstoVisualizandoId:(S.previstoVisualizandoId!==undefined?S.previstoVisualizandoId:null),historicoEngCustos:S.historicoEngCustos||[],mesCustoVigente:S.mesCustoVigente||null,classificacaoColunas:S.classificacaoColunas||[],classificacaoLinhas:S.classificacaoLinhas||[],receitaVenda:S.receitaVenda||{},receitaMedicoes:S.receitaMedicoes||[],receitaValoresMedicao:S.receitaValoresMedicao||{},receitaFaturamentoDireto:S.receitaFaturamentoDireto||{},receitaProxId:S.receitaProxId||1,avancoFisicoPct:(S.avancoFisicoPct===undefined?null:S.avancoFisicoPct),fdPrevisto:(S.fdPrevisto===undefined?null:S.fdPrevisto),fdConsumido:(S.fdConsumido===undefined?null:S.fdConsumido),adtValor:(S.adtValor===undefined?null:S.adtValor),adtDescontado:(S.adtDescontado===undefined?null:S.adtDescontado),obraDataInicio:S.obraDataInicio||"",obraPrazoDias:(S.obraPrazoDias===undefined?null:S.obraPrazoDias),dreGer:S.dreGer||null,classificacoes:S.classificacoes||{},unidadesMedida:S.unidadesMedida||[],abcCfg:S.abcCfg||null,abcCfgs:S.abcCfgs||null,abcModCfg:S.abcModCfg||null,takeInOut:S.takeInOut||[],receitaImportadoDeArquivo:!!S.receitaImportadoDeArquivo,contingenciaData:S.contingenciaData||[],razaoDados:S.razaoDados||[],razaoArquivoNome:S.razaoArquivoNome||"",razaoColunasOcultas:S.razaoColunasOcultas||[],saldoColunas:S.saldoColunas||{},razaoRealAte:S.razaoRealAte||""};}
 function salvarJSON(){var data=montarDadosCompletos();var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="custos_"+S.projNome.replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);registrarHistoricoEngCustos("Baixou o arquivo JSON de dados");}
 // Firestore tem um limite rigido de 1 MB por documento. Anexos de contrato (PDF/imagem em base64) podem
 // facilmente estourar isso sozinhos, entao para a NUVEM eles sao removidos (fica so o nome do arquivo, como aviso).
@@ -9277,7 +9648,7 @@ function migrarHEParaFimSemana(he){
   });
   return he;
 }
-function aplicarDadosImportados(d){S.projetoId=d.projetoId||"legado";S.avancoFisicoPct=(d.avancoFisicoPct===undefined||d.avancoFisicoPct===null||d.avancoFisicoPct==="")?null:Number(d.avancoFisicoPct);S.fdPrevisto=(d.fdPrevisto===undefined||d.fdPrevisto===null||d.fdPrevisto==="")?null:Number(d.fdPrevisto);S.fdConsumido=(d.fdConsumido===undefined||d.fdConsumido===null||d.fdConsumido==="")?null:Number(d.fdConsumido);S.adtValor=(d.adtValor===undefined||d.adtValor===null||d.adtValor==="")?null:Number(d.adtValor);S.adtDescontado=(d.adtDescontado===undefined||d.adtDescontado===null||d.adtDescontado==="")?null:Number(d.adtDescontado);S.obraDataInicio=d.obraDataInicio||"";S.dreGer=(d.dreGer&&Array.isArray(d.dreGer.linhas))?d.dreGer:null;S.classificacoes=(d.classificacoes&&typeof d.classificacoes==="object")?d.classificacoes:{};S.unidadesMedida=Array.isArray(d.unidadesMedida)?d.unidadesMedida:[];S.abcCfg=(d.abcCfg&&typeof d.abcCfg==="object")?d.abcCfg:null;S.abcCfgs=(d.abcCfgs&&typeof d.abcCfgs==="object")?d.abcCfgs:null;S.abcModCfg=(d.abcModCfg&&typeof d.abcModCfg==="object")?d.abcModCfg:null;S.takeInOut=Array.isArray(d.takeInOut)?d.takeInOut:[];S.obraPrazoDias=(d.obraPrazoDias===undefined||d.obraPrazoDias===null||d.obraPrazoDias==="")?null:parseInt(d.obraPrazoDias,10);if(d.projNome)S.projNome=d.projNome;if(d.projSub!==undefined)S.projSub=d.projSub;if(d.projLocal!==undefined)S.projLocal=d.projLocal;if(d.logoB64)S.logoB64=d.logoB64;if(d.obraIni)S.obraIni=d.obraIni;if(d.obraFim)S.obraFim=d.obraFim;if(d.mult)S.mult=d.mult;if(d.he)S.he=migrarHEParaFimSemana(d.he);if(d.aloj)S.aloj=d.aloj;if(d.salMOD)S.salMOD=d.salMOD;if(d.modData)S.modData=d.modData;if(d.moiData)S.moiData=d.moiData;if(d.indiretoData)S.indiretoData=d.indiretoData;if(d.cronograma)S.cronograma=d.cronograma;if(d.pedidos)S.pedidos=d.pedidos;if(d.pedidosCompra){S.pedidosCompra=d.pedidosCompra;var ccoSet={};S.pedidosCompra.forEach(function(p){ccoSet[p.ccoInfo.full]=p.ccoInfo;});S.ccosPed=Object.values(ccoSet);buildFiltroCCOPed();if(S.pedidosCompra.length){document.getElementById("ped-compra-empty").style.display="none";document.getElementById("ped-compra-content").style.display="block";}}if(d.distPedidos)S.distPedidos=d.distPedidos;if(d.distMensal)S.distMensal=d.distMensal;if(d.medicoes)S.medicoes=d.medicoes;if(d.escopos)S.escopos=d.escopos;if(d.razaoMO)S.razaoMO=d.razaoMO;if(d.coletorEAP)S.coletorEAP=d.coletorEAP;S.receitaEAP=(Array.isArray(d.receitaEAP)&&d.receitaEAP.length)?d.receitaEAP:JSON.parse(JSON.stringify(S.coletorEAP||[]));S.eapMOD=d.eapMOD||"";S.eapMOI=d.eapMOI||"";S.eapSEG=d.eapSEG||"";S.contingenciaReplans=Array.isArray(d.contingenciaReplans)?d.contingenciaReplans:[];S.eapCONTG=(typeof d.eapCONTG==="string")?d.eapCONTG:null;garantirItensEAPReceita();if(d.coletorColapso)S.coletorColapso=d.coletorColapso;if(d.coletorNivelAtivo!==undefined)S.coletorNivelAtivo=d.coletorNivelAtivo;if(d.coletorSyncedCodes)S.coletorSyncedCodes=d.coletorSyncedCodes;if(d.encargos)S.encargos=d.encargos;if(d.equipeEng)S.equipeEng=d.equipeEng;if(d.coletorSubtotais)S.coletorSubtotais=d.coletorSubtotais;if(d.dreReceitaData)S.dreReceitaData=d.dreReceitaData;if(d.dreImpostoPct)S.dreImpostoPct=d.dreImpostoPct;if(d.previstosSalvos)S.previstosSalvos=d.previstosSalvos;if(d.previstoVisualizandoId!==undefined)S.previstoVisualizandoId=d.previstoVisualizandoId;if(d.historicoEngCustos)S.historicoEngCustos=d.historicoEngCustos;if(d.mesCustoVigente!==undefined)S.mesCustoVigente=d.mesCustoVigente;if(d.classificacaoColunas)S.classificacaoColunas=d.classificacaoColunas;if(d.classificacaoLinhas)S.classificacaoLinhas=d.classificacaoLinhas;if(d.razaoDados)S.razaoDados=d.razaoDados;if(d.razaoColunas)S.razaoColunas=d.razaoColunas;if(d.razaoArquivoNome!==undefined)S.razaoArquivoNome=d.razaoArquivoNome;
+function aplicarDadosImportados(d){S.projetoId=d.projetoId||"legado";if(d.nuvemFirebase&&window.firebaseAplicarDaBase)window.firebaseAplicarDaBase(d.nuvemFirebase);S.avancoFisicoPct=(d.avancoFisicoPct===undefined||d.avancoFisicoPct===null||d.avancoFisicoPct==="")?null:Number(d.avancoFisicoPct);S.fdPrevisto=(d.fdPrevisto===undefined||d.fdPrevisto===null||d.fdPrevisto==="")?null:Number(d.fdPrevisto);S.fdConsumido=(d.fdConsumido===undefined||d.fdConsumido===null||d.fdConsumido==="")?null:Number(d.fdConsumido);S.adtValor=(d.adtValor===undefined||d.adtValor===null||d.adtValor==="")?null:Number(d.adtValor);S.adtDescontado=(d.adtDescontado===undefined||d.adtDescontado===null||d.adtDescontado==="")?null:Number(d.adtDescontado);S.obraDataInicio=d.obraDataInicio||"";S.dreGer=(d.dreGer&&Array.isArray(d.dreGer.linhas))?d.dreGer:null;S.classificacoes=(d.classificacoes&&typeof d.classificacoes==="object")?d.classificacoes:{};S.unidadesMedida=Array.isArray(d.unidadesMedida)?d.unidadesMedida:[];S.abcCfg=(d.abcCfg&&typeof d.abcCfg==="object")?d.abcCfg:null;S.abcCfgs=(d.abcCfgs&&typeof d.abcCfgs==="object")?d.abcCfgs:null;S.abcModCfg=(d.abcModCfg&&typeof d.abcModCfg==="object")?d.abcModCfg:null;S.takeInOut=Array.isArray(d.takeInOut)?d.takeInOut:[];S.obraPrazoDias=(d.obraPrazoDias===undefined||d.obraPrazoDias===null||d.obraPrazoDias==="")?null:parseInt(d.obraPrazoDias,10);if(d.projNome)S.projNome=d.projNome;if(d.projSub!==undefined)S.projSub=d.projSub;if(d.projLocal!==undefined)S.projLocal=d.projLocal;if(d.logoB64)S.logoB64=d.logoB64;if(d.obraIni)S.obraIni=d.obraIni;if(d.obraFim)S.obraFim=d.obraFim;if(d.mult)S.mult=d.mult;if(d.he)S.he=migrarHEParaFimSemana(d.he);if(d.aloj)S.aloj=d.aloj;if(d.salMOD)S.salMOD=d.salMOD;if(d.modData)S.modData=d.modData;if(d.moiData)S.moiData=d.moiData;if(d.indiretoData)S.indiretoData=d.indiretoData;if(d.cronograma)S.cronograma=d.cronograma;if(d.pedidos)S.pedidos=d.pedidos;if(d.pedidosCompra){S.pedidosCompra=d.pedidosCompra;var ccoSet={};S.pedidosCompra.forEach(function(p){ccoSet[p.ccoInfo.full]=p.ccoInfo;});S.ccosPed=Object.values(ccoSet);buildFiltroCCOPed();if(S.pedidosCompra.length){document.getElementById("ped-compra-empty").style.display="none";document.getElementById("ped-compra-content").style.display="block";}}if(d.distPedidos)S.distPedidos=d.distPedidos;if(d.distMensal)S.distMensal=d.distMensal;if(d.medicoes)S.medicoes=d.medicoes;if(d.escopos)S.escopos=d.escopos;if(d.razaoMO)S.razaoMO=d.razaoMO;if(d.coletorEAP)S.coletorEAP=d.coletorEAP;S.receitaEAP=(Array.isArray(d.receitaEAP)&&d.receitaEAP.length)?d.receitaEAP:JSON.parse(JSON.stringify(S.coletorEAP||[]));S.eapMOD=d.eapMOD||"";S.eapMOI=d.eapMOI||"";S.eapSEG=d.eapSEG||"";S.contingenciaReplans=Array.isArray(d.contingenciaReplans)?d.contingenciaReplans:[];S.eapCONTG=(typeof d.eapCONTG==="string")?d.eapCONTG:null;garantirItensEAPReceita();if(d.coletorColapso)S.coletorColapso=d.coletorColapso;if(d.coletorNivelAtivo!==undefined)S.coletorNivelAtivo=d.coletorNivelAtivo;if(d.coletorSyncedCodes)S.coletorSyncedCodes=d.coletorSyncedCodes;if(d.encargos)S.encargos=d.encargos;if(d.equipeEng)S.equipeEng=d.equipeEng;if(d.coletorSubtotais)S.coletorSubtotais=d.coletorSubtotais;if(d.dreReceitaData)S.dreReceitaData=d.dreReceitaData;if(d.dreImpostoPct)S.dreImpostoPct=d.dreImpostoPct;if(d.previstosSalvos)S.previstosSalvos=d.previstosSalvos;if(d.previstoVisualizandoId!==undefined)S.previstoVisualizandoId=d.previstoVisualizandoId;if(d.historicoEngCustos)S.historicoEngCustos=d.historicoEngCustos;if(d.mesCustoVigente!==undefined)S.mesCustoVigente=d.mesCustoVigente;if(d.classificacaoColunas)S.classificacaoColunas=d.classificacaoColunas;if(d.classificacaoLinhas)S.classificacaoLinhas=d.classificacaoLinhas;if(d.razaoDados)S.razaoDados=d.razaoDados;if(d.razaoColunas)S.razaoColunas=d.razaoColunas;if(d.razaoArquivoNome!==undefined)S.razaoArquivoNome=d.razaoArquivoNome;S.razaoColunasOcultas=Array.isArray(d.razaoColunasOcultas)?d.razaoColunasOcultas:[];S.saldoColunas=(d.saldoColunas&&typeof d.saldoColunas==="object")?d.saldoColunas:{};S.razaoRealAte=d.razaoRealAte||"";
 // So aplica os dados de Receita da base carregada se ela ja tiver sido salva DEPOIS da correcao dos valores reais
 // da BMM (marcada por receitaImportadoDeArquivo=true). Uma base salva ANTES dessa correcao ainda tem os valores
 // antigos (do seed desatualizado) - nesse caso mantem os dados corretos que ja vem de fabrica no arquivo, em vez
@@ -9792,7 +10163,9 @@ init();
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
   import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-  const firebaseConfig = {
+  // Configuracao de fabrica (a que ja vinha no arquivo). O Administrador pode trocar pelo campo
+  // "Nuvem (Firebase)" do painel de acessos; a escolha fica neste navegador e viaja no JSON exportado.
+  const FIREBASE_CONFIG_PADRAO = {
     apiKey: "AIzaSyCk1hdv3h8A2gDOcaZDRuRtceDiG2bvXOc",
     authDomain: "kz-planejamento-e-custos.firebaseapp.com",
     projectId: "kz-planejamento-e-custos",
@@ -9802,12 +10175,48 @@ init();
     measurementId: "G-YD64M53C0S"
   };
 
-  const app = initializeApp(firebaseConfig);
-  let analytics;
-  try { analytics = getAnalytics(app); } catch (e) { /* analytics pode falhar em file:// ou com bloqueador de anuncios - nao e critico */ }
-  const db = getFirestore(app);
+  const COLECAO_PADRAO = "Controle de Custo";
+  const CHAVE_NUVEM = "ctc-custos:firebase-config";
 
-  const NOME_COLECAO = "Controle de Custo";
+  // origem: "padrao" (de fabrica), "local" (configurado neste navegador) ou "json" (veio da base importada)
+  let nuvemAtual = null, db = null, NOME_COLECAO = COLECAO_PADRAO, contApps = 0;
+  function criarConexao(config) {
+    const app = initializeApp(config, contApps++ ? "ctc-nuvem-" + contApps : undefined);
+    if (config.measurementId) { try { getAnalytics(app); } catch (e) { /* analytics pode falhar em file:// ou com bloqueador de anuncios - nao e critico */ } }
+    return getFirestore(app);
+  }
+  function usarNuvem(n) {
+    db = criarConexao(n.config);
+    NOME_COLECAO = n.colecao || COLECAO_PADRAO;
+    nuvemAtual = { config: { ...n.config }, colecao: NOME_COLECAO, origem: n.origem };
+  }
+  function lerNuvemLocal() {
+    try { const n = JSON.parse(localStorage.getItem(CHAVE_NUVEM) || "null"); return (n && n.config && n.config.projectId) ? { ...n, origem: "local" } : null; } catch (e) { return null; }
+  }
+  usarNuvem(lerNuvemLocal() || { config: FIREBASE_CONFIG_PADRAO, colecao: COLECAO_PADRAO, origem: "padrao" });
+
+  window.firebaseNuvemAtual = function () { return { config: { ...nuvemAtual.config }, colecao: nuvemAtual.colecao, origem: nuvemAtual.origem }; };
+  // Testa a conexao (leitura de um documento inexistente) e, se der certo, passa a usar a nova configuracao
+  window.firebaseConfigurar = async function (config, colecao) {
+    const dbTeste = criarConexao(config);
+    let timer;
+    const prazo = new Promise((_, rej) => { timer = setTimeout(() => rej(new Error("O Firebase nao respondeu a tempo. Verifique a internet e as regras do Firestore.")), 20000); });
+    try { await Promise.race([getDoc(doc(dbTeste, colecao || COLECAO_PADRAO, "teste-conexao-ctc")), prazo]); } finally { clearTimeout(timer); }
+    db = dbTeste;
+    NOME_COLECAO = colecao || COLECAO_PADRAO;
+    nuvemAtual = { config: { ...config }, colecao: NOME_COLECAO, origem: "local" };
+    try { localStorage.setItem(CHAVE_NUVEM, JSON.stringify({ config: nuvemAtual.config, colecao: NOME_COLECAO })); } catch (e) { /* navegador sem armazenamento */ }
+  };
+  window.firebaseRestaurarPadrao = function () {
+    try { localStorage.removeItem(CHAVE_NUVEM); } catch (e) { /* ignora */ }
+    usarNuvem({ config: FIREBASE_CONFIG_PADRAO, colecao: COLECAO_PADRAO, origem: "padrao" });
+  };
+  // Base importada com configuracao propria: so e usada se este navegador nao tiver uma configuracao escolhida pelo Administrador
+  window.firebaseAplicarDaBase = function (n) {
+    if (!n || !n.config || !n.config.projectId || nuvemAtual.origem === "local") return;
+    if (n.config.projectId === nuvemAtual.config.projectId && (n.colecao || COLECAO_PADRAO) === nuvemAtual.colecao) return;
+    usarNuvem({ config: n.config, colecao: n.colecao, origem: "json" });
+  };
   const NOME_DOCUMENTO = "Controle de Custos RAO";
 
   // Salvamento rapido: cada PROJETO tem o seu proprio documento (o projeto original "legado" mantem o documento antigo),
@@ -9873,7 +10282,7 @@ init();
 
 <script id="razao-js">
 (function(){
-var COLS=[{k:'competencia',l:'Competência'},{k:'natureza',l:'Natureza'},{k:'documento',l:'Documento (Nº NF)'},{k:'gerador',l:'Gerador (Fornecedor)'},{k:'valor',l:'Valor'},{k:'historico',l:'Histórico'},{k:'centroCusto',l:'Centro de Custo'}], filtros={};
+var COLS=[{k:'competencia',l:'Competência'},{k:'natureza',l:'Natureza'},{k:'documento',l:'Documento (Nº NF)'},{k:'gerador',l:'Gerador (Fornecedor)'},{k:'valor',l:'Valor'},{k:'conta',l:'Conta'},{k:'historico',l:'Histórico'},{k:'centroCusto',l:'Centro de Custo'}], filtros={};
 function norm(v){return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function fmtData(v){if(v===null||v===undefined||v==='')return '';if(v instanceof Date&&!isNaN(v))return ('0'+(v.getMonth()+1)).slice(-2)+'/'+v.getFullYear();if(typeof v==='number'&&v>20000){var d=new Date(Math.round((v-25569)*86400*1000));return ('0'+(d.getUTCMonth()+1)).slice(-2)+'/'+d.getUTCFullYear();}return String(v);}
@@ -9886,7 +10295,7 @@ window.renderRazao=function(){
  var all=dados(),vis=all.filter(function(r){return passa(r);});
  h.innerHTML=COLS.map(function(c){var at=filtros[c.k]&&filtros[c.k].size?' active':'';return '<th data-rcol="'+c.k+'"><div class="razao-th"><span>'+c.l+'</span><span><button class="razao-filter-btn'+at+'" title="Filtrar" onclick="razaoAbrirFiltro(event,\''+c.k+'\')">&#9660;</button><button class="razao-hide-btn" title="Ocultar esta coluna" onclick="razaoOcultarColuna(event,\''+c.k+'\')">&minus;</button></span></div></th>';}).join('')+'<th data-rcol="classificacaoRazao"><div class="razao-th"><span>Classificação</span><button class="razao-hide-btn" title="Ocultar esta coluna" onclick="razaoOcultarColuna(event,\'classificacaoRazao\')">&minus;</button></div></th>';
  var itens=(typeof razaoItensClassificacao==='function')?razaoItensClassificacao():[];
- b.innerHTML=vis.length?vis.map(function(r){var opts=(typeof razaoOpcoesClassificacao==='function')?razaoOpcoesClassificacao(itens,r.classificacaoRazaoId):'<option value="">-- Selecione --</option>';var realIndex=all.indexOf(r);return '<tr>'+COLS.map(function(c){return '<td data-rcol="'+c.k+'">'+esc(r[c.k])+'</td>';}).join('')+'<td data-rcol="classificacaoRazao"><select class="rzc-select" onchange="classificarLinhaRazao('+realIndex+',this)">'+opts+'</select></td></tr>';}).join(''):'<tr><td colspan="8" class="razao-empty">'+(all.length?'Nenhum registro corresponde aos filtros.':'Importe o relatório Excel para carregar o Razão.')+'</td></tr>';
+ b.innerHTML=vis.length?vis.map(function(r){var opts=(typeof razaoOpcoesClassificacao==='function')?razaoOpcoesClassificacao(itens,r.classificacaoRazaoId):'<option value="">-- Selecione --</option>';var realIndex=all.indexOf(r);return '<tr>'+COLS.map(function(c){return '<td data-rcol="'+c.k+'">'+esc(r[c.k])+'</td>';}).join('')+'<td data-rcol="classificacaoRazao"><select class="rzc-select" onchange="classificarLinhaRazao('+realIndex+',this)">'+opts+'</select></td></tr>';}).join(''):'<tr><td colspan="9" class="razao-empty">'+(all.length?'Nenhum registro corresponde aos filtros.':'Importe o relatório Excel para carregar o Razão.')+'</td></tr>';
  document.getElementById('razao-cnt').textContent='('+vis.length+' de '+all.length+' registro(s))';document.getElementById('razao-arquivo').textContent=S.razaoArquivoNome?('Arquivo: '+S.razaoArquivoNome):'';razaoAplicarColunasOcultas();
 };
 window.razaoOcultarColuna=function(ev,k){ev.stopPropagation();if(!window.S)window.S={};if(!Array.isArray(S.razaoColunasOcultas))S.razaoColunasOcultas=[];if(S.razaoColunasOcultas.indexOf(k)<0)S.razaoColunasOcultas.push(k);document.querySelectorAll('[data-rcol="'+k+'"]').forEach(function(el){el.classList.add('razao-col-hidden');});};
@@ -9896,18 +10305,24 @@ window.razaoAbrirFiltro=function(ev,k){ev.stopPropagation();var p=document.getEl
 window.razaoPesquisarOpcoes=function(q){var p=document.getElementById('razao-filter-pop'),l=document.getElementById('razao-filter-list');q=norm(q);l.innerHTML=p._vals.filter(function(v){return !q||norm(v).includes(q);}).map(function(v){return '<label><input type="checkbox" '+(p._sel.has(v)?'checked':'')+' data-v="'+esc(v)+'" onchange="razaoToggleValor(this)"><span>'+(v?esc(v):'(Vazios)')+'</span></label>';}).join('');};
 window.razaoToggleValor=function(e){var p=document.getElementById('razao-filter-pop'),v=e.getAttribute('data-v');e.checked?p._sel.add(v):p._sel.delete(v);};window.razaoMarcarTodos=function(on){var p=document.getElementById('razao-filter-pop');p._sel=on?new Set(p._vals):new Set();razaoPesquisarOpcoes('');};window.razaoAplicarFiltro=function(){var p=document.getElementById('razao-filter-pop'),k=p.dataset.col;p._sel.size===p._vals.length?delete filtros[k]:filtros[k]=new Set(p._sel);p.style.display='none';renderRazao();};window.razaoLimparColuna=function(){var p=document.getElementById('razao-filter-pop');delete filtros[p.dataset.col];p.style.display='none';renderRazao();};window.razaoLimparFiltros=function(){filtros={};document.getElementById('razao-filter-pop').style.display='none';renderRazao();};window.razaoLimparDados=function(){if(confirm('Deseja excluir todos os dados importados do Razão?')){S.razaoDados=[];S.razaoArquivoNome='';filtros={};renderRazao();}};
 document.addEventListener('click',function(e){var p=document.getElementById('razao-filter-pop');if(p&&p.style.display!=='none'&&!p.contains(e.target))p.style.display='none';});
-var inp=document.getElementById('inp-razao');if(inp)inp.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});var ws=wb.Sheets['Documentos']||wb.Sheets[wb.SheetNames[0]],m=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});var hi=-1;for(var z=0;z<Math.min(m.length,30);z++){var ns=m[z].map(norm);if(ns.indexOf('competencia')>=0&&ns.indexOf('natureza')>=0&&ns.indexOf('gerador')>=0&&ns.indexOf('historico')>=0){hi=z;break;}}if(hi<0)throw new Error('Não encontrei o cabeçalho do relatório.');var cab=m[hi],idx={documento:cabIdx(cab,'Documento'),competencia:cabIdx(cab,'Competência'),natureza:cabIdx(cab,'Natureza'),gerador:cabIdx(cab,'Gerador'),valor:cabIdx(cab,'Valor'),historico:cabIdx(cab,'Histórico'),centroCusto:cabIdx(cab,'Centro de custo')};var falt=Object.keys(idx).filter(function(k){return idx[k]<0;});if(falt.length)throw new Error('Colunas não encontradas: '+falt.join(', '));var out=m.slice(hi+1).filter(function(r){return r.some(function(v){return String(v==null?'':v).trim()!=='';});}).map(function(r,outIndex){var doc=r[idx.documento],ger=String(r[idx.gerador]||'').trim();return {_rid:'rz-'+(hi+2+outIndex),competencia:fmtData(r[idx.competencia]),natureza:String(r[idx.natureza]||'').trim(),documento:doc===null||doc===undefined?'':String(doc).trim(),gerador:ger,valor:fmtValor(r[idx.valor]),historico:String(r[idx.historico]||'').trim(),centroCusto:String(r[idx.centroCusto]||'').trim()};});S.razaoDados=out;S.razaoArquivoNome=f.name;filtros={};renderRazao();alert('Importação concluída: '+out.length+' registros carregados.');}catch(ex){console.error(ex);alert('Erro na importação: '+ex.message);}e.target.value='';};rd.readAsArrayBuffer(f);});
+var inp=document.getElementById('inp-razao');if(inp)inp.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});var ws=wb.Sheets['Documentos']||wb.Sheets[wb.SheetNames[0]],m=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});var hi=-1;for(var z=0;z<Math.min(m.length,30);z++){var ns=m[z].map(norm);if(ns.indexOf('competencia')>=0&&ns.indexOf('natureza')>=0&&ns.indexOf('gerador')>=0&&ns.indexOf('historico')>=0){hi=z;break;}}if(hi<0)throw new Error('Não encontrei o cabeçalho do relatório.');var cab=m[hi],idx={documento:cabIdx(cab,'Documento'),competencia:cabIdx(cab,'Competência'),natureza:cabIdx(cab,'Natureza'),gerador:cabIdx(cab,'Gerador'),valor:cabIdx(cab,'Valor'),historico:cabIdx(cab,'Histórico'),centroCusto:cabIdx(cab,'Centro de custo')};var falt=Object.keys(idx).filter(function(k){return idx[k]<0;});if(falt.length)throw new Error('Colunas não encontradas: '+falt.join(', '));var iConta=cabIdx(cab,'Conta'),iEntrada=cabIdx(cab,'Data de entrada');
+/* Rev68: ignora a linha "Soma:" do rodape (so tem valor, sem competencia/natureza/gerador) e guarda Conta e Data de entrada */
+var out=m.slice(hi+1).filter(function(r){return String(r[idx.competencia]==null?'':r[idx.competencia]).trim()!==''&&(String(r[idx.natureza]||'').trim()!==''||String(r[idx.gerador]||'').trim()!=='');}).map(function(r,outIndex){var doc=r[idx.documento],ger=String(r[idx.gerador]||'').trim();return {_rid:'rz-'+(hi+2+outIndex),competencia:fmtData(r[idx.competencia]),dataEntrada:iEntrada>=0?fmtData(r[iEntrada]):'',natureza:String(r[idx.natureza]||'').trim(),documento:doc===null||doc===undefined?'':String(doc).trim(),gerador:ger,valor:fmtValor(r[idx.valor]),conta:iConta>=0?String(r[iConta]||'').trim():'',historico:String(r[idx.historico]||'').trim(),centroCusto:String(r[idx.centroCusto]||'').trim()};});
+/* Rev68: o relatorio e acumulado - cada lancamento que ja existia mantem a classificacao (chave = conteudo + ordem de repeticao) */
+var chave=function(r){return [r.competencia,r.documento,r.gerador,r.natureza,r.valor,r.conta||'',r.historico].join('|');},antigos={},nOcc={};(S.razaoDados||[]).forEach(function(r){if(!r.classificacaoRazaoId)return;var k=chave(r);(antigos[k]=antigos[k]||[]).push(r);});var mantidas=0,semConta=(S.razaoDados||[]).some(function(r){return r.conta===undefined;});
+out.forEach(function(r){var k=chave(r),lista=antigos[k]||(semConta?antigos[[r.competencia,r.documento,r.gerador,r.natureza,r.valor,'',r.historico].join('|')]:null);if(lista&&lista.length){var a=lista.shift();r.classificacaoRazaoId=a.classificacaoRazaoId;r.classificacaoRazaoTexto=a.classificacaoRazaoTexto;mantidas++;}});
+var totAnt=(S.razaoDados||[]).filter(function(r){return r.classificacaoRazaoId;}).length;S.razaoDados=out;S.razaoArquivoNome=f.name;filtros={};renderRazao();if(typeof razaoRealAtualizar==='function')razaoRealAtualizar();alert('Importação concluída: '+out.length+' registros carregados.'+(totAnt?'\nClassificações mantidas: '+mantidas+' de '+totAnt+(mantidas<totAnt?' (as demais não foram encontradas no novo relatório).':'.'):''));}catch(ex){console.error(ex);alert('Erro na importação: '+ex.message);}e.target.value='';};rd.readAsArrayBuffer(f);});
 })();
 </script>
 
-\n<script id="razao-class-js">
+<script id="razao-class-js">
 (function(){
 function e(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function n(v){return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 window.razaoItensClassificacao=function(){var out=[];(S.indiretoData||[]).forEach(function(it,idx){if(typeof normIndireto==='function')normIndireto(it);if(['Indireto','Servico','Material','Equipamento'].indexOf(it.categoria)<0||it.composicaoPai)return;var cat=(window.CAT_CFG&&CAT_CFG[it.categoria])?CAT_CFG[it.categoria].label:it.categoria;if(cat==='Indireto')cat='Custo Indireto';out.push({id:String(it.id!=null?it.id:idx),grupo:cat,txt:(it.descricao||'-')+(it.itemEAP?' | '+it.itemEAP:'')});});var ord={'Custo Indireto':1,'Servico':2,'Serviço':2,'Material':3,'Equipamento':4};return out.sort(function(a,b){return (ord[a.grupo]||99)-(ord[b.grupo]||99)||a.txt.localeCompare(b.txt,'pt-BR',{numeric:true});});};
 window.razaoOpcoesClassificacao=function(itens,selecionado){var html='<option value="">-- Selecione uma classificação --</option>',grupo='';itens.forEach(function(it){if(it.grupo!==grupo){if(grupo)html+='</optgroup>';grupo=it.grupo;html+='<optgroup label="'+e(grupo)+'">';}html+='<option value="'+e(it.id)+'" '+(String(selecionado||'')===String(it.id)?'selected':'')+'>'+e(it.txt)+'</option>';});if(grupo)html+='</optgroup>';return html;}
 window.renderClassificarRazao=function(){var tb=document.getElementById('rzc-body');if(!tb)return;var linhas=(S.razaoDados||[]),itens=razaoItensClassificacao(),bus=n((document.getElementById('rzc-busca')||{}).value||''),st=(document.getElementById('rzc-status')||{}).value||'',vis=[];linhas.forEach(function(r,i){if(!r._rid)r._rid='rz-'+i;var cls=!!r.classificacaoRazaoId;if(st==='pendente'&&cls)return;if(st==='classificado'&&!cls)return;var texto=[r.competencia,r.natureza,r.documento,r.gerador,r.valor,r.historico,r.centroCusto,r.classificacaoRazaoTexto].join(' ');if(bus&&n(texto).indexOf(bus)<0)return;vis.push({r:r,i:i});});tb.innerHTML=vis.length?vis.map(function(x){var r=x.r,opts=razaoOpcoesClassificacao(itens,r.classificacaoRazaoId);return '<tr class="'+(r.classificacaoRazaoId?'rzc-classificado':'rzc-pendente')+'"><td>'+e(r.competencia)+'</td><td>'+e(r.natureza)+'</td><td>'+e(r.documento)+'</td><td>'+e(r.gerador)+'</td><td>'+e(r.valor)+'</td><td>'+e(r.historico)+'</td><td>'+e(r.centroCusto)+'</td><td><select class="rzc-select" onchange="classificarLinhaRazao('+x.i+',this)">'+opts+'</select></td></tr>';}).join(''):'<tr><td colspan="8" style="padding:28px;text-align:center;color:#64748b">'+(linhas.length?'Nenhuma linha corresponde aos filtros.':'Importe primeiro o relatório na aba Razão.')+'</td></tr>';var cl=linhas.filter(function(r){return !!r.classificacaoRazaoId;}).length;document.getElementById('rzc-cnt').textContent='('+cl+' classificadas de '+linhas.length+')';};
-window.classificarLinhaRazao=function(i,sel){var r=(S.razaoDados||[])[i];if(!r)return;r.classificacaoRazaoId=sel.value||'';r.classificacaoRazaoTexto=sel.value?sel.options[sel.selectedIndex].text:'';renderClassificarRazao();};
+window.classificarLinhaRazao=function(i,sel){var r=(S.razaoDados||[])[i];if(!r)return;r.classificacaoRazaoId=sel.value||'';r.classificacaoRazaoTexto=sel.value?sel.options[sel.selectedIndex].text:'';renderClassificarRazao();if(typeof razaoRealAtualizar==='function')razaoRealAtualizar();};
 })();
 </script>
 </body>
