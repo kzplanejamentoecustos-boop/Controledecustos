@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Controle de Custos de Obra — Rev68</title>
+<title>Controle de Custos de Obra — Rev70</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Segoe UI,system-ui,sans-serif}
@@ -463,6 +463,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
 .mc:hover{background:rgba(255,255,255,.30)}
 @keyframes ctc-pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 
+/* Barras de rolagem sempre visiveis (o Windows 11 esconde as barras "flutuantes" do Edge/Chrome quando o mouse sai) */
+::-webkit-scrollbar{width:14px;height:14px}
+::-webkit-scrollbar-track{background:var(--ctc-neutral-100);border-radius:999px}
+::-webkit-scrollbar-thumb{background:var(--ctc-neutral-400);border-radius:999px;border:3px solid var(--ctc-neutral-100);min-height:40px;min-width:40px}
+::-webkit-scrollbar-thumb:hover{background:var(--ctc-neutral-600)}
+::-webkit-scrollbar-corner{background:var(--ctc-neutral-100)}
 @media (max-width:640px){.hdr-brand-stack{width:120px}#proj-name{font-size:16px}}
 @media (prefers-reduced-motion:reduce){.ctl-dropdown.on,.ctl-item.has-sub:hover>.ctl-sub,.modal{animation:none}}
 </style>
@@ -1754,7 +1760,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
   </div>
 </div>
 <div class="modal-bg" id="modal-edit-mod">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:560px">
     <div class="mh"><h3 id="em2-modal-tit">Editar Funcao</h3><button class="mc" onclick="document.getElementById('modal-edit-mod').classList.remove('on')">X</button></div>
     <div class="mb">
       <input type="hidden" id="em2-idx">
@@ -1764,6 +1770,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
         <div class="fg"><label>Regime</label><select id="em2-regime" style="width:100%;border:2px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px" onchange="atualizarVisibTipoHoraMod()"><option value="CLT">CLT</option><option value="PJ">PJ</option></select></div>
       </div>
       <div class="fg" id="em2-tipohora-box"><label>Regime de Horas (CLT)</label><select id="em2-tipohora" style="width:100%;border:2px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px"><option value="horista">Horista (recebe hora extra)</option><option value="mensalista">Mensalista (nao recebe hora extra)</option></select></div>
+      <div style="border:2px solid #c7d2fe;border-radius:10px;padding:12px;margin-bottom:14px;background:#f8fafc">
+        <p style="font-weight:700;color:#1e3a5f;font-size:12px;margin-bottom:2px">&#128736; Distribuicao de trabalho (EAP)</p>
+        <p style="font-size:11px;color:#64748b;margin-bottom:8px">Onde esta funcao trabalha e quanto (%) em cada atividade, ate somar 100%. A hora extra fica aberta por Funcao &ndash; EAP em Controlador &rarr; H. Extras.</p>
+        <div id="em2-distrib-lista"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px"><button type="button" class="btn b-sm b-outline" onclick="distribModAdd()">&#10133; Adicionar atividade</button><span id="em2-distrib-soma" style="font-size:12px;font-weight:700"></span></div>
+      </div>
       <div class="fg"><label>Alojamento</label><select id="em2-alojamento" style="width:100%;border:2px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px" onchange="atualizarVisibMoradiaMod()"><option value="N/A">N/A</option><option value="Familiar">Familiar</option><option value="Republica">Republica</option></select></div>
       <div id="em2-moradia-box" style="border:2px solid #bfdbfe;border-radius:10px;padding:12px;margin-bottom:14px;display:none">
         <p style="font-weight:700;color:#1d4ed8;font-size:12px;margin-bottom:8px">Moradia</p>
@@ -2024,6 +2036,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
   <div class="modal" style="max-width:980px;width:96vw">
     <div class="mh"><h3 id="calc-detalhe-titulo">Memoria de Calculo</h3><button class="mc" onclick="document.getElementById('modal-calc-detalhe').classList.remove('on')">X</button></div>
     <div class="mb" id="calc-detalhe-body" style="padding:8px 18px 18px"></div>
+  </div>
+</div>
+<div class="modal-bg" id="modal-apres-he">
+  <div class="modal" style="max-width:860px;width:96vw">
+    <div class="mh"><h3 id="apres-he-titulo">Entenda a hora extra</h3><button class="mc" onclick="document.getElementById('modal-apres-he').classList.remove('on')">X</button></div>
+    <div class="mb" style="padding:0">
+      <div id="apres-he-slide" style="min-height:380px;padding:22px 26px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-top:1px solid #e2e8f0;background:#f8fafc;border-radius:0 0 16px 16px">
+        <button class="btn b-outline" id="apres-he-ant" onclick="apresHEIr(-1)">&#8592; Anterior</button>
+        <div id="apres-he-dots" style="display:flex;gap:6px;align-items:center"></div>
+        <button class="btn b-blue" id="apres-he-prox" onclick="apresHEIr(1)">Proximo &#8594;</button>
+      </div>
+    </div>
   </div>
 </div>
 <div class="modal-bg" id="modal-composicao-real">
@@ -2499,6 +2524,25 @@ function mesesObra(){try{return mesesEntre(S.obraIni,S.obraFim);}catch(e){return
 // Rev42: Trabalho noturno - acrescimo de 20 p.p. no adicional de HE (ex.: 50% -> 70%, 100% -> 120%)
 var HE_NOTURNO_ADIC=20;
 function heExtraNoturno(x){return (x&&x.trabNoturno)?HE_NOTURNO_ADIC:0;}
+// Rev69: HE da M.O.I por setor - S.he.moiSetores["Area|Setor"]={semana:{horas,adicional},fimSemana:{horas,adicional}}
+// (mesmos grupos Area > Setor da aba Custo M.O.I). Setor sem HE propria usa a HE padrao da aba (S.he.moi).
+function heSetorChave(p){return ((p.area||"").trim()||"SEM AREA")+"|"+(p.setor||"").trim();}
+function heSetorRotulo(k){var a=String(k).split("|");return a[0]+(a[1]?" › "+a[1]:" (sem setor)");}
+function heCfgMoi(p){var o=(S.he&&S.he.moiSetores&&p)?S.he.moiSetores[heSetorChave(p)]:null;return o||S.he.moi;}
+// Rev70: HE do MOD por Funcao - EAP: S.he.modCombos["Funcao|EAP"]={semana,fimSemana}. A HE da funcao e a media
+// ponderada pela distribuicao de trabalho (fn.distribEAP); funcao sem distribuicao usa a combinacao "Funcao|" (sem EAP).
+// Combinacao ainda nao configurada usa S.he.mod (os ultimos valores gerais do MOD).
+function heModFuncNome(fn){return String((fn&&fn.funcao)||"Funcao").trim();}
+function heModPartes(fn){
+  var d=(fn&&Array.isArray(fn.distribEAP))?fn.distribEAP.filter(function(x){return x&&x.eap&&(parseFloat(x.pct)||0)>0;}):[];
+  return d.length?d.map(function(x){return {eap:x.eap,peso:(parseFloat(x.pct)||0)/100};}):[{eap:"",peso:1}];
+}
+function heModChave(fn,eap){return heModFuncNome(fn)+"|"+(eap||"");}
+function heModCfg(fn,eap){var o=(S.he&&S.he.modCombos)?S.he.modCombos[heModChave(fn,eap)]:null;return o||S.he.mod;}
+function heModEapNome(cod){if(!cod)return "sem distribuicao";var e=(S.coletorEAP||[]).find(function(x){return x.item===cod;});return cod+(e?" "+e.descricao:"");}
+function calcHEMod(fn){var ex=heExtraNoturno(fn);return heModPartes(fn).reduce(function(t,p){return t+p.peso*calcHE(fn.salario,heModCfg(fn,p.eap),ex);},0);}
+function heModHorasPond(fn,dia){return heModPartes(fn).reduce(function(t,p){var c=heModCfg(fn,p.eap)[dia];return t+p.peso*(parseFloat(c&&c.horas)||0);},0);}
+function heModTitulo(fn,dia){return heModPartes(fn).map(function(p){var c=heModCfg(fn,p.eap)[dia]||{};return heModEapNome(p.eap)+" ("+fmtQtdBR(p.peso*100)+"%): "+(parseFloat(c.horas)||0)+"h a "+(c.adicional||0)+"%";}).join(" | ");}
 function calcHE(sal,cat,extra){var vh=sal/HMES,t=0,dias=["semana","fimSemana"],ex=parseFloat(extra)||0;for(var i=0;i<dias.length;i++){var c=cat[dias[i]];if(!c)continue;t+=(parseFloat(c.horas)||0)*vh*(1+((parseFloat(c.adicional)||0)+ex)/100);}return t;}
 // Soma as horas configuradas na aba Eng.Custos (por categoria mod/moi) cujo adicional bate com o percentual informado (70 ou 100)
 function getHorasEngCustos(cat,pct){var dias=["semana","fimSemana"],t=0,c=S.he[cat];for(var i=0;i<dias.length;i++){if(c[dias[i]]&&parseFloat(c[dias[i]].adicional)===pct)t+=parseFloat(c[dias[i]].horas)||0;}return t;}
@@ -2792,7 +2836,7 @@ function alojValidarSelecao(prefix){
 function custoUnitMOD(fn){
   normMod(fn);
   var exN=heExtraNoturno(fn)/100; // Rev42: trabalho noturno (+20 p.p. em toda HE)
-  var heVal=(fn.regime==="CLT"&&fn.tipoHora==="horista")?calcHE(fn.salario,S.he.mod,heExtraNoturno(fn)):0;
+  var heVal=(fn.regime==="CLT"&&fn.tipoHora==="horista")?calcHEMod(fn):0; // Rev70: ponderada pela distribuicao Funcao - EAP
   var vh=fn.salario/HMES;
   var ehHorista=(fn.regime==="CLT"&&fn.tipoHora==="horista");
   var hAdc70Val=ehHorista?(parseFloat(fn.horaAdc70)||0)*vh*(1.70+exN):0;
@@ -2824,7 +2868,7 @@ function custoUnitMOD(fn){
 function custoUnitMOI(p){
   normMoi(p);
   var exN=heExtraNoturno(p)/100; // Rev42: trabalho noturno (+20 p.p. em toda HE)
-  var heVal=(p.regime==="CLT"&&p.tipoHora==="horista")?calcHE(p.salario,S.he.moi,heExtraNoturno(p)):0;
+  var heVal=(p.regime==="CLT"&&p.tipoHora==="horista")?calcHE(p.salario,heCfgMoi(p),heExtraNoturno(p)):0;
   var vh=p.salario/HMES;
   var ehHorista=(p.regime==="CLT"&&p.tipoHora==="horista");
   var hAdc70Val=ehHorista?(parseFloat(p.horaAdc70)||0)*vh*(1.70+exN):0;
@@ -2857,6 +2901,75 @@ function custoUnitMOI(p){
 function calcSecHeader(t){return "<tr><td colspan='2' style='padding:10px 8px 4px;font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;border-bottom:1px solid #e2e8f0'>"+t+"</td></tr>";}
 function calcAviso(t){return"<tr><td colspan='2' style='padding:0 8px 6px;font-size:11px;font-weight:700;color:#dc2626;white-space:normal'>"+t+"</td></tr>";}
 function calcLinha(label,val,bold){return "<tr"+(bold?" style='background:#f8fafc'":"")+"><td style='padding:4px 8px;font-size:12px;white-space:normal;word-break:break-word;vertical-align:top;color:"+(bold?"#1e293b;font-weight:700":"#475569")+"'>"+label+"</td><td class='mono tr' style='padding:4px 8px;font-size:12px;vertical-align:top;color:"+(bold?"#1e3a8a;font-weight:700":"#334155")+"'>"+val+"</td></tr>";}
+// ===================== Rev70: Apresentacao "Entenda a hora extra" (Memoria de Calculo do MOD) =====================
+// Slides com os numeros reais da funcao: valor-hora, distribuicao, HE de cada atividade, peso pela %, e onde a HE entra no custo.
+var APRES_CORES=["#1e40af","#0f766e","#b45309","#6d28d9","#be123c","#0369a1","#4d7c0f","#9333ea"];
+function apresHEDados(fn){
+  var vh=fn.salario/HMES,ex=heExtraNoturno(fn),tot=0;
+  var ativ=heModPartes(fn).map(function(p,i){
+    var c=heModCfg(fn,p.eap),dias=[["Semana","semana"],["Fim de semana","fimSemana"]].map(function(d){var x=c[d[1]]||{},h=parseFloat(x.horas)||0,a=(parseFloat(x.adicional)||0)+ex;return {nome:d[0],horas:h,adc:a,valor:h*vh*(1+a/100)};});
+    var cheio=dias.reduce(function(t,d){return t+d.valor;},0),contrib=p.peso*cheio;tot+=contrib;
+    return {eap:p.eap,nome:heModEapNome(p.eap),pct:p.peso*100,peso:p.peso,dias:dias,cheio:cheio,contrib:contrib,cor:APRES_CORES[i%APRES_CORES.length]};
+  });
+  return {vh:vh,ex:ex,ativ:ativ,total:tot,horasSem:heModHorasPond(fn,"semana"),horasFds:heModHorasPond(fn,"fimSemana")};
+}
+function apresCaixa(titulo,valor,cor,sub){return "<div style='flex:1;min-width:150px;border-radius:12px;padding:14px 16px;background:"+cor+"12;border:1.5px solid "+cor+"55'><div style='font-size:11px;font-weight:700;color:"+cor+";text-transform:uppercase;letter-spacing:.4px'>"+titulo+"</div><div style='font-size:22px;font-weight:800;color:#0f172a;margin-top:4px'>"+valor+"</div>"+(sub?"<div style='font-size:11.5px;color:#64748b;margin-top:2px'>"+sub+"</div>":"")+"</div>";}
+function apresSeta(){return "<div style='font-size:22px;color:#94a3b8;align-self:center'>&#10140;</div>";}
+function apresTitulo(n,t,sub){return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:6px'><span style='display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#1e3a5f;color:#fff;font-weight:800'>"+n+"</span><span style='font-size:19px;font-weight:800;color:#0f172a'>"+t+"</span></div>"+(sub?"<p style='font-size:13px;color:#475569;margin:0 0 16px 40px;line-height:1.5'>"+sub+"</p>":"");}
+function apresBarra(ativ){
+  return "<div style='display:flex;height:34px;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0'>"+ativ.map(function(a){return "<div title='"+a.nome.replace(/'/g,"&#39;")+"' style='width:"+a.pct+"%;background:"+a.cor+";color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden'>"+fmtQtdBR(a.pct)+"%</div>";}).join("")+"</div>";
+}
+function abrirApresHEMod(idx){window._apresHE={idx:idx,slide:0};document.getElementById("modal-apres-he").classList.add("on");apresHERender();}
+function apresHEIr(d){var s=window._apresHE;if(!s)return;s.slide=Math.max(0,Math.min(s.total-1,s.slide+d));apresHERender();}
+function apresHERender(){
+  var s=window._apresHE;if(!s)return;var fn=S.modData[s.idx];if(!fn)return;normMod(fn);
+  var D=apresHEDados(fn),cu=custoUnitMOD(fn),fenc=getFENCAtual(),fm=getFM(),nome=fn.funcao||"Funcao",slides=[];
+  var semDist=D.ativ.length===1&&!D.ativ[0].eap;
+  // 1. Valor da hora
+  slides.push(apresTitulo(1,"Tudo comeca no valor da hora","A hora extra e paga sobre o valor de 1 hora normal do "+nome+". O mes de trabalho considerado tem <b>220 horas</b>.")+
+    "<div style='display:flex;gap:12px;flex-wrap:wrap'>"+apresCaixa("Salario",fmt(fn.salario),"#1e3a5f","por mes")+apresSeta()+apresCaixa("Divide por","220 h","#475569","horas do mes")+apresSeta()+apresCaixa("Valor-hora",fmt(D.vh),"#15803d","= "+fmt(fn.salario)+" &divide; 220")+"</div>"+
+    (D.ex?"<div style='margin-top:16px;padding:10px 14px;background:#eef2ff;border-radius:10px;font-size:12.5px;color:#3730a3'>&#127769; Esta funcao tem <b>trabalho noturno</b>: cada % de hora extra ganha <b>+"+D.ex+" pontos</b> (50% vira "+(50+D.ex)+"%).</div>":""));
+  // 2. Distribuicao
+  slides.push(apresTitulo(2,"Onde o "+nome+" trabalha",semDist?"Esta funcao <b>nao tem distribuicao de trabalho</b> (Editar do Custo M.O.D.). Ela usa 100% a HE \"sem distribuicao\".":"Na distribuicao de trabalho (Editar do Custo M.O.D.) foi dito em que atividades da EAP ele trabalha e quanto do mes passa em cada uma. A soma e sempre <b>100%</b>.")+
+    apresBarra(D.ativ)+"<div style='margin-top:14px;display:flex;flex-direction:column;gap:8px'>"+D.ativ.map(function(a){return "<div style='display:flex;align-items:center;gap:10px;font-size:13.5px'><span style='width:14px;height:14px;border-radius:4px;background:"+a.cor+"'></span><b style='min-width:54px'>"+fmtQtdBR(a.pct)+"%</b><span>"+a.nome+"</span></div>";}).join("")+"</div>"+
+    "<div style='margin-top:16px;font-size:12.5px;color:#64748b'>Em outras palavras: de cada 10 dias de trabalho, "+D.ativ.map(function(a){return "<b style='color:"+a.cor+"'>"+fmtQtdBR(a.peso*10)+"</b> em "+(a.eap||"(sem distribuicao)");}).join(", ")+".</div>");
+  // 3. HE de cada atividade (mes cheio)
+  slides.push(apresTitulo(3,"Quanto de hora extra cada atividade pede","Em Controlador &rarr; H. Extras cada combinacao <b>"+nome+" &ndash; atividade</b> tem as horas extras de <b>um mes inteiro</b> naquela atividade. Primeiro calculamos esse valor \"cheio\".")+
+    "<div style='display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px'>"+D.ativ.map(function(a){
+      return "<div style='border:2px solid "+a.cor+";border-radius:12px;overflow:hidden'><div style='background:"+a.cor+";color:#fff;padding:8px 12px;font-weight:800;font-size:13px'>"+a.nome+"</div><div style='padding:10px 12px;font-size:12.5px'>"+
+        a.dias.map(function(d){return "<div style='display:flex;justify-content:space-between;gap:8px;padding:3px 0'><span>"+d.nome+": <b>"+d.horas+"h</b> a "+d.adc+"%</span><span class='mono'>"+(d.horas?fmtQtdBR(d.horas)+" &times; "+fmt(D.vh)+" &times; "+(1+d.adc/100).toFixed(2).replace(".",",")+" = <b>"+fmt(d.valor)+"</b>":"<span style='color:#94a3b8'>sem HE</span>")+"</span></div>";}).join("")+
+        "<div style='border-top:1px dashed #cbd5e1;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between'><span>Mes inteiro nesta atividade</span><b style='color:"+a.cor+"'>"+fmt(a.cheio)+"</b></div></div></div>";
+    }).join("")+"</div>");
+  // 4. Peso pela %
+  slides.push(apresTitulo(4,"Cada atividade entra pela % do tempo","Como o "+nome+" divide o mes, cada valor cheio e multiplicado pela % da atividade. A soma e a hora extra da funcao.")+
+    "<div style='display:flex;flex-direction:column;gap:10px'>"+D.ativ.map(function(a){var w=D.total>0?Math.max(2,a.contrib/D.total*100):0;
+      return "<div><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px'><span><b style='color:"+a.cor+"'>"+a.nome+"</b></span><span class='mono'>"+fmt(a.cheio)+" &times; "+fmtQtdBR(a.pct)+"% = <b>"+fmt(a.contrib)+"</b></span></div><div style='height:12px;background:#f1f5f9;border-radius:99px;overflow:hidden'><div style='height:100%;width:"+w+"%;background:"+a.cor+"'></div></div></div>";
+    }).join("")+"</div>"+
+    "<div style='margin-top:18px;display:flex;gap:12px;flex-wrap:wrap'>"+apresCaixa("Hora extra da funcao",fmt(D.total),"#1e40af","por pessoa, por mes")+apresCaixa("Equivale a",(fmtQtdBR(D.horasSem)||"0")+"h + "+(fmtQtdBR(D.horasFds)||"0")+"h","#475569","semana + fim de semana (media pela %)")+"</div>");
+  // 5. Para onde vai a HE
+  var base=cu.baseEncargos,comEnc=base*fenc,qtd=S.mesSel?(fn.qtdPorMes[S.mesSel]||0):0,unit=cu.base+cu.alojVal+cu.vavrVal;
+  slides.push(apresTitulo(5,"Onde a hora extra entra no custo","A HE soma no salario <b>antes</b> dos encargos, entao ela tambem recebe encargos e coeficientes.")+
+    "<div style='display:flex;gap:10px;flex-wrap:wrap;align-items:stretch'>"+
+      apresCaixa("Salario + adicionais + HE",fmt(base),"#1e3a5f",fmt(fn.salario)+" + ... + "+fmt(D.total))+apresSeta()+
+      apresCaixa("Com encargos",fmt(comEnc),"#b45309","&times; "+fenc.toFixed(4).replace(".",",")+" ("+((fenc-1)*100).toFixed(2).replace(".",",")+"%)")+apresSeta()+
+      apresCaixa("Com coeficientes",fmt(cu.base),"#6d28d9","&times; "+fm.toFixed(4).replace(".",","))+"</div>"+
+    "<div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:12px'>"+apresCaixa("Custo por pessoa/mes",fmt(unit),"#15803d","+ moradia, alimentacao e VA/VR, se houver")+apresSeta()+apresCaixa("No mes "+(S.mesSel?mlbl(S.mesSel):"-"),fmt(unit*qtd),"#0f766e",qtd+" pessoa(s) &times; "+fmt(unit))+"</div>");
+  // 6. Exemplo simples
+  var vh=D.vh,ex10=10*vh*1.5;
+  slides.push(apresTitulo(6,"Exemplo simples para fixar","Imagine o "+nome+" (salario "+fmt(fn.salario)+") dividido em duas atividades:")+
+    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px'>"+
+      "<div style='border:2px solid #0f766e;border-radius:12px;padding:12px'><div style='font-weight:800;color:#0f766e'>Atividade A &mdash; 50% do tempo</div><div style='font-size:13px;margin-top:6px'>Sem hora extra (0h)</div><div style='font-size:13px;margin-top:6px'>0 &times; 50% = <b>R$ 0,00</b></div></div>"+
+      "<div style='border:2px solid #b45309;border-radius:12px;padding:12px'><div style='font-weight:800;color:#b45309'>Atividade B &mdash; 50% do tempo</div><div style='font-size:13px;margin-top:6px'>10h a 50% no mes inteiro = 10 &times; "+fmt(vh)+" &times; 1,50 = <b>"+fmt(ex10)+"</b></div><div style='font-size:13px;margin-top:6px'>"+fmt(ex10)+" &times; 50% = <b>"+fmt(ex10/2)+"</b></div></div></div>"+
+    "<div style='margin-top:14px;padding:12px 14px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px;font-size:13.5px'>&#9989; HE do "+nome+" = R$ 0,00 + "+fmt(ex10/2)+" = <b>"+fmt(ex10/2)+"</b> por pessoa/mes &mdash; o mesmo que <b>5h</b> extras, porque ele so passa metade do mes na atividade B.</div>"+
+    "<div style='margin-top:10px;font-size:12.5px;color:#64748b'>Se fosse 70% A e 30% B: "+fmt(ex10)+" &times; 30% = <b>"+fmt(ex10*0.3)+"</b> (3h).</div>");
+  s.total=slides.length;
+  document.getElementById("apres-he-titulo").textContent="Entenda a hora extra — "+nome;
+  document.getElementById("apres-he-slide").innerHTML=slides[s.slide];
+  document.getElementById("apres-he-dots").innerHTML=slides.map(function(_,i){return "<span onclick='window._apresHE.slide="+i+";apresHERender()' style='cursor:pointer;width:"+(i===s.slide?22:9)+"px;height:9px;border-radius:99px;background:"+(i===s.slide?"#1e3a5f":"#cbd5e1")+";transition:width .2s'></span>";}).join("");
+  document.getElementById("apres-he-ant").disabled=s.slide===0;document.getElementById("apres-he-ant").style.opacity=s.slide===0?.4:1;
+  var prox=document.getElementById("apres-he-prox");prox.innerHTML=s.slide===s.total-1?"Concluir &#10003;":"Proximo &#8594;";
+  prox.onclick=s.slide===s.total-1?function(){document.getElementById("modal-apres-he").classList.remove("on");}:function(){apresHEIr(1);};
+}
 function abrirCalcMod(idx){
   if(!engDesbloqueado){pedirSenhaEngPara(function(){abrirCalcMod(idx);});return;}
   var fn=S.modData[idx];normMod(fn);
@@ -2880,9 +2993,9 @@ function abrirCalcMod(idx){
     h+=calcLinha("Encargos ("+((getFENCAtual()-1)*100).toFixed(2)+"%) s/ Sal\u00e1rio + Adicionais + HE ("+fmt(baseEncMod)+")",fmt(encVal));
     if(ehHorista){
       h+=calcSecHeader(passo+". Horas Extras (config. Eng.Custos)"+(heNotMemo?" \u2014 Trabalho noturno: +"+heNotMemo+"%":""));passo++;
-      var dias=[["Semana",S.he.mod.semana],["Fim de semana",S.he.mod.fimSemana]].filter(function(d){return d[1];});
-      var temHE=false;
-      dias.forEach(function(d){var horas=parseFloat(d[1].horas)||0,adc=(parseFloat(d[1].adicional)||0)+heNotMemo;if(horas>0){var v=horas*vh*(1+adc/100);temHE=true;h+=calcLinha(d[0]+" ("+horas+"h x "+adc+"% adicional)",fmt(v));}});
+      h+="<tr><td colspan='2' style='padding:6px 8px'><button class='btn b-sm b-blue' onclick='abrirApresHEMod("+idx+")'>&#127916; Entenda a hora extra desta funcao (passo a passo)</button></td></tr>"; // Rev70
+      var temHE=false; // Rev70: uma linha por atividade da distribuicao (HE da combinacao x % da atividade)
+      heModPartes(fn).forEach(function(p){var c=heModCfg(fn,p.eap);[["Semana",c.semana],["Fim de semana",c.fimSemana]].forEach(function(d){if(!d[1])return;var horas=parseFloat(d[1].horas)||0,adc=(parseFloat(d[1].adicional)||0)+heNotMemo;if(horas>0){var v=p.peso*horas*vh*(1+adc/100);temHE=true;h+=calcLinha(heModEapNome(p.eap)+" ("+fmtQtdBR(p.peso*100)+"%) - "+d[0]+" ("+horas+"h x "+adc+"% adicional)",fmt(v));}});});
       if(!temHE)h+=calcLinha("Nenhuma hora extra configurada","-");
       h+=calcLinha("Subtotal Horas Extras",fmt(cu.heVal),true);
     }
@@ -2947,7 +3060,8 @@ function abrirCalcMoi(idx){
     h+=calcLinha("Encargos ("+((getFENCAtual()-1)*100).toFixed(2)+"%) s/ Sal\u00e1rio + Adicionais + HE ("+fmt(baseEncMoi)+")",fmt(encVal));
     if(ehHorista){
       h+=calcSecHeader(passo+". Horas Extras (config. Eng.Custos)"+(heNotMemo?" \u2014 Trabalho noturno: +"+heNotMemo+"%":""));passo++;
-      var dias=[["Semana",S.he.moi.semana],["Fim de semana",S.he.moi.fimSemana]].filter(function(d){return d[1];});
+      var heP=heCfgMoi(p),dias=[["Semana",heP.semana],["Fim de semana",heP.fimSemana]].filter(function(d){return d[1];});
+      if(heP!==S.he.moi)h+=calcLinha("HE do setor "+heSetorRotulo(heSetorChave(p)),"(propria do setor)");
       var temHE=false;
       dias.forEach(function(d){var horas=parseFloat(d[1].horas)||0,adc=(parseFloat(d[1].adicional)||0)+heNotMemo;if(horas>0){var v=horas*vh*(1+adc/100);temHE=true;h+=calcLinha(d[0]+" ("+horas+"h x "+adc+"% adicional)",fmt(v));}});
       if(!temHE)h+=calcLinha("Nenhuma hora extra configurada","-");
@@ -3760,6 +3874,7 @@ function novaFuncaoMod(){
   document.getElementById("em2-hora70").value=0;
   document.getElementById("em2-hora100").value=0;
   document.getElementById("em2-alojamento").value="N/A";
+  distribModIniciar([]); // Rev70
   alojPopularSelect("em2","");
   document.querySelector("input[name='em2-moradia-modo'][value='padrao']").checked=true;
   document.getElementById("em2-moradia-valor").value="";
@@ -3813,7 +3928,45 @@ function abrirEditMod(idx){
   atualizarVisibMoradiaMod();
   document.getElementById("em2-desmobilizado").checked=!!fn.desmobilizado;
   document.getElementById("em2-validado").checked=!!fn.validado;
+  distribModIniciar(fn.distribEAP); // Rev70
   document.getElementById("modal-edit-mod").classList.add("on");
+}
+// ===================== Rev70: Distribuicao de trabalho da funcao MOD pelas linhas da EAP =====================
+// fn.distribEAP=[{eap:"codigo",pct:60},...] (soma 100%). Usada para a HE do MOD por Funcao - EAP.
+var _distribMod=[];
+function distribModIniciar(lista){_distribMod=(Array.isArray(lista)?lista:[]).map(function(x){return {eap:x.eap||"",pct:parseFloat(x.pct)||0};});distribModRender();}
+function distribModOpcoes(sel){
+  var h="<option value=''>-- Escolha a atividade (EAP) --</option>";
+  (S.coletorEAP||[]).forEach(function(it){if((it.nivel||1)>4)return;h+="<option value='"+it.item+"'"+(it.item===sel?" selected":"")+">"+"  ".repeat(Math.max(0,(it.nivel||1)-1))+it.item+" - "+String(it.descricao||"").replace(/</g,"&lt;")+"</option>";});
+  return h;
+}
+function distribModRender(){
+  var w=document.getElementById("em2-distrib-lista");if(!w)return;
+  w.innerHTML=_distribMod.length?_distribMod.map(function(x,i){
+    return "<div style='display:flex;gap:6px;align-items:center;margin-bottom:6px'><select onchange='distribModSet("+i+",\"eap\",this.value)' style='flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:8px;padding:6px 8px;font-size:12px'>"+distribModOpcoes(x.eap)+"</select>"+
+      "<input type='number' min='0' max='100' step='0.01' value='"+(x.pct||"")+"' placeholder='%' oninput='distribModSet("+i+",\"pct\",this.value)' style='width:70px;border:1px solid #cbd5e1;border-radius:8px;padding:6px;font-size:12px;text-align:right'><span style='font-size:12px;color:#64748b'>%</span>"+
+      "<button type='button' class='btn b-sm' style='background:#fee2e2;color:#b91c1c;padding:3px 8px' title='Remover atividade' onclick='distribModDel("+i+")'>&#10005;</button></div>";
+  }).join(""):"<p style='font-size:11.5px;color:#94a3b8'>Nenhuma atividade. Sem distribuicao, a funcao usa a HE \"sem distribuicao\".</p>";
+  distribModSoma();
+}
+function distribModSoma(){
+  var el=document.getElementById("em2-distrib-soma");if(!el)return;
+  if(!_distribMod.length){el.textContent="";return;}
+  var s=_distribMod.reduce(function(t,x){return t+(parseFloat(x.pct)||0);},0),ok=Math.abs(s-100)<0.01;
+  el.innerHTML="Total: "+fmtQtdBR(s)+"% "+(ok?"&#9989;":"<span style='color:#dc2626'>(precisa somar 100%)</span>");el.style.color=ok?"#15803d":"#dc2626";
+}
+function distribModAdd(){_distribMod.push({eap:"",pct:Math.max(0,Math.round((100-_distribMod.reduce(function(t,x){return t+(parseFloat(x.pct)||0);},0))*100)/100)});distribModRender();}
+function distribModDel(i){_distribMod.splice(i,1);distribModRender();}
+function distribModSet(i,campo,v){if(!_distribMod[i])return;_distribMod[i][campo]=campo==="pct"?(parseFloat(v)||0):v;distribModSoma();}
+// Valida antes de salvar: atividade escolhida, sem repetir, soma 100%. Retorna a lista limpa ou null (com aviso).
+function distribModValidar(){
+  var lista=_distribMod.filter(function(x){return x.eap||(parseFloat(x.pct)||0)>0;});
+  if(!lista.length)return [];
+  if(lista.some(function(x){return !x.eap;})){alert("Distribuicao de trabalho: escolha a atividade (EAP) de todas as linhas, ou remova a linha vazia.");return null;}
+  var vistos={};if(lista.some(function(x){if(vistos[x.eap])return true;vistos[x.eap]=1;return false;})){alert("Distribuicao de trabalho: a mesma atividade (EAP) aparece mais de uma vez.");return null;}
+  var s=lista.reduce(function(t,x){return t+(parseFloat(x.pct)||0);},0);
+  if(Math.abs(s-100)>=0.01){alert("Distribuicao de trabalho: as porcentagens somam "+fmtQtdBR(s)+"%. Ajuste para fechar 100%.");return null;}
+  return lista.map(function(x){return {eap:x.eap,pct:parseFloat(x.pct)||0};});
 }
 // Ao desmobilizar uma funcao MOD, move ela para o fim da lista (MOD nao tem grupos de Area/Setor como o MOI,
 // entao o "grupo" aqui e a lista inteira).
@@ -3825,6 +3978,7 @@ function reposicionarDesmobilizadoMod(fn){
 }
 function salvarEditMod(){
   if(!alojValidarSelecao("em2"))return;
+  var distrib=distribModValidar();if(distrib===null)return; // Rev70
   var idx=parseInt(document.getElementById("em2-idx").value);
   var criandoNovo=(idx===-1);
   var fn=criandoNovo?{qtdPorMes:{},alojado:false}:S.modData[idx];
@@ -3844,6 +3998,7 @@ function salvarEditMod(){
   fn.alojLinhaId=(modoMoradiaSelMod&&modoMoradiaSelMod.value==="linha"&&(document.getElementById("em2-alojamento").value==="Familiar"||document.getElementById("em2-alojamento").value==="Republica"))?document.getElementById("em2-aloj-linha").value:"";
   fn.desmobilizado=document.getElementById("em2-desmobilizado").checked;
   fn.validado=document.getElementById("em2-validado").checked;
+  fn.distribEAP=distrib; // Rev70
   if(criandoNovo)S.modData.push(fn);
   if(fn.desmobilizado)reposicionarDesmobilizadoMod(fn);
   sincronizarAlojamentoIndireto();
@@ -4184,7 +4339,7 @@ function renderCustoModMatrix(){
   var th1="<tr style='color:#fff'>";
   th1+="<th rowspan='2' style='position:sticky;left:0;z-index:11;background:#475569;min-width:160px'>Funcao"+avModFunc+"</th>";
   th1+="<th rowspan='2' style='position:sticky;left:160px;z-index:11;background:#475569;min-width:90px;text-align:right;border-right:2px solid #4a7fb5'>Salario</th>";
-  th1+="<th rowspan='2' style='min-width:70px;background:#475569'>Regime</th><th rowspan='2' style='min-width:70px;text-align:right;background:#475569'>Encargos</th><th rowspan='2' style='min-width:70px;background:#475569'>Insalub.</th><th rowspan='2' style='min-width:70px;background:#475569'>Noturno</th><th rowspan='2' style='min-width:80px;text-align:right;background:#475569'>VA/VR"+avModVavr+"</th>"+["semana","fimSemana"].map(function(dia,di){var adc=(S.he.mod[dia]&&S.he.mod[dia].adicional)||0,lbl="Hora Extra "+adc+"%";return "<th rowspan='2' style='min-width:110px;text-align:right;background:#475569"+(di===1?";border-right:2px solid #4a7fb5":"")+"' title='Horas configuradas na aba Eng.Custos para esta faixa'>"+lbl+"</th>";}).join("");
+  th1+="<th rowspan='2' style='min-width:70px;background:#475569'>Regime</th><th rowspan='2' style='min-width:70px;text-align:right;background:#475569'>Encargos</th><th rowspan='2' style='min-width:70px;background:#475569'>Insalub.</th><th rowspan='2' style='min-width:70px;background:#475569'>Noturno</th><th rowspan='2' style='min-width:80px;text-align:right;background:#475569'>VA/VR"+avModVavr+"</th>"+["semana","fimSemana"].map(function(dia,di){var lbl=dia==="semana"?"HE Semana":"HE Fim de Semana"; /* Rev70: varia por Funcao - EAP */return "<th rowspan='2' style='min-width:110px;text-align:right;background:#475569"+(di===1?";border-right:2px solid #4a7fb5":"")+"' title='Horas configuradas na aba Eng.Custos para esta faixa'>"+lbl+"</th>";}).join("");
   var th2="<tr style='color:#fff'>";
   for(var mi=0;mi<meses.length;mi++){
     var m=meses[mi],st=stM(m),mbg=st==="real"?"#15803d":st==="atual"?"#1e40af":"#3b5fa0";
@@ -4235,7 +4390,7 @@ function renderCustoModMatrix(){
     tb+="<td style='"+sC(0,rowBg)+"font-weight:600;font-size:12px'>"+(desmob?"":"<span title='Arraste para reordenar' style='cursor:grab;margin-right:3px;color:#94a3b8'>&#8942;&#8942;</span>")+iconVerPrevistoMod+"<span onclick=\"abrirEditMod("+idx+")\" title='Editar funcao' style='cursor:pointer;margin-right:5px;color:#1e40af'>&#9998;</span><span onclick=\"excluirFuncaoMod("+idx+")\" title='Excluir funcao' style='cursor:pointer;margin-right:5px;color:#dc2626'>&#128465;</span>"+(engDesbloqueado?"<span onclick=\"abrirCalcMod("+idx+")\" title='Ver memoria de calculo' style='cursor:pointer;margin-right:5px;color:#059669'>&#128202;</span>":"")+fn.funcao+(fn.trabNoturno?" <span title='Trabalho noturno: HE +20%' style='font-size:12px'>&#127769;</span>":"")+(desmob?" "+bdg("re","DESMOBILIZADO"):"")+alojChipRateio(fn)+"</td>";
     tb+="<td style='"+sC(1,rowBg)+"font-family:monospace;text-align:right'>"+fmt(fn.salario)+"</td>";
     var ehHoristaMod=(fn.regime==="CLT"&&fn.tipoHora==="horista");
-    var horasHEMod=["semana","fimSemana"].map(function(dia,di){var h=ehHoristaMod?(parseFloat(S.he.mod[dia]&&S.he.mod[dia].horas)||0):0;return "<td class='mono tr'"+(di===1?" style='border-right:2px solid #e2e8f0'":"")+">"+(h>0?h+"h":"-")+"</td>";}).join("");
+    var horasHEMod=["semana","fimSemana"].map(function(dia,di){var h=ehHoristaMod?heModHorasPond(fn,dia):0;return "<td class='mono tr'"+(di===1?" style='border-right:2px solid #e2e8f0'":"")+(ehHoristaMod?" title='"+escAttrObs(heModTitulo(fn,dia))+"'":"")+">"+(h>0?fmtQtdBR(h)+"h":"-")+"</td>";}).join(""); // Rev70: horas medias ponderadas pela distribuicao
     tb+="<td>"+bdg(fn.regime==="PJ"?"pu":"bl",fn.regime)+"</td><td class='mono tr' style='font-size:11px'>"+encPct+"</td><td class='tc'>"+(fn.insalubridade.ativo?bdg("or",fn.insalubridade.percentual+"%"):"<span style='color:#cbd5e1'>-</span>")+"</td><td class='tc'>"+(fn.noturno.ativo?bdg("or",fn.noturno.percentual+"%"):"<span style='color:#cbd5e1'>-</span>")+"</td><td class='mono tr'>"+alimCelulaInfo(cu.vavrAtiva,cu.vavrVal,cu.vavrInfo)+"</td>"+horasHEMod;
     tb+=linhaMeses;
     tb+="<td id='modrow-qtd-"+idx+"' data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+rowBg+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#334155'>"+(qtdRow>0?qtdRow:"-")+"</td>";
@@ -5951,7 +6106,7 @@ async function exportarModExcel(comPrevisto,wbExterno){
     var wb=wbExterno||new ExcelJS.Workbook(); // Rev53: no compilado recebe o workbook unico
     var ws=wb.addWorksheet("Custo MOD");
     var diasHE=["semana","fimSemana"];
-    var labelHE=diasHE.map(function(d){var adc=(S.he.mod[d]&&S.he.mod[d].adicional)||0;return "Hora Extra "+adc+"%";});
+    var labelHE=diasHE.map(function(d){return d==="semana"?"HE Semana (h)":"HE Fim de Semana (h)";}); // Rev70: varia por Funcao - EAP
     var fixedHeaders=["Funcao","Salario","Regime","Encargos","Insalub.","Noturno","VA/VR",labelHE[0],labelHE[1]];
     var colAfterFixed=fixedHeaders.length;
     var totalColIdx=colAfterFixed+meses.length*2+2,colQtdIdx=totalColIdx-1,totQtdP=0,totQtdR=0; // Rev53: +coluna Qtd Total
@@ -5993,8 +6148,8 @@ async function exportarModExcel(comPrevisto,wbExterno){
       var desmob=!!fn.desmobilizado;
       var encPct=fn.regime==="CLT"?((getFENCAtual()-1)*100).toFixed(1)+"%":"-";
       var ehHorista=(fn.regime==="CLT"&&fn.tipoHora==="horista");
-      var h1=ehHorista?(parseFloat(S.he.mod.semana&&S.he.mod.semana.horas)||0):0;
-      var h2=ehHorista?(parseFloat(S.he.mod.fimSemana&&S.he.mod.fimSemana.horas)||0):0;
+      var h1=ehHorista?Math.round(heModHorasPond(fn,"semana")*100)/100:0; // Rev70: media ponderada pela distribuicao
+      var h2=ehHorista?Math.round(heModHorasPond(fn,"fimSemana")*100)/100:0;
       var rowR=ws.getRow(rowIdx);
       rowR.getCell(1).value=fn.funcao+(desmob?" (DESMOBILIZADO)":"");
       rowR.getCell(2).value=fn.salario;rowR.getCell(2).numFmt='"R$" #,##0.00';
@@ -6077,7 +6232,7 @@ async function exportarMoiExcel(comPrevisto,wbExterno){
     var wb=wbExterno||new ExcelJS.Workbook(); // Rev53: no compilado recebe o workbook unico
     var ws=wb.addWorksheet("Custo MOI");
     var diasHE=["semana","fimSemana"];
-    var labelHE=diasHE.map(function(d){var adc=(S.he.moi[d]&&S.he.moi[d].adicional)||0;return "Hora Extra "+adc+"%";});
+    var labelHE=diasHE.map(function(d){return d==="semana"?"HE Semana (h)":"HE Fim de Semana (h)";}); // Rev69: % varia por setor
     var fixedHeaders=["Nome","Cargo","Salario","Categoria","Encargos","Insalub.","Transf.","Noturno","Alojamento","Moradia","Alimentacao Alojado","VA/VR",labelHE[0],labelHE[1]];
     var colAfterFixed=fixedHeaders.length;
     var totalColIdx=colAfterFixed+meses.length*2+2,colQtdIdx=totalColIdx-1,totQtdP=0,totQtdR=0; // Rev53: +coluna Qtd Total
@@ -6142,8 +6297,9 @@ async function exportarMoiExcel(comPrevisto,wbExterno){
           var desmob=!!p.desmobilizado;
           var encPct=p.regime==="CLT"?((getFENCAtual()-1)*100).toFixed(1)+"%":"-";
           var ehHorista=(p.regime==="CLT"&&p.tipoHora==="horista");
-          var h1=ehHorista?(parseFloat(S.he.moi.semana&&S.he.moi.semana.horas)||0):0;
-          var h2=ehHorista?(parseFloat(S.he.moi.fimSemana&&S.he.moi.fimSemana.horas)||0):0;
+          var heP=heCfgMoi(p); // Rev69: HE do setor (ou padrao da aba)
+          var h1=ehHorista?(parseFloat(heP.semana&&heP.semana.horas)||0):0;
+          var h2=ehHorista?(parseFloat(heP.fimSemana&&heP.fimSemana.horas)||0):0;
           var rowR=ws.getRow(rowIdx);
           rowR.getCell(1).value=p.nome+(desmob?" (DESMOBILIZADO)":"");
           rowR.getCell(2).value=p.cargo;
@@ -6681,7 +6837,9 @@ function renderIndiretoMatrix(categoria){
         ];
         // "+"/"-" 1o nivel: mostra/esconde os equipamentos (itens) que formam esta composicao
         var iconVerItens="<span onclick=\"equipComposicaoToggleEdicao("+idx+")\" style='cursor:pointer;margin-right:4px;color:#1e40af;font-weight:900;font-size:14px' title='"+(it.modoEdicaoItens?"Recolher itens da composicao":"Mostrar itens da composicao (agrupar)")+"'>"+(it.modoEdicaoItens?"&#8722;":"&#43;")+"</span>";
-        var resComp=linhaPR(idx,it,(it.validado?"#f0fdf4":"#eff6ff"),false,false,"",menuComp,false,iconVerItens,{expandido:!!it.mostrarPrevisto,onclick:"equipToggleChildPrevisto("+idx+")"});
+        // Rev68: a linha da composicao tambem pode ser arrastada para reordenar (os itens de dentro acompanham, pois sao desenhados logo abaixo dela)
+        var dragComp=" draggable='true' ondragstart=\"dragEquipStart(event,"+idx+")\" ondragover=\"allowDropEquip(event)\" ondragleave=\"dragLeaveEquip(event)\" ondrop=\"dropEquip(event,"+idx+")\"";
+        var resComp=linhaPR(idx,it,(it.validado?"#f0fdf4":"#eff6ff"),false,false,dragComp,menuComp,true,iconVerItens,{expandido:!!it.mostrarPrevisto,onclick:"equipToggleChildPrevisto("+idx+")"});
         var dscOld="<span class='dsc' style='font-weight:600'>"+(it.descricao||"Item sem nome")+"</span>";
         resComp.html=resComp.html.replace(dscOld,"<span class='dsc' style='font-weight:600'>&#128279; "+(it.descricao||"Item sem nome")+"</span>"+(it.modoEdicaoItens?" <span style=\"font-size:9.5px;color:#b45309\">(itens abaixo)</span>":""));
         tb+=resComp.html;
@@ -7133,7 +7291,7 @@ function renderCustoMOMatrix(){
   if(colunasVisiveis){
     th1+="<th rowspan='2' style='min-width:90px;text-align:right;background:#334155'>Salario</th><th rowspan='2' style='min-width:70px;background:#334155'>Categoria</th><th rowspan='2' style='min-width:70px;text-align:right;background:#334155'>Encargos</th>";
     th1+="<th rowspan='2' style='min-width:60px;background:#334155'>Insalub.</th><th rowspan='2' style='min-width:60px;background:#334155'>Transf.</th><th rowspan='2' style='min-width:60px;background:#334155'>Noturno</th>";
-    th1+="<th rowspan='2' style='min-width:90px;background:#334155'>Alojamento</th><th rowspan='2' style='min-width:100px;text-align:right;background:#334155'>Moradia"+avMoiMorad+"</th><th rowspan='2' style='min-width:110px;text-align:right;background:#334155'>Alimentação Alojado"+avMoiAlim+"</th><th rowspan='2' style='min-width:80px;text-align:right;background:#334155'>VA/VR"+avMoiVavr+"</th>"+["semana","fimSemana"].map(function(dia,di){var adc=(S.he.moi[dia]&&S.he.moi[dia].adicional)||0,lbl="Hora Extra "+adc+"%";return "<th rowspan='2' style='min-width:110px;text-align:right;background:#334155"+(di===1?";border-right:2px solid #4a7fb5":"")+"' title='Horas configuradas na aba Eng.Custos para esta faixa'>"+lbl+"</th>";}).join("");
+    th1+="<th rowspan='2' style='min-width:90px;background:#334155'>Alojamento</th><th rowspan='2' style='min-width:100px;text-align:right;background:#334155'>Moradia"+avMoiMorad+"</th><th rowspan='2' style='min-width:110px;text-align:right;background:#334155'>Alimentação Alojado"+avMoiAlim+"</th><th rowspan='2' style='min-width:80px;text-align:right;background:#334155'>VA/VR"+avMoiVavr+"</th>"+["semana","fimSemana"].map(function(dia,di){var lbl=dia==="semana"?"HE Semana":"HE Fim de Semana"; /* Rev69: % varia por setor - aparece na celula */return "<th rowspan='2' style='min-width:110px;text-align:right;background:#334155"+(di===1?";border-right:2px solid #4a7fb5":"")+"' title='Horas configuradas na aba Eng.Custos para esta faixa'>"+lbl+"</th>";}).join("");
   }
   var th2="<tr style='color:#fff'>";
   for(var mi=0;mi<meses.length;mi++){
@@ -7230,7 +7388,8 @@ function renderCustoMOMatrix(){
           tb+="<td class='mono tr'>"+alimCelulaInfo(cu.alimAlojAtiva,cu.alimAlojVal,cu.alimAlojInfo)+"</td>";
           tb+="<td class='mono tr'>"+alimCelulaInfo(cu.vavrAtiva,cu.vavrVal,cu.vavrInfo)+"</td>";
           var ehHoristaMoi=(p.regime==="CLT"&&p.tipoHora==="horista");
-          tb+=["semana","fimSemana"].map(function(dia,di){var h=ehHoristaMoi?(parseFloat(S.he.moi[dia]&&S.he.moi[dia].horas)||0):0;return "<td class='mono tr'"+(di===1?" style='border-right:2px solid #e2e8f0'":"")+">"+(h>0?h+"h":"-")+"</td>";}).join("");
+          var heP=heCfgMoi(p); // Rev69: HE do setor (ou padrao da aba); mostra o % quando difere do cabecalho
+          tb+=["semana","fimSemana"].map(function(dia,di){var h=ehHoristaMoi?(parseFloat(heP[dia]&&heP[dia].horas)||0):0,adP=heP[dia]&&heP[dia].adicional,adT=S.he.moi[dia]&&S.he.moi[dia].adicional;return "<td class='mono tr'"+(di===1?" style='border-right:2px solid #e2e8f0'":"")+(heP!==S.he.moi?" title='HE propria do setor "+heSetorRotulo(heSetorChave(p))+"'":"")+">"+(h>0?h+"h"+(adP?" <span style='font-size:9.5px;color:#1e40af'>("+adP+"%)</span>":""):"-")+"</td>";}).join("");
         }
         tb+=linhaMeses;
         tb+="<td id='moirow-qtd-"+idx+"' data-r1='1' class='mono tr' style='position:sticky;right:110px;z-index:2;background:"+rowBg+";border-left:2px solid #e2e8f0;font-weight:700;text-align:center;color:#334155'>"+(cc.qtdRow>0?cc.qtdRow:"-")+"</td>";
@@ -9737,7 +9896,109 @@ function onEncModoChange(){
   atualizarEncPctAtual();
 }
 function prevAloj(){var alim=parseFloat(document.getElementById("aloj-alim").value)||0,dias=parseInt(document.getElementById("aloj-dias").value)||26,mor=parseFloat(document.getElementById("aloj-mor").value)||0,vavr=parseFloat(document.getElementById("aloj-vavr").value)||0,ta=alim*dias;document.getElementById("pa1").textContent=fmt(ta);document.getElementById("pa2").textContent=fmt(ta);document.getElementById("pa3").textContent=fmt(mor);document.getElementById("pa5").textContent=fmt(vavr);document.getElementById("pa4").textContent=fmt(ta+mor);}
-function buildHERows(){var adics=[50,60,70,75,80,100],cats=[{cat:"mod",label:"MOD"},{cat:"moi",label:"MOI"}],dias=["semana","fimSemana"],html="";for(var ci=0;ci<cats.length;ci++){var cat=cats[ci].cat;html+="<div style='border:2px solid #e2e8f0;border-radius:10px;margin-bottom:14px'><div style='background:#f8fafc;padding:10px 14px;border-bottom:1px solid #e2e8f0;font-weight:700'>"+cats[ci].label+"</div><div style='padding:14px'>";for(var di=0;di<dias.length;di++){var d=dias[di],cfg=S.he[cat][d];html+="<div style='display:flex;gap:8px;align-items:center;margin-bottom:10px'><span id='he-lbl-"+cat+"-"+d+"' style='font-size:12px;font-weight:700;width:130px'>Hora Extra "+cfg.adicional+"%</span><input type='number' min='0' max='200' value='"+cfg.horas+"' id='he-"+cat+"-"+d+"' style='border:2px solid #e2e8f0;border-radius:8px;padding:6px;font-size:13px;text-align:center;width:80px'><div style='display:flex;flex-wrap:wrap;gap:3px'>";for(var ai=0;ai<adics.length;ai++){var a=adics[ai];html+="<button onclick=\"heAdic('"+cat+"','"+d+"',"+a+")\" id='ha-"+cat+"-"+d+"-"+a+"' style='padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;border:1px solid #e2e8f0;background:"+(cfg.adicional===a?"#1e40af":"#fff")+";color:"+(cfg.adicional===a?"#fff":"#374151")+"'>"+a+"%</button>";}html+="</div></div>";}html+="</div></div>";}document.getElementById("he-rows").innerHTML=html;}
+function buildHERows(){var adics=[50,60,70,75,80,100],cats=[],/* Rev69/Rev70: HE da MOI por setor e do MOD por Funcao - EAP (quadros abaixo) */dias=["semana","fimSemana"],html="";for(var ci=0;ci<cats.length;ci++){var cat=cats[ci].cat;html+="<div style='border:2px solid #e2e8f0;border-radius:10px;margin-bottom:14px'><div style='background:#f8fafc;padding:10px 14px;border-bottom:1px solid #e2e8f0;font-weight:700'>"+cats[ci].label+"</div><div style='padding:14px'>";for(var di=0;di<dias.length;di++){var d=dias[di],cfg=S.he[cat][d];html+="<div style='display:flex;gap:8px;align-items:center;margin-bottom:10px'><span id='he-lbl-"+cat+"-"+d+"' style='font-size:12px;font-weight:700;width:130px'>Hora Extra "+cfg.adicional+"%</span><input type='number' min='0' max='200' value='"+cfg.horas+"' id='he-"+cat+"-"+d+"' style='border:2px solid #e2e8f0;border-radius:8px;padding:6px;font-size:13px;text-align:center;width:80px'><div style='display:flex;flex-wrap:wrap;gap:3px'>";for(var ai=0;ai<adics.length;ai++){var a=adics[ai];html+="<button onclick=\"heAdic('"+cat+"','"+d+"',"+a+")\" id='ha-"+cat+"-"+d+"-"+a+"' style='padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;border:1px solid #e2e8f0;background:"+(cfg.adicional===a?"#1e40af":"#fff")+";color:"+(cfg.adicional===a?"#fff":"#374151")+"'>"+a+"%</button>";}html+="</div></div>";}html+="</div></div>";}html+=heModCombosHtml()+heSetoresHtml();document.getElementById("he-rows").innerHTML=html;}
+// ===== Rev70: HE do MOD por Funcao - EAP (aba H. Extras) =====
+// Lista as combinacoes das funcoes do Custo M.O.D (uma por atividade da distribuicao; "sem distribuicao" quando nao ha),
+// agrupadas por funcao. Combinacao nova nasce com os ultimos valores gerais do MOD (S.he.mod), para o custo nao mudar.
+function heModCombosLista(){
+  var grupos={},ordem=[],usadas={};
+  (S.modData||[]).forEach(function(fn){
+    var nome=heModFuncNome(fn);if(!grupos[nome]){grupos[nome]={nome:nome,qtd:0,combos:[]};ordem.push(nome);}
+    grupos[nome].qtd++;
+    heModPartes(fn).forEach(function(p){var k=heModChave(fn,p.eap);if(usadas[k])return;usadas[k]=true;grupos[nome].combos.push({k:k,eap:p.eap,pct:p.peso*100,ativa:true});});
+  });
+  // So aparecem as combinacoes em uso: com distribuicao (100%), so as atividades; sem distribuicao, so "sem distribuicao".
+  // As que deixaram de ser usadas ficam guardadas (sem aparecer) e voltam com os mesmos valores se a atividade voltar.
+  return ordem.sort(function(a,b){return a.localeCompare(b,"pt-BR");}).map(function(n){return grupos[n];});
+}
+function heModCombosHtml(){
+  var adics=[50,60,70,75,80,100],grupos=heModCombosLista(),flat=[];
+  if(!S.he.modCombos)S.he.modCombos={};
+  var h="<div style='border:2px solid #e2e8f0;border-radius:10px;margin-bottom:14px'><div style='background:#f8fafc;padding:10px 14px;border-bottom:1px solid #e2e8f0;font-weight:700'>MOD &mdash; HE por Funcao &ndash; EAP <span style='font-weight:400;font-size:11px;color:#64748b'>(a distribuicao de cada funcao e feita no Editar do Custo M.O.D.; a HE da funcao e a media pela %)</span></div><div style='padding:6px 14px 10px'>";
+  if(!grupos.length)h+="<p style='font-size:12px;color:#94a3b8;padding:6px 0'>Nenhuma funcao cadastrada no Custo M.O.D.</p>";
+  grupos.forEach(function(g){
+    h+="<div style='border-bottom:1px solid #e2e8f0;padding:8px 0'><div style='font-size:12.5px;font-weight:800;color:#1e3a5f'>"+g.nome.replace(/</g,"&lt;")+(g.qtd?"":" <span style='font-weight:400;color:#94a3b8'>(funcao nao existe mais)</span>")+"</div>";
+    g.combos.forEach(function(c){
+      var i=flat.length;flat.push(c);
+      var o=S.he.modCombos[c.k]||(S.he.modCombos[c.k]={semana:JSON.parse(JSON.stringify(S.he.mod.semana||{horas:0,adicional:50})),fimSemana:JSON.parse(JSON.stringify(S.he.mod.fimSemana||{horas:0,adicional:100}))});
+      h+="<div style='margin:8px 0 0 12px'><div style='font-size:12px;font-weight:700;color:#334155'>"+g.nome.replace(/</g,"&lt;")+" &ndash; "+heModEapNome(c.eap).replace(/</g,"&lt;")+(c.ativa&&c.eap?" <span style='font-weight:400;color:#64748b'>("+fmtQtdBR(c.pct)+"%)</span>":"")+(c.ativa?"":" <span style='font-weight:400;color:#dc2626;cursor:pointer;text-decoration:underline' onclick=\"heModRemover("+i+")\">remover (nao usada)</span>")+"</div>";
+      ["semana","fimSemana"].forEach(function(d){
+        var cfg=o[d]||(o[d]={horas:0,adicional:d==="semana"?50:100});
+        h+="<div style='display:flex;gap:8px;align-items:center;margin:6px 0 0 12px'><span id='hm-lbl-"+i+"-"+d+"' style='font-size:12px;font-weight:600;width:120px'>Hora Extra "+cfg.adicional+"%</span><input type='number' min='0' max='200' value='"+cfg.horas+"' id='hm-"+i+"-"+d+"' style='border:2px solid #e2e8f0;border-radius:8px;padding:5px;font-size:13px;text-align:center;width:70px'><div style='display:flex;flex-wrap:wrap;gap:3px'>";
+        adics.forEach(function(a){h+="<button onclick=\"heModAdic("+i+",'"+d+"',"+a+")\" id='hma-"+i+"-"+d+"-"+a+"' style='padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;border:1px solid #e2e8f0;background:"+(cfg.adicional===a?"#1e40af":"#fff")+";color:"+(cfg.adicional===a?"#fff":"#374151")+"'>"+a+"%</button>";});
+        h+="</div></div>";
+      });
+      h+="</div>";
+    });
+    h+="</div>";
+  });
+  window._heModCombos=flat;
+  return h+"</div></div>";
+}
+function heLerHorasMod(){
+  (window._heModCombos||[]).forEach(function(c,i){
+    var o=S.he.modCombos&&S.he.modCombos[c.k];if(!o)return;
+    ["semana","fimSemana"].forEach(function(d){var el=document.getElementById("hm-"+i+"-"+d);if(el&&o[d])o[d].horas=parseFloat(el.value)||0;});
+  });
+}
+function heModAdic(i,d,a){
+  var c=(window._heModCombos||[])[i],o=c&&S.he.modCombos?S.he.modCombos[c.k]:null;if(!o||!o[d])return;
+  o[d].adicional=a;
+  [50,60,70,75,80,100].forEach(function(x){var el=document.getElementById("hma-"+i+"-"+d+"-"+x);if(el){el.style.background=x===a?"#1e40af":"#fff";el.style.color=x===a?"#fff":"#374151";}});
+  var lbl=document.getElementById("hm-lbl-"+i+"-"+d);if(lbl)lbl.textContent="Hora Extra "+a+"%";
+}
+function heModRemover(i){var c=(window._heModCombos||[])[i];if(!c)return;heLerHorasTela();delete S.he.modCombos[c.k];buildHERows();}
+// ===== Rev69: HE por setor da M.O.I (aba H. Extras) =====
+function heSetoresLista(){
+  var set={},cont={};
+  (S.moiData||[]).forEach(function(p){var k=heSetorChave(p);set[k]=true;cont[k]=(cont[k]||0)+1;});
+  Object.keys((S.he&&S.he.moiSetores)||{}).forEach(function(k){set[k]=true;}); // setor que ficou sem pessoas continua aparecendo para poder desmarcar
+  return Object.keys(set).sort().map(function(k){return {k:k,n:cont[k]||0};});
+}
+function heSetoresHtml(){
+  var lista=heSetoresLista(),adics=[50,60,70,75,80,100];window._heSetoresLista=lista;
+  if(!S.he.moiSetores)S.he.moiSetores={};
+  var h="<div style='border:2px solid #e2e8f0;border-radius:10px;margin-bottom:14px'><div style='background:#f8fafc;padding:10px 14px;border-bottom:1px solid #e2e8f0;font-weight:700'>MOI &mdash; HE por setor <span style='font-weight:400;font-size:11px;color:#64748b'>(setores do Custo M.O.I.; setor novo comeca com a ultima HE geral da MOI)</span></div><div style='padding:6px 14px 10px'>";
+  if(!lista.length)h+="<p style='font-size:12px;color:#94a3b8;padding:6px 0'>Nenhum colaborador cadastrado no Custo M.O.I.</p>";
+  lista.forEach(function(s,i){
+    // Rev69: todo setor tem a sua HE; o que ainda nao tinha nasce com a HE geral da MOI (mesmo custo de antes)
+    var o=S.he.moiSetores[s.k]||(S.he.moiSetores[s.k]={semana:JSON.parse(JSON.stringify(S.he.moi.semana||{horas:0,adicional:50})),fimSemana:JSON.parse(JSON.stringify(S.he.moi.fimSemana||{horas:0,adicional:100}))});
+    h+="<div style='border-bottom:1px solid #f1f5f9;padding:8px 0'><div style='font-size:12px;font-weight:700'>"+heSetorRotulo(s.k)+" <span style='font-weight:400;color:#64748b'>("+s.n+" pessoa"+(s.n===1?"":"s")+")</span>"+(s.n?"":" <span style='font-weight:400;color:#dc2626;cursor:pointer;text-decoration:underline' onclick=\"heSetorToggle("+i+",false)\">remover (setor sem pessoas)</span>")+"</div>";
+    ["semana","fimSemana"].forEach(function(d){
+      var cfg=o[d]||(o[d]={horas:0,adicional:d==="semana"?50:100});
+      h+="<div style='display:flex;gap:8px;align-items:center;margin:8px 0 0 24px'><span id='hs-lbl-"+i+"-"+d+"' style='font-size:12px;font-weight:600;width:120px'>Hora Extra "+cfg.adicional+"%</span><input type='number' min='0' max='200' value='"+cfg.horas+"' id='hs-"+i+"-"+d+"' style='border:2px solid #e2e8f0;border-radius:8px;padding:5px;font-size:13px;text-align:center;width:70px'><div style='display:flex;flex-wrap:wrap;gap:3px'>";
+      adics.forEach(function(a){h+="<button onclick=\"heSetorAdic("+i+",'"+d+"',"+a+")\" id='hsa-"+i+"-"+d+"-"+a+"' style='padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;border:1px solid #e2e8f0;background:"+(cfg.adicional===a?"#1e40af":"#fff")+";color:"+(cfg.adicional===a?"#fff":"#374151")+"'>"+a+"%</button>";});
+      h+="</div></div>";
+    });
+    h+="</div>";
+  });
+  return h+"</div></div>";
+}
+// Le as horas digitadas (padrao MOD/MOI e setores) antes de redesenhar a aba, para nao perder o que ainda nao foi salvo
+function heLerHorasTela(){
+  ["mod","moi"].forEach(function(cat){["semana","fimSemana"].forEach(function(d){var el=document.getElementById("he-"+cat+"-"+d);if(el)S.he[cat][d].horas=parseFloat(el.value)||0;});});
+  heLerHorasSetores();heLerHorasMod();
+}
+function heLerHorasSetores(){
+  (window._heSetoresLista||[]).forEach(function(s,i){
+    var o=S.he.moiSetores&&S.he.moiSetores[s.k];if(!o)return;
+    ["semana","fimSemana"].forEach(function(d){var el=document.getElementById("hs-"+i+"-"+d);if(el&&o[d])o[d].horas=parseFloat(el.value)||0;});
+  });
+}
+function heSetorToggle(i,on){
+  var s=(window._heSetoresLista||[])[i];if(!s)return;
+  heLerHorasTela();
+  if(!S.he.moiSetores)S.he.moiSetores={};
+  if(on)S.he.moiSetores[s.k]={semana:JSON.parse(JSON.stringify(S.he.moi.semana||{horas:0,adicional:50})),fimSemana:JSON.parse(JSON.stringify(S.he.moi.fimSemana||{horas:0,adicional:100}))}; // comeca igual a HE da MOI
+  else delete S.he.moiSetores[s.k];
+  buildHERows();
+}
+function heSetorAdic(i,d,a){
+  var s=(window._heSetoresLista||[])[i],o=s&&S.he.moiSetores?S.he.moiSetores[s.k]:null;if(!o||!o[d])return;
+  o[d].adicional=a;
+  [50,60,70,75,80,100].forEach(function(x){var el=document.getElementById("hsa-"+i+"-"+d+"-"+x);if(el){el.style.background=x===a?"#1e40af":"#fff";el.style.color=x===a?"#fff":"#374151";}});
+  var lbl=document.getElementById("hs-lbl-"+i+"-"+d);if(lbl)lbl.textContent="Hora Extra "+a+"%";
+}
 function heAdic(cat,d,a){S.he[cat][d].adicional=a;var adics=[50,60,70,75,80,100];for(var i=0;i<adics.length;i++){var el=document.getElementById("ha-"+cat+"-"+d+"-"+adics[i]);if(el){el.style.background=adics[i]===a?"#1e40af":"#fff";el.style.color=adics[i]===a?"#fff":"#374151";}}var lbl=document.getElementById("he-lbl-"+cat+"-"+d);if(lbl)lbl.textContent="Hora Extra "+a+"%";}
 function buildSalRows(){var keys=Object.keys(S.salMOD),h="";for(var i=0;i<keys.length;i++){var fn=keys[i];h+="<div style='display:flex;gap:8px;margin-bottom:8px'><input value='"+fn+"' onchange=\"renameSal('"+fn+"',this.value)\" style='flex:1;border:2px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:13px'><input type='number' value='"+S.salMOD[fn]+"' onchange=\"S.salMOD['"+fn+"']=parseFloat(this.value)||0\" style='width:110px;border:2px solid #e2e8f0;border-radius:8px;padding:6px;font-family:monospace;text-align:center;font-size:13px'><button onclick=\"delSal('"+fn+"')\" class='btn b-red b-sm'>X</button></div>";}document.getElementById("sal-rows").innerHTML=h;}
 function renameSal(old,nw){var v=S.salMOD[old];delete S.salMOD[old];S.salMOD[nw]=v;}
@@ -9746,7 +10007,7 @@ function addSalRow(){S.salMOD["Nova Funcao"]=0;buildSalRows();}
 function buildCoefRows(){var keys=Object.keys(S.mult),h="";for(var i=0;i<keys.length;i++){var k=keys[i],m=S.mult[k];h+="<div style='margin-bottom:14px'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px'><b style='font-size:12px'>"+m.label+"</b><div style='display:flex;align-items:center;gap:6px'><input type='number' step='0.01' min='"+m.min+"' max='"+m.max+"' value='"+m.val.toFixed(2)+"' id='cf-"+k+"' oninput=\"updCoef('"+k+"',this.value)\" style='width:80px;border:2px solid #e2e8f0;border-radius:8px;padding:5px;font-family:monospace;text-align:center;font-size:13px'>"+(m.val>1?"<button onclick=\"rstCoef('"+k+"')\" class='btn b-outline b-sm' style='padding:3px 7px'>reset</button>":"")+"</div></div><input type='range' min='"+m.min+"' max='"+m.max+"' step='0.001' value='"+m.val+"' oninput=\"updCoef('"+k+"',this.value)\" style='width:100%'><div style='text-align:right;font-size:11px;color:#94a3b8'>"+(m.val>1?"+"+((m.val-1)*100).toFixed(1)+"%":"neutro")+"</div></div>";}document.getElementById("coef-rows").innerHTML=h;document.getElementById("coef-tot").textContent=getFM().toFixed(6);}
 function updCoef(k,v){var n=parseFloat(v);if(isNaN(n))return;S.mult[k].val=Math.min(Math.max(n,S.mult[k].min),S.mult[k].max);buildCoefRows();}
 function rstCoef(k){S.mult[k].val=1;buildCoefRows();}
-function salvarEng(){S.aloj.vlrAlimentacao=parseFloat(document.getElementById("aloj-alim").value)||0;S.aloj.diasMes=parseInt(document.getElementById("aloj-dias").value)||26;S.aloj.vlrMoradia=parseFloat(document.getElementById("aloj-mor").value)||0;S.aloj.vlrVaVr=parseFloat(document.getElementById("aloj-vavr").value)||0;var cats=["mod","moi"],dias=["semana","fimSemana"];for(var ci=0;ci<cats.length;ci++){for(var di=0;di<dias.length;di++){var el=document.getElementById("he-"+cats[ci]+"-"+dias[di]);if(el)S.he[cats[ci]][dias[di]].horas=parseFloat(el.value)||0;}}var encModoSel=document.querySelector("input[name='enc-modo']:checked");S.encargos.modo=encModoSel?encModoSel.value:"padrao";S.encargos.percentualManual=parseFloat(document.getElementById("enc-manual-pct").value)||0;registrarHistoricoEngCustos("Atualizou configuracoes avancadas (Alojamento/Horas Extras/Coeficientes/Encargos)");fecharEng();recalc();}
+function salvarEng(){S.aloj.vlrAlimentacao=parseFloat(document.getElementById("aloj-alim").value)||0;S.aloj.diasMes=parseInt(document.getElementById("aloj-dias").value)||26;S.aloj.vlrMoradia=parseFloat(document.getElementById("aloj-mor").value)||0;S.aloj.vlrVaVr=parseFloat(document.getElementById("aloj-vavr").value)||0;var cats=["mod","moi"],dias=["semana","fimSemana"];for(var ci=0;ci<cats.length;ci++){for(var di=0;di<dias.length;di++){var el=document.getElementById("he-"+cats[ci]+"-"+dias[di]);if(el)S.he[cats[ci]][dias[di]].horas=parseFloat(el.value)||0;}}heLerHorasSetores();heLerHorasMod();var encModoSel=document.querySelector("input[name='enc-modo']:checked");S.encargos.modo=encModoSel?encModoSel.value:"padrao";S.encargos.percentualManual=parseFloat(document.getElementById("enc-manual-pct").value)||0;registrarHistoricoEngCustos("Atualizou configuracoes avancadas (Alojamento/Horas Extras/Coeficientes/Encargos)");fecharEng();recalc();}
 // ===== UTILITÁRIOS CCO / MEDIÇÕES =====
 function normCCOCode(s){var m=String(s||"").trim().match(/^(\d{5}-[A-Z])/i);return m?m[1].toUpperCase():(String(s||"").trim().slice(0,7).toUpperCase());}
 function getMesFrmDate(s){
