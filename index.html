@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Controle de Custos de Obra — Rev78.5</title>
+<title>Controle de Custos de Obra — Rev79</title>
 <style>/* Rev75: quadros da aba Atalhos (Controlador) */
 .atl-card{border:2px solid #e2e8f0;border-radius:12px;padding:14px;background:#fff}
 .atl-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
@@ -13,9 +13,9 @@
 .atl-info{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:#334155;line-height:1.45;background:#f8fafc;border-radius:8px;padding:10px 12px;margin-bottom:10px}
 @media(max-width:640px){.atl-info{grid-template-columns:1fr}}
 /* Rev75: Modo Ajuda - destaca os botoes; clicar abre a Apresentacao Botao */
-body.modo-ajuda button:not(.ctl-btn):not(.mc):not(.mtab):not(#btn-ajuda),body.modo-ajuda select{outline:2px dashed #f59e0b;outline-offset:2px;cursor:help}
+body.modo-ajuda button:not(.ctl-btn):not(.mc):not(.mtab):not(#btn-ajuda):not(#btn-ajuda-landing),body.modo-ajuda select{outline:2px dashed #f59e0b;outline-offset:2px;cursor:help}
 body.modo-ajuda #ajuda-faixa button,body.modo-ajuda #modal-apres-atl button,body.modo-ajuda .ctl-wrap button{outline:none!important;cursor:pointer!important}
-body.modo-ajuda #btn-ajuda{background:#f59e0b!important;color:#1e293b!important;border-color:#f59e0b!important;opacity:1!important}
+body.modo-ajuda #btn-ajuda,body.modo-ajuda #btn-ajuda-landing{background:#f59e0b!important;color:#1e293b!important;border-color:#f59e0b!important;opacity:1!important}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script><!-- Rev76: graficos do Dashboard -->
@@ -553,7 +553,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
 </head>
 <body>
 <div id="landing-screen" style="position:fixed;inset:0;z-index:150;background:linear-gradient(135deg,#0f172a,#1e293b);display:flex;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+  <div style="position:relative;background:#fff;border-radius:16px;max-width:520px;width:100%;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <button class="btn b-outline b-sm" id="btn-ajuda-landing" onclick="toggleModoAjuda()" style="position:absolute;top:14px;right:14px" title="Modo Ajuda: ao clicar em um botao, exibe a apresentacao dele em vez de executa-lo">&#10067; Ajuda</button><!-- Rev79 -->
     <div id="landing-logo-wrap" style="display:none;justify-content:center;margin-bottom:14px">
       <img id="landing-logo-img" style="max-height:64px;max-width:220px;object-fit:contain" alt="Logo da obra"/>
     </div>
@@ -703,7 +704,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
       </div>
       <div class="hdr-titles">
         <div id="proj-name">Controle de Custos de Obra</div>
-        <div id="proj-sub-el">Lucro Presumido - Grau de Risco 3 - <span id="hdr-meses">0</span> meses</div>
+        <div id="proj-sub-el" style="display:none"><span id="hdr-meses" style="display:none">0</span></div><!-- Rev79: texto fixo "Lucro Presumido - Grau de Risco 3 - N meses" retirado do cabecalho -->
         <div id="ctl-atual" class="hdr-pagina"></div>
       </div>
     </div>
@@ -776,8 +777,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
         <button class="btn b-green b-sm" onclick="novoColaboradorMoi()">&#10133; Novo Colaborador</button>
         <button class="btn b-outline b-sm" onclick="expandirColunasMoiMat()">&#8862; Expandir Colunas</button>
         <button class="btn b-outline b-sm" onclick="recolherColunasMoiMat()">&#8863; Recolher Colunas</button>
-        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="moiOcultarPrevisto()">&#128065; Ocultar Previsto</button>
-        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="moiReexibirPrevisto()">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="ocvMenu(this,'ocultar','MOI')" title="Oculta o Previsto, a Quantidade ou o Valor">&#128065; Ocultar &#9662;</button><!-- Rev79 -->
+        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="ocvMenu(this,'reexibir','MOI')" title="Reexibe o Previsto, a Quantidade ou o Valor">&#128065; Reexibir &#9662;</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarMoiExcelPerguntar()">&#128190; Exportar Excel</button>
         <span style="font-size:11px;color:#64748b">Digite a quantidade de pessoas por mes em cada linha (ex: 3 apontadores)</span>
       </div>
@@ -804,8 +805,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
       <h3>Planilha Detalhada MOD - Quantidade por Mes</h3>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-green b-sm" onclick="novaFuncaoMod()">&#10133; Nova Funcao</button>
-        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="modOcultarPrevisto()">&#128065; Ocultar Previsto</button>
-        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="modReexibirPrevisto()">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="ocvMenu(this,'ocultar','MOD')" title="Oculta o Previsto, a Quantidade ou o Valor">&#128065; Ocultar &#9662;</button><!-- Rev79 -->
+        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="ocvMenu(this,'reexibir','MOD')" title="Reexibe o Previsto, a Quantidade ou o Valor">&#128065; Reexibir &#9662;</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarModExcelPerguntar()">&#128190; Exportar Excel</button>
         <button class="btn b-sm" style="background:#0f766e;color:#fff;border:none" onclick="abrirBaseExternaMod()">&#128194; Carregar Base Externa</button>
         <span style="font-size:11px;color:#64748b">Digite a quantidade de pessoas por mes em cada linha</span>
@@ -828,8 +829,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Indireto')">&#10133; Novo Item</button>
         <button class="btn b-sm b-blue" onclick="saldoColAbrirNova('Indireto')" title="Cria uma coluna a direita para guardar o saldo a gastar de cada linha">&#128274; Nova Coluna de Saldo</button>
-        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Indireto')">&#128065; Ocultar Previsto</button>
-        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Indireto')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="ocvMenu(this,'ocultar','Indireto')" title="Oculta o Previsto, a Quantidade ou o Valor">&#128065; Ocultar &#9662;</button><!-- Rev79 -->
+        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="ocvMenu(this,'reexibir','Indireto')" title="Reexibe o Previsto, a Quantidade ou o Valor">&#128065; Reexibir &#9662;</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Indireto')">&#128190; Exportar Excel</button>
         <span style="display:inline-flex;gap:6px;align-items:center;margin-left:4px">
           <button class="btn b-sm" id="filt-limpar-Indireto" title="Limpar filtro" onclick="filtroIndiretoLimpar('Indireto')" style="display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">&#10005; Limpar</button>
@@ -855,8 +856,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Servico')">&#10133; Novo Item</button>
         <button class="btn b-sm b-blue" onclick="saldoColAbrirNova('Servico')" title="Cria uma coluna a direita para guardar o saldo a gastar de cada linha">&#128274; Nova Coluna de Saldo</button>
-        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Servico')">&#128065; Ocultar Previsto</button>
-        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Servico')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="ocvMenu(this,'ocultar','Servico')" title="Oculta o Previsto, a Quantidade ou o Valor">&#128065; Ocultar &#9662;</button><!-- Rev79 -->
+        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="ocvMenu(this,'reexibir','Servico')" title="Reexibe o Previsto, a Quantidade ou o Valor">&#128065; Reexibir &#9662;</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Servico')">&#128190; Exportar Excel</button>
         <span style="display:inline-flex;gap:6px;align-items:center;margin-left:4px">
           <button class="btn b-sm" id="filt-limpar-Servico" title="Limpar filtro" onclick="filtroIndiretoLimpar('Servico')" style="display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">&#10005; Limpar</button>
@@ -882,8 +883,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Material')">&#10133; Novo Item</button>
         <button class="btn b-sm b-blue" onclick="saldoColAbrirNova('Material')" title="Cria uma coluna a direita para guardar o saldo a gastar de cada linha">&#128274; Nova Coluna de Saldo</button>
-        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Material')">&#128065; Ocultar Previsto</button>
-        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Material')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="ocvMenu(this,'ocultar','Material')" title="Oculta o Previsto, a Quantidade ou o Valor">&#128065; Ocultar &#9662;</button><!-- Rev79 -->
+        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="ocvMenu(this,'reexibir','Material')" title="Reexibe o Previsto, a Quantidade ou o Valor">&#128065; Reexibir &#9662;</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Material')">&#128190; Exportar Excel</button>
         <span style="display:inline-flex;gap:6px;align-items:center;margin-left:4px">
           <button class="btn b-sm" id="filt-limpar-Material" title="Limpar filtro" onclick="filtroIndiretoLimpar('Material')" style="display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">&#10005; Limpar</button>
@@ -909,8 +910,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Equipamento')">&#10133; Novo Item</button>
         <button class="btn b-sm b-blue" onclick="saldoColAbrirNova('Equipamento')" title="Cria uma coluna a direita para guardar o saldo a gastar de cada linha">&#128274; Nova Coluna de Saldo</button>
-        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Equipamento')">&#128065; Ocultar Previsto</button>
-        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Equipamento')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="ocvMenu(this,'ocultar','Equipamento')" title="Oculta o Previsto, a Quantidade ou o Valor">&#128065; Ocultar &#9662;</button><!-- Rev79 -->
+        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="ocvMenu(this,'reexibir','Equipamento')" title="Reexibe o Previsto, a Quantidade ou o Valor">&#128065; Reexibir &#9662;</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Equipamento')">&#128190; Exportar Excel</button>
         <span style="display:inline-flex;gap:6px;align-items:center;margin-left:4px">
           <button class="btn b-sm" id="filt-limpar-Equipamento" title="Limpar filtro" onclick="filtroIndiretoLimpar('Equipamento')" style="display:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">&#10005; Limpar</button>
@@ -937,8 +938,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
       <h3>Planilha Detalhada Seguros - Quantidade e Valor por Mes</h3>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="novoItemIndireto('Seguro')">&#10133; Novo Item</button>
-        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="indiretoOcultarPrevisto('Seguro')">&#128065; Ocultar Previsto</button>
-        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="indiretoReexibirPrevisto('Seguro')">&#128065; Reexibir Previsto</button>
+        <button class="btn b-sm" style="background:#94a3b8;color:#fff;border:none" onclick="ocvMenu(this,'ocultar','Seguro')" title="Oculta o Previsto, a Quantidade ou o Valor">&#128065; Ocultar &#9662;</button><!-- Rev79 -->
+        <button class="btn b-sm" style="background:#b45309;color:#fff;border:none" onclick="ocvMenu(this,'reexibir','Seguro')" title="Reexibe o Previsto, a Quantidade ou o Valor">&#128065; Reexibir &#9662;</button>
         <button class="btn b-sm" style="background:#15803d;color:#fff;border:none" onclick="exportarIndiretoExcelPerguntar('Seguro')">&#128190; Exportar Excel</button>
         <button class="btn b-sm btn-compilar-selecionados" style="display:none;background:#f59e0b;color:#fff;border:none" onclick="compilarSelecionadosEmComposicao('Seguro')" data-categoria="Seguro">&#128279; Compilar Selecionados em Composicao</button>
         <span style="font-size:11px;color:#64748b">Cada mes tem 2 colunas: Qtd e Valor. Preencha uma que a outra calcula sozinha (Valor = Qtd x Valor Unit.)</span>
@@ -3171,6 +3172,8 @@ var MODO_AJUDA=false;
 var AJUDA_LIVRE=["toggleModoAjuda","abrirApresAtalho","abrirAjudaAba","apresAtlIr","apresAtlRender","toggleColetorNode","togglePrevistoDesvioItem","abrirDescColetor","abcToggleComp","toggleControlesMenu","setTabAndClose","setETab","fecharEng"];
 var APRES_ATL_MAP={confirmarSalvarPrevistoDoReal:"previsto",abrirTransferenciaCusto:"transf",exportarCompiladoExcelPerguntar:"compilado"};
 var AJUDA={
+  ocvMenu:{t:"Ocultar / Reexibir",f:"Abre as op&ccedil;&otilde;es <b>Previsto</b>, <b>Quantidade</b> e <b>Valor</b>. A op&ccedil;&atilde;o escolhida &eacute; ocultada (bot&atilde;o Ocultar) ou reexibida (bot&atilde;o Reexibir).",o:"Somente na tabela da aba atual. Os valores, totais e exporta&ccedil;&otilde;es n&atilde;o s&atilde;o alterados.",
+    telas:[{h:"Op&ccedil;&otilde;es",passos:["<b>Previsto:</b> linhas PREVISTO de todos os itens da aba.","<b>Quantidade:</b> subcoluna Qtd de cada m&ecirc;s.","<b>Valor:</b> subcoluna Valor (R$) de cada m&ecirc;s.","Cada op&ccedil;&atilde;o mostra se est&aacute; vis&iacute;vel ou oculta no momento."],aviso:"Quantidade e Valor n&atilde;o podem ficar ocultos ao mesmo tempo: pelo menos uma das colunas permanece vis&iacute;vel em cada m&ecirc;s."}]},
   // ---------- Cabecalho ----------
   toggleModoAjuda:{t:"Ajuda",f:"Liga e desliga o Modo Ajuda. Com o modo ligado, os bot&otilde;es ficam destacados e, ao serem acionados, exibem sua apresenta&ccedil;&atilde;o em vez de executar a a&ccedil;&atilde;o.",o:"Em todas as telas do controle, inclusive nas janelas do Controlador."},
   abrirEng:{t:"Controlador",f:"Abre as Configura&ccedil;&otilde;es Avan&ccedil;adas: Alojamento, Horas Extras, Coeficientes, Encargos, Ferramentas e Atalhos.",o:"Os par&acirc;metros alterados recalculam M.O.I, M.O.D, Resumo M.O., Coletor Total, DRE e Dashboard ap&oacute;s <b>Salvar configura&ccedil;&atilde;o</b>.",
@@ -3234,9 +3237,206 @@ var AJUDA_ABAS={
       {h:"Nuvem",passos:["<b>Salvar na Nuvem:</b> salvamento r&aacute;pido do projeto, sobrescrevendo a vers&atilde;o atual.","<b>Salvar Nova Vers&atilde;o:</b> cria uma vers&atilde;o com nome, indicada para o fechamento do m&ecirc;s.","<b>Salvar na Base Existente:</b> substitui uma vers&atilde;o escolhida do mesmo projeto."],aviso:"Os salvamentos na nuvem solicitam o login de um engenheiro do projeto e t&ecirc;m limite aproximado de 1 MB; acima disso, utilize o Salvar JSON."}]}
 };
 function abrirAjudaAba(k){var d=AJUDA_ABAS[k];if(!d)return;window._apresAtl={slide:0,slides:ajudaMontar(d),titulo:"Apresentação Botão — "+d.t.replace(/&[a-z]+;/g,function(e){var x=document.createElement("textarea");x.innerHTML=e;return x.value;})};document.getElementById("modal-apres-atl").classList.add("on");apresAtlRender();}
+// Rev79: apresentacoes de todos os demais botoes (Modo Ajuda). Chaves: nome da funcao; "inp:<id>" = botao que abre a selecao de arquivo; "abrir:<id>" = botao que abre uma janela.
+(function(){
+var P=function(t,f,o,passos,aviso,cor){var d={t:t,f:f,o:o};if(passos||aviso)d.telas=[{h:"Detalhes",passos:passos||[],aviso:aviso,cor:cor}];return d;};
+var EXC="#b91c1c";
+Object.assign(AJUDA,{
+  // ---------- Tela inicial ----------
+  "abrir:modal-tutorial":P("Tutorial","Exibe um guia r&aacute;pido de acesso ao controle.","Janela pr&oacute;pria; nenhum dado &eacute; alterado."),
+  "inp:inp-json":P("Importar base de dados / Carregar JSON","Abre um arquivo .json salvo anteriormente e substitui todos os dados em mem&oacute;ria.","Todas as abas: custos, Raz&atilde;o classificado, Replans, colunas de saldo, acessos e configura&ccedil;&atilde;o da nuvem.",["Na tela inicial, &eacute; necess&aacute;rio para entrar como Visualizador ou Controlador.","O arquivo atual em tela &eacute; substitu&iacute;do pelo importado."],"Salve o trabalho atual antes de carregar outro arquivo."),
+  abrirModalVersoes:P("Abrir Vers&atilde;o (Nuvem)","Lista as vers&otilde;es salvas na nuvem, agrupadas por projeto, para carregamento.","Todas as abas, com os dados da vers&atilde;o escolhida (incluindo anexos e imagens).",["Depende da nuvem configurada no Painel do Administrador.","O carregamento solicita confirma&ccedil;&atilde;o."]),
+  carregarVersaoEscolhida:P("Carregar vers&atilde;o","Carrega a vers&atilde;o selecionada da nuvem, substituindo os dados em tela.","Todas as abas do controle."),
+  landingRemoverJson:P("Remover JSON carregado","Descarta a base carregada e recarrega a p&aacute;gina.","Tela inicial.",null,"Os dados n&atilde;o salvos em JSON ou na nuvem s&atilde;o perdidos.",EXC),
+  landingIniciarProjetoNovo:P("Iniciar Projeto Novo","Abre o cadastro de uma obra em branco: nome, local, per&iacute;odo e engenheiro respons&aacute;vel.","Cria um projeto novo; nenhuma base salva &eacute; alterada.",["Solicita a senha mestre.","Mant&eacute;m coeficientes, horas extras e encargos padr&atilde;o.","Ap&oacute;s criar, abre a aba Dados da Obra."]),
+  confirmarProjetoNovo:P("Criar projeto em branco","Cria a obra com os dados informados e o engenheiro respons&aacute;vel.","Todo o controle passa a exibir a obra nova, vazia."),
+  landingEntrarVisualizador:P("Visualizador","Acessa o controle somente para consulta.","Todas as abas; campos de edi&ccedil;&atilde;o, colunas de saldo, Real do Raz&atilde;o e anota&ccedil;&otilde;es ficam bloqueados."),
+  landingEntrarEngenheiro:P("Controlador","Acessa o controle com edi&ccedil;&atilde;o completa, mediante e-mail e senha de um engenheiro cadastrado.","Libera edi&ccedil;&atilde;o, Configura&ccedil;&otilde;es Avan&ccedil;adas, mem&oacute;ria de c&aacute;lculo e salvamento na nuvem."),
+  landingAbrirAdmin:P("Administrador","Abre o Painel do Administrador mediante a senha mestre.","Acessos dos engenheiros e configura&ccedil;&atilde;o da nuvem."),
+  landingComecarDoZero:P("Come&ccedil;ar obra do zero","Acessa como Controlador com os dados existentes no arquivo, sem importar um JSON.","Todas as abas. Solicita a senha mestre."),
+  // ---------- Acesso, nuvem e administrador ----------
+  tryPw:P("Entrar (Controlador)","Valida a senha de acesso &agrave;s Configura&ccedil;&otilde;es Avan&ccedil;adas.","Janela do Controlador."),
+  tryLoginEng:P("Entrar","Valida o e-mail e a senha do engenheiro.","Libera a a&ccedil;&atilde;o solicitada (edi&ccedil;&atilde;o ou salvamento)."),
+  confirmarReauthSalvar:P("Confirmar","Confirma a opera&ccedil;&atilde;o com o login e a senha do engenheiro.","Executa a a&ccedil;&atilde;o indicada na janela (salvamento, transfer&ecirc;ncia ou exclus&atilde;o)."),
+  toggleCfg:P("Configurar Obra","Exibe no cabe&ccedil;alho os campos In&iacute;cio da Obra e T&eacute;rmino Previsto.","As datas definem as colunas de m&ecirc;s de todas as abas e a quantidade de meses exibida no cabe&ccedil;alho."),
+  salvarJSON:P("Salvar JSON","Baixa a base completa no computador.","Arquivo .json com todos os dados, anexos, Raz&atilde;o, Replans e anota&ccedil;&otilde;es.",null,"Mantenha sempre uma c&oacute;pia em JSON como seguran&ccedil;a."),
+  salvarNaNuvem:P("Salvar na Nuvem","Salvamento r&aacute;pido do projeto, sobrescrevendo a vers&atilde;o atual.","Nuvem (Firebase). Solicita o login de um engenheiro do projeto.",["Bases grandes s&atilde;o compactadas e gravadas em partes automaticamente."]),
+  salvarNovaVersaoNuvem:P("Salvar Nova Vers&atilde;o","Cria uma nova vers&atilde;o com nome na nuvem.","Lista de Abrir Vers&atilde;o (Nuvem). Indicado para o fechamento mensal."),
+  abrirModalSalvarVersaoExistente:P("Salvar na Base Existente","Lista as vers&otilde;es do projeto para substituir uma delas pelos dados atuais.","Nuvem.",null,"A vers&atilde;o escolhida perde os dados anteriores.",EXC),
+  confirmarSalvarSobreVersao:P("Substituir vers&atilde;o","Seleciona a vers&atilde;o que ser&aacute; substitu&iacute;da.","Nuvem; o sistema solicita confirma&ccedil;&atilde;o."),
+  executarSalvarSobreVersao:P("Sim, substituir","Grava os dados atuais sobre a vers&atilde;o escolhida.","Nuvem.",null,"A opera&ccedil;&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  salvarEng:P("Salvar configura&ccedil;&atilde;o","Grava Alojamento, Horas Extras, Coeficientes e Encargos e recalcula o controle.","M.O.I, M.O.D, Resumo M.O., Coletor Total, DRE e Dashboard."),
+  adminAdicionarConta:P("Adicionar acesso","Cadastra o login (nome, e-mail e senha) de um engenheiro do projeto.","Esse login acessa como Controlador e salva na nuvem. Salve a base ap&oacute;s a inclus&atilde;o."),
+  adminRemoverConta:P("Remover acesso","Remove o login do engenheiro.","Painel do Administrador. O projeto mant&eacute;m pelo menos um engenheiro."),
+  toggleSenhaConta:P("Exibir senha","Mostra ou oculta a senha do engenheiro.","Painel do Administrador."),
+  nuvemSalvarConfig:P("Testar e salvar","Testa a conex&atilde;o com a configura&ccedil;&atilde;o do Firebase informada e passa a utiliz&aacute;-la.","Salvar na Nuvem e Abrir Vers&atilde;o (Nuvem)."),
+  nuvemRestaurarPadrao:P("Restaurar padr&atilde;o do arquivo","Retorna &agrave; configura&ccedil;&atilde;o de nuvem original do arquivo.","Salvar na Nuvem e Abrir Vers&atilde;o (Nuvem)."),
+  salvarNome:P("Salvar (nome do projeto)","Grava o nome e o subt&iacute;tulo do projeto.","Cabe&ccedil;alho do controle."),
+  // ---------- Controlador: H. Extras, Coeficientes, Previsto ----------
+  heAdic:P("Adicional de hora extra","Define o percentual adicional da hora extra (50% a 100%).","Custo da m&atilde;o de obra, ap&oacute;s Salvar configura&ccedil;&atilde;o."),
+  heModAdic:P("Adicional de hora extra (Fun&ccedil;&atilde;o&ndash;EAP)","Define o percentual adicional da combina&ccedil;&atilde;o Fun&ccedil;&atilde;o&ndash;EAP.","Custo M.O.D da fun&ccedil;&atilde;o, ponderado pela distribui&ccedil;&atilde;o de trabalho."),
+  heModRemover:P("Remover combina&ccedil;&atilde;o","Remove a combina&ccedil;&atilde;o Fun&ccedil;&atilde;o&ndash;EAP que n&atilde;o est&aacute; mais em uso.","Controlador &rarr; H. Extras."),
+  heSetorAdic:P("Adicional de hora extra (setor)","Define o percentual adicional do setor da M.O.I.","Custo M.O.I dos colaboradores do setor."),
+  heSetorToggle:P("Hora extra pr&oacute;pria do setor","Cria ou remove a configura&ccedil;&atilde;o de hora extra pr&oacute;pria do setor.","Custo M.O.I dos colaboradores do setor."),
+  rstCoef:P("Reset do coeficiente","Retorna o coeficiente a 1,000.","Custo de toda a m&atilde;o de obra, ap&oacute;s Salvar configura&ccedil;&atilde;o."),
+  delSal:P("Excluir sal&aacute;rio de refer&ecirc;ncia","Exclui a fun&ccedil;&atilde;o da tabela de sal&aacute;rios de refer&ecirc;ncia.","Controlador."),
+  addSalRow:P("Adicionar sal&aacute;rio de refer&ecirc;ncia","Inclui uma fun&ccedil;&atilde;o na tabela de sal&aacute;rios de refer&ecirc;ncia.","Controlador."),
+  renomearPrevistoSalvo:P("Renomear Replan","Altera o nome do previsto registrado.","Coluna Replan do Coletor Total e Ver Previsto Salvo."),
+  excluirPrevistoSalvo:P("Excluir Replan","Exclui o previsto registrado.","Deixa de constar na coluna Replan do Coletor Total e em Ver Previsto Salvo.",null,"A exclus&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  selecionarPrevistoSalvo:P("Selecionar previsto","Seleciona o Replan a comparar com o Real.","Prev x Real e abas de custo, com faixa azul de aviso."),
+  // ---------- Resumo M.O. ----------
+  "sel:syncMes":P("M&ecirc;s de refer&ecirc;ncia","Define o m&ecirc;s de an&aacute;lise.","Mesmo seletor do Dashboard: altera o m&ecirc;s de todo o controle."),
+  gerarTemplate:P("Template do efetivo","Baixa a planilha modelo do efetivo (abas MOD e MOI, uma coluna por m&ecirc;s).","Arquivo Excel; preenchido, &eacute; importado em Importar &rarr; Efetivo de Obra."),
+  exportarEfetivo:P("Extrair Efetivo","Exporta o efetivo atual (quantidade de pessoas por m&ecirc;s) no layout do template.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
+  setTab:P("Importar","Abre a aba Importar.","Central de importa&ccedil;&atilde;o: efetivo, cronograma, pedidos, medi&ccedil;&otilde;es, EAP e Raz&atilde;o."),
+  // ---------- Custo M.O.I ----------
+  novoColaboradorMoi:P("Novo Colaborador","Abre o cadastro de um colaborador da M.O.I.","Tabela do Custo M.O.I; sem nome, o colaborador &eacute; registrado como A CONTRATAR."),
+  expandirColunasMoiMat:P("Expandir Colunas","Exibe as colunas de sal&aacute;rio, adicionais, alojamento e hora extra.","Somente na tabela do Custo M.O.I."),
+  recolherColunasMoiMat:P("Recolher Colunas","Oculta as colunas de composi&ccedil;&atilde;o do custo.","Somente na tabela do Custo M.O.I."),
+  exportarMoiExcelPerguntar:P("Exportar Excel (M.O.I)","Gera a planilha do Custo M.O.I, com ou sem as linhas PREVISTO.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
+  abrirClassifEapAba:P("Classifica&ccedil;&atilde;o EAP da aba","Define o item da EAP que recebe o total da aba (vermelho indica aus&ecirc;ncia de classifica&ccedil;&atilde;o).","Real e Previsto do item no Coletor Total e no Prev x Real."),
+  abrirEditMoi:P("Editar colaborador","Abre o cadastro do colaborador.","Custo unit&aacute;rio do colaborador e totais da M.O.I."),
+  excluirColaboradorMoi:P("Excluir colaborador","Exclui o colaborador da M.O.I.","Totais da M.O.I, Resumo M.O., Coletor Total e DRE.",null,"A exclus&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  abrirCalcMoi:P("Mem&oacute;ria de c&aacute;lculo","Demonstra o c&aacute;lculo do custo unit&aacute;rio do colaborador.","Janela pr&oacute;pria; dispon&iacute;vel para o Controlador."),
+  moiToggleMostrarPrevisto:P("Previsto do colaborador","Exibe ou oculta a linha PREVISTO do colaborador.","Somente na tabela do Custo M.O.I."),
+  moiTogglePrevistoFixado:P("Bloquear previsto","Bloqueia ou desbloqueia a linha PREVISTO do colaborador.","Linha PREVISTO do colaborador."),
+  moiIgualarComReal:P("Igualar previsto com o Real","Copia as quantidades reais para o previsto do colaborador.","Linha PREVISTO do colaborador, Prev x Real e Replan atual."),
+  adicionarNovaAreaMoi:P("Nova &aacute;rea","Cadastra uma nova &aacute;rea da M.O.I.","Agrupamento da tabela do Custo M.O.I."),
+  adicionarNovoSetorMoi:P("Novo setor","Cadastra um novo setor na &aacute;rea.","Agrupamento da tabela e hora extra por setor (Controlador &rarr; H. Extras)."),
+  salvarEditMoi:P("Salvar colaborador","Grava o cadastro do colaborador.","Custo unit&aacute;rio, totais da M.O.I, Resumo M.O., Coletor Total e DRE."),
+  // ---------- Custo M.O.D ----------
+  novaFuncaoMod:P("Nova Fun&ccedil;&atilde;o","Abre o cadastro de uma fun&ccedil;&atilde;o da M.O.D.","Tabela do Custo M.O.D."),
+  exportarModExcelPerguntar:P("Exportar Excel (M.O.D)","Gera a planilha do Custo M.O.D, com ou sem as linhas PREVISTO.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
+  abrirBaseExternaMod:P("Carregar Base Externa","Atualiza as fun&ccedil;&otilde;es da M.O.D a partir de um Excel preenchido.","Cadastro das fun&ccedil;&otilde;es do Custo M.O.D.",["Exporte o modelo, preencha e importe; confira o resumo antes de confirmar.","Mesmo nome e regime atualiza a fun&ccedil;&atilde;o; campo vazio n&atilde;o altera; zero zera o valor."]),
+  exportarModeloModExcel:P("Exportar modelo","Baixa o modelo em branco ou com as fun&ccedil;&otilde;es atuais.","Arquivo Excel para preenchimento."),
+  "inp:inp-mod-externo":P("Importar Excel preenchido","Seleciona o Excel preenchido com as fun&ccedil;&otilde;es.","Resumo da importa&ccedil;&atilde;o, para confer&ecirc;ncia antes de confirmar."),
+  confirmarImportModExterno:P("Confirmar importa&ccedil;&atilde;o","Aplica as altera&ccedil;&otilde;es do Excel nas fun&ccedil;&otilde;es da M.O.D.","Custo M.O.D, Resumo M.O., Coletor Total e DRE."),
+  abrirEditMod:P("Editar fun&ccedil;&atilde;o","Abre o cadastro da fun&ccedil;&atilde;o, incluindo a distribui&ccedil;&atilde;o de trabalho pela EAP.","Custo unit&aacute;rio da fun&ccedil;&atilde;o e combina&ccedil;&otilde;es de hora extra Fun&ccedil;&atilde;o&ndash;EAP."),
+  excluirFuncaoMod:P("Excluir fun&ccedil;&atilde;o","Exclui a fun&ccedil;&atilde;o da M.O.D.","Totais da M.O.D, Resumo M.O., Coletor Total e DRE.",null,"A exclus&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  abrirCalcMod:P("Mem&oacute;ria de c&aacute;lculo","Demonstra o c&aacute;lculo do custo unit&aacute;rio da fun&ccedil;&atilde;o.","Janela pr&oacute;pria, com o bot&atilde;o Entenda a hora extra desta fun&ccedil;&atilde;o."),
+  modToggleMostrarPrevisto:P("Previsto da fun&ccedil;&atilde;o","Exibe ou oculta a linha PREVISTO da fun&ccedil;&atilde;o.","Somente na tabela do Custo M.O.D."),
+  modTogglePrevistoFixado:P("Bloquear previsto","Bloqueia ou desbloqueia a linha PREVISTO da fun&ccedil;&atilde;o.","Linha PREVISTO da fun&ccedil;&atilde;o."),
+  modIgualarComReal:P("Igualar previsto com o Real","Copia as quantidades reais para o previsto da fun&ccedil;&atilde;o.","Linha PREVISTO da fun&ccedil;&atilde;o, Prev x Real e Replan atual."),
+  distribModAdd:P("Adicionar atividade","Inclui uma atividade da EAP na distribui&ccedil;&atilde;o de trabalho da fun&ccedil;&atilde;o.","Combina&ccedil;&otilde;es de hora extra Fun&ccedil;&atilde;o&ndash;EAP (Controlador &rarr; H. Extras).",null,"A soma das porcentagens deve ser 100% para salvar."),
+  distribModDel:P("Remover atividade","Retira a atividade da distribui&ccedil;&atilde;o de trabalho.","Hora extra da fun&ccedil;&atilde;o."),
+  salvarEditMod:P("Salvar fun&ccedil;&atilde;o","Grava o cadastro da fun&ccedil;&atilde;o.","Custo unit&aacute;rio, totais da M.O.D, Resumo M.O., Coletor Total e DRE."),
+  // ---------- Abas de custo ----------
+  novoItemIndireto:P("Novo Item","Abre o cadastro de uma linha de custo.","Tabela da aba; com Item EAP, a linha soma no Coletor Total."),
+  saldoColAbrirNova:P("Nova Coluna de Saldo","Cria uma coluna, com nome e m&ecirc;s de vig&ecirc;ncia, para registrar o contrato de cada linha.","Colunas &agrave; direita da tabela: Qtd Total, Valor Total e A distribuir.",["<b>Colar saldo</b> registra a Qtd Total e o Valor Total atuais.","<b>A distribuir</b> = valor registrado &minus; total atual (ap&oacute;s o real do Raz&atilde;o).","<b>Atualizar</b> recalcula ap&oacute;s a redistribui&ccedil;&atilde;o nos meses."],"Registre o contrato antes de avan&ccedil;ar a vig&ecirc;ncia do Raz&atilde;o no Dashboard."),
+  saldoColCriar:P("Criar coluna","Cria a coluna de saldo com o nome e o m&ecirc;s informados.","Tabela da aba."),
+  saldoColColar:P("Colar saldo","Registra a Qtd Total e o Valor Total atuais de todas as linhas.","Coluna de saldo; base do c&aacute;lculo do A distribuir."),
+  saldoColAtualizar:P("Atualizar","Recalcula a coluna A distribuir com os valores atuais das linhas.","Coluna de saldo."),
+  saldoColExcluir:P("Excluir coluna de saldo","Exclui a coluna de saldo.","Tabela da aba.",null,"A exclus&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  exportarIndiretoExcelPerguntar:P("Exportar Excel","Gera a planilha da aba, com ou sem as linhas PREVISTO.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
+  filtroIndiretoLimpar:P("Limpar filtros","Remove os filtros de descri&ccedil;&atilde;o e fornecedor.","Somente na tabela da aba."),
+  compilarSelecionadosEmComposicao:P("Compilar Selecionados em Composi&ccedil;&atilde;o","Agrupa as linhas marcadas (mesmo grupo de EAP) em uma linha-m&atilde;e que soma as filhas.","Tabela da aba; o Raz&atilde;o &eacute; classificado na linha-m&atilde;e e as Curvas ABC detalham a composi&ccedil;&atilde;o.",["Marque duas ou mais linhas do mesmo grupo de EAP.","Informe o nome da composi&ccedil;&atilde;o.","Tirar da composi&ccedil;&atilde;o devolve a linha com a EAP da composi&ccedil;&atilde;o."]),
+  abrirEquipMenu:P("Menu da linha (&#8942;)","Abre as op&ccedil;&otilde;es da linha: editar, contratos/aditivos e excluir.","Linha da tabela."),
+  abrirEditIndireto:P("Editar item","Abre o cadastro da linha: pedido, fornecedor, descri&ccedil;&atilde;o, valor unit&aacute;rio, Item EAP e classifica&ccedil;&atilde;o.","Item EAP alimenta o Coletor Total; Classifica&ccedil;&atilde;o e Faturamento Direto alimentam a DRE."),
+  excluirItemIndireto:P("Excluir item","Exclui a linha de custo.","Totais da aba, Coletor Total, DRE e Curvas ABC.",null,"A exclus&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  equipTogglePrevistoFixado:P("Bloquear previsto","Bloqueia ou desbloqueia a linha PREVISTO.","Linha PREVISTO do item."),
+  equipIgualarComReal:P("Igualar previsto com o Real","Copia quantidades e valor unit&aacute;rio reais para o previsto do item.","Linha PREVISTO, Prev x Real e Replan atual."),
+  equipComposicaoToggleEdicao:P("Itens da composi&ccedil;&atilde;o","Exibe ou oculta as linhas que comp&otilde;em a composi&ccedil;&atilde;o.","Somente na tabela da aba."),
+  novaUnidadeMedida:P("Nova unidade","Cadastra uma unidade de medida.","Lista de unidades do cadastro."),
+  novaClassificacaoIndireto:P("Nova classifica&ccedil;&atilde;o","Cadastra uma classifica&ccedil;&atilde;o (agrupamento da DRE) para a aba.","Lista de classifica&ccedil;&otilde;es e filtros da DRE."),
+  salvarEditIndireto:P("Salvar item","Grava o cadastro da linha.","Tabela da aba, Coletor Total, DRE e Curvas ABC."),
+  salvarObservacaoIndireto:P("Salvar observa&ccedil;&atilde;o","Grava a observa&ccedil;&atilde;o da linha, com imagens.","&Iacute;cone &#128172; da linha."),
+  "inp:obs-file":P("Inserir imagem","Anexa imagens &agrave; observa&ccedil;&atilde;o (at&eacute; 10).","Observa&ccedil;&atilde;o da linha."),
+  adicionarContratoRow:P("Adicionar contrato / aditivo","Inclui um contrato ou aditivo, com n&uacute;mero, valor e anexo.","Coluna Jur&iacute;dico da linha (soma dos contratos e aditivos)."),
+  salvarContratos:P("Salvar contratos","Grava os contratos e aditivos da linha.","Coluna Jur&iacute;dico da linha."),
+  abrirAnexoContratoRow:P("Abrir anexo","Abre o arquivo anexado ao contrato.","Nova janela do navegador ou programa do computador."),
+  removerAnexoContrato:P("Remover anexo","Remove o arquivo anexado ao contrato.","Contrato da linha."),
+  transfRender:P("Abas de origem e destino","Seleciona a aba de origem (DE) e a aba de destino (PARA) da transfer&ecirc;ncia.","Lista de linhas da janela Transfer&ecirc;ncia de Custo."),
+  transfMarcarTodos:P("Marcar todas","Marca ou desmarca todas as linhas vis&iacute;veis.","Janela Transfer&ecirc;ncia de Custo."),
+  transfToggle:P("Selecionar linha","Marca ou desmarca a linha para transfer&ecirc;ncia.","Janela Transfer&ecirc;ncia de Custo."),
+  transfConfirmar:P("Confirmar transfer&ecirc;ncia","Transfere as linhas marcadas para a aba de destino, mediante login.","Abas de origem e destino, Coletor Total, DRE e Curvas ABC.",null,"A opera&ccedil;&atilde;o n&atilde;o possui desfazer autom&aacute;tico.",EXC),
+  exportarComposicaoExcel:P("Exportar Excel (Composi&ccedil;&atilde;o do Real)","Gera a planilha das linhas que formam o Real do item.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
+  salvarNotaSatc:P("Salvar anota&ccedil;&atilde;o","Grava a justificativa do Saldo a Contratar.","&Iacute;cone &#128221; do item no Coletor Total.",null,"Com valor diferente de zero, a anota&ccedil;&atilde;o &eacute; obrigat&oacute;ria."),
+  saldoFormulaAplicar:P("Aplicar conta","Aplica a f&oacute;rmula escolhida &agrave; coluna Saldo.","Coluna Saldo, linha TOTAL e cards do Coletor Total."),
+  saldoFormulaAtalho:P("Atalho de f&oacute;rmula","Preenche a f&oacute;rmula com uma conta pronta.","Janela Escolher conta."),
+  saldoFormulaSet:P("Sinal da coluna","Define se a coluna soma, subtrai ou n&atilde;o participa da conta.","Janela Escolher conta."),
+  aplicarFiltroDesvioTodosMeses:P("Todos os meses","Filtra os itens com desvio em qualquer m&ecirc;s.","Tabela do Prev x Real."),
+  aplicarFiltroDesvioPeriodo:P("Aplicar per&iacute;odo","Filtra os itens com desvio no per&iacute;odo escolhido.","Tabela do Prev x Real."),
+  // ---------- Take In / Take Out ----------
+  tioFiltrar:P("Filtro Take In / Take Out","Exibe todas as linhas, somente Take In ou somente Take Out.","Somente na tabela da aba."),
+  tioNovo:P("Novo Take In / Take Out","Inclui uma linha de Take In (acr&eacute;scimo) ou Take Out (redu&ccedil;&atilde;o).","Tabela da aba; uma linha da DRE pode puxar o saldo, o In ou o Out."),
+  tioExcluir:P("Excluir linha","Exclui a linha de Take In / Take Out.","Tabela da aba e DRE."),
+  // ---------- Sistema de Compras ----------
+  "inp:inp-ped-compra":P("Importar Relat&oacute;rio de Pedidos","Carrega o relat&oacute;rio de pedidos de compra (formato Lumina).","Sistema de Compras, Planejamento, DRE e Dashboard."),
+  toggleCCODrop:P("Filtro de CCOs","Abre a lista de centros de custo para filtro.","Somente na tabela do Sistema de Compras."),
+  toggleAllCCO:P("Todos os CCOs","Marca ou desmarca todos os centros de custo.","Filtro do Sistema de Compras."),
+  updCCOFilt:P("CCO","Inclui ou retira o centro de custo do filtro.","Filtro do Sistema de Compras."),
+  "sel:S":P("Situa&ccedil;&atilde;o do pedido","Filtra os pedidos: todos, com saldo, sem saldo ou que precisam de aditivo.","Somente na tabela do Sistema de Compras."),
+  filtrarAditivos:P("Aditivos Pendentes","Filtra os pedidos cuja proje&ccedil;&atilde;o ultrapassa o saldo.","Somente na tabela do Sistema de Compras."),
+  distIgualPed:P("Distribuir Saldo Atual","Lan&ccedil;a o saldo de cada pedido filtrado no m&ecirc;s atual.","Proje&ccedil;&otilde;es do Sistema de Compras, DRE e Dashboard."),
+  limparProjecoes:P("Limpar Proje&ccedil;&otilde;es","Apaga as proje&ccedil;&otilde;es futuras e do m&ecirc;s atual, mantendo as medi&ccedil;&otilde;es realizadas.","Sistema de Compras, DRE e Dashboard.",null,"O sistema solicita confirma&ccedil;&atilde;o.",EXC),
+  distLinear:P("Distribuir saldo","Distribui o saldo do pedido igualmente nos meses futuros.","Proje&ccedil;&otilde;es do pedido; aditivo = projetado &minus; saldo."),
+  // ---------- Receita ----------
+  receitaExpandirTudo:P("Expandir Tudo","Exibe todos os n&iacute;veis da EAP da Receita.","Somente na tabela da Receita."),
+  receitaRecolherTudo:P("Recolher Tudo","Recolhe a EAP da Receita ao primeiro n&iacute;vel.","Somente na tabela da Receita."),
+  receitaExpandirNivel:P("N&iacute;vel","Exibe a EAP da Receita at&eacute; o n&iacute;vel escolhido.","Somente na tabela da Receita."),
+  receitaToggleModoEdicao:P("Editar EAP","Liga o modo de edi&ccedil;&atilde;o da EAP da Receita, com a&ccedil;&otilde;es em cada item.","EAP da Receita; o c&oacute;digo dos itens &eacute; renumerado automaticamente.",["<b>+ Sub</b> cria um subitem; <b>+ Abaixo</b> cria um item no mesmo n&iacute;vel.","&#9998; edita; &uarr; &darr; movem; &larr; &rarr; recuam ou avan&ccedil;am o n&iacute;vel; &#10005; exclui o item e os subitens.","Valores de cadastro e medi&ccedil;&otilde;es acompanham o item."],"Dispon&iacute;vel para o Controlador e o Administrador."),
+  receitaAbrirModalItem:P("Item da EAP da Receita","Cria ou edita um item: descri&ccedil;&atilde;o, cronograma, quantidade, unidade e pre&ccedil;o.","EAP da Receita e Receita Contratada."),
+  receitaMoverItem:P("Mover item","Move o item (com os subitens) para cima ou para baixo.","EAP da Receita, renumerada automaticamente."),
+  receitaRecuarNivel:P("Recuar n&iacute;vel","Sobe o item um n&iacute;vel na hierarquia.","EAP da Receita."),
+  receitaAvancarNivel:P("Avan&ccedil;ar n&iacute;vel","Transforma o item em subitem do item acima.","EAP da Receita."),
+  receitaExcluirItem:P("Excluir item","Exclui o item e os subitens.","EAP da Receita, Receita Contratada e medi&ccedil;&otilde;es do item.",null,"A exclus&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  receitaSalvarModalItem:P("Salvar item","Grava o item da EAP da Receita.","EAP da Receita e Receita Contratada."),
+  receitaAbrirImportarEAP:P("Importar EAP (Excel)","Substitui a EAP e o Cadastro da Receita pelo Excel (CRONOGRAMA, N&Iacute;VEL, ITEM, DISCRIMINA&Ccedil;&Atilde;O, QTDE, UNID., PRE&Ccedil;O UNIT&Aacute;RIO, PRE&Ccedil;O TOTAL).","EAP da Receita, Receita Contratada, Dashboard e DRE.",null,"As medi&ccedil;&otilde;es lan&ccedil;adas s&atilde;o apagadas, pois pertenciam &agrave; EAP anterior. Salve o JSON antes.",EXC),
+  receitaConfirmarImportarEAP:P("Confirmar importa&ccedil;&atilde;o","Aplica a EAP importada &agrave; Receita.","EAP da Receita, Receita Contratada e medi&ccedil;&otilde;es (apagadas).",null,"A opera&ccedil;&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  receitaExportarEAPExcel:P("Exportar EAP / Modelo","Baixa a EAP da Receita no layout de importa&ccedil;&atilde;o.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
+  receitaAbrirAtualizarResumo:P("Atualizar Dashboard pelo BM","L&ecirc; o Boletim de Medi&ccedil;&atilde;o (.xlsm) para atualizar os dados do Dashboard.","Dashboard: Faturamento Direto, Adiantamento e Avan&ccedil;o F&iacute;sico.",["Aba RESUMO: Faturamento Direto e Desconto de Adiantamento de cada BM, FD Previsto e Adiantamento total.","Aba Avan&ccedil;o Cronograma: avan&ccedil;o f&iacute;sico e data de corte.","Os campos continuam edit&aacute;veis; ao editar, passam a ser manuais."]),
+  receitaAbrirModalNovaMedicao:P("Nova Medi&ccedil;&atilde;o (BM)","Abre o cadastro de um Boletim de Medi&ccedil;&atilde;o: nome e per&iacute;odo, ou importa&ccedil;&atilde;o do BMM.","Coluna do BM na medi&ccedil;&atilde;o, Receita Medida, Dashboard e DRE."),
+  receitaConfirmarNovaMedicao:P("Adicionar Coluna","Cria a coluna do BM com o nome e o per&iacute;odo informados.","Aba Lan&ccedil;ar Medi&ccedil;&atilde;o."),
+  "inp:inp-rc-importar-medicao":P("Importar Medi&ccedil;&atilde;o (aba BMM)","L&ecirc; o Boletim de Medi&ccedil;&atilde;o: n&uacute;mero, per&iacute;odo e valores do m&ecirc;s.","Coluna do BM, Receita Medida, Dashboard e DRE; tamb&eacute;m l&ecirc; a aba RESUMO, se existir."),
+  receitaExcluirMedicaoCol:P("Excluir medi&ccedil;&atilde;o","Exclui a coluna do BM e os valores.","Receita Medida, Dashboard e DRE.",null,"A exclus&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  // ---------- Classificacao, Razao ----------
+  "sel:renderClassifLinhasCusto":P("Filtro por aba","Exibe as linhas de uma aba de custo ou de todas.","Somente na lista da aba Classifica&ccedil;&atilde;o."),
+  renderClassifLinhasCusto:P("Atualizar","Recarrega a lista de linhas e pend&ecirc;ncias de Item EAP.","Aba Classifica&ccedil;&atilde;o."),
+  "inp:inp-classificacao":P("Importar Relat&oacute;rio","Importa o relat&oacute;rio de classifica&ccedil;&atilde;o.","Aba Classifica&ccedil;&atilde;o."),
+  classificarLinha:P("Classifica&ccedil;&atilde;o da linha","Define a classifica&ccedil;&atilde;o da linha do relat&oacute;rio.","Aba Classifica&ccedil;&atilde;o."),
+  "inp:inp-razao":P("Importar Raz&atilde;o","Importa o arquivo Documentos.xlsx (aba Documentos) da contabilidade.","Lista de NFs da aba Raz&atilde;o e do Classificar Raz&atilde;o.",["Colunas: Documento, Compet&ecirc;ncia, Natureza, Gerador, Valor, Hist&oacute;rico e Centro de custo.","Reimportar mant&eacute;m as classifica&ccedil;&otilde;es j&aacute; realizadas."]),
+  razaoLimparFiltros:P("Limpar filtros","Remove todos os filtros das colunas.","Somente na tabela do Raz&atilde;o."),
+  razaoMostrarColunas:P("Mostrar todas as colunas","Reexibe as colunas ocultadas.","Somente na tabela do Raz&atilde;o."),
+  razaoLimparDados:P("Limpar dados","Apaga o Raz&atilde;o importado.","Real das abas de custo nos meses vigentes e Custo Incorrido das Curvas ABC.",null,"O sistema solicita confirma&ccedil;&atilde;o; a opera&ccedil;&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  razaoAbrirFiltro:P("Filtro da coluna","Abre o filtro por valores da coluna.","Somente na tabela do Raz&atilde;o."),
+  razaoOcultarColuna:P("Ocultar coluna","Oculta a coluna da tabela.","Somente na tabela do Raz&atilde;o."),
+  "sel:renderClassificarRazao":P("Status","Filtra as NFs: todas, n&atilde;o classificadas ou classificadas.","Somente na lista do Classificar Raz&atilde;o."),
+  renderClassificarRazao:P("Atualizar lista","Recarrega a lista de NFs.","Aba Classificar Raz&atilde;o."),
+  classificarLinhaRazao:P("Classifica&ccedil;&atilde;o da NF","Vincula a NF a uma linha de Custo Indireto, Servi&ccedil;o, Material ou Equipamento.","Real das abas de custo at&eacute; a vig&ecirc;ncia, Coletor Total e Custo Incorrido das Curvas ABC."),
+  // ---------- Curva ABC MOD, Contingencia ----------
+  exportarCurvaAbcModExcel:P("Exportar Excel (Curva ABC)","Gera a planilha da curva exibida.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
+  abrirNovaContingencia:P("Cadastrar Conting&ecirc;ncia","Cadastra uma conting&ecirc;ncia: descri&ccedil;&atilde;o, valor do servi&ccedil;o e % adotada.","Linha fixa Conting&ecirc;ncia do Custo Indireto, Coletor Total e DRE."),
+  salvarContingencia:P("Salvar conting&ecirc;ncia","Grava a conting&ecirc;ncia.","Linha Conting&ecirc;ncia do Custo Indireto."),
+  abrirEditContingencia:P("Editar conting&ecirc;ncia","Abre o cadastro da conting&ecirc;ncia.","Linha Conting&ecirc;ncia do Custo Indireto."),
+  excluirContingencia:P("Excluir conting&ecirc;ncia","Exclui a conting&ecirc;ncia.","Linha Conting&ecirc;ncia do Custo Indireto.",null,"A exclus&atilde;o n&atilde;o pode ser desfeita.",EXC),
+  contgRedistribuir:P("Redistribuir no Prazo Restante","Mant&eacute;m o lan&ccedil;ado at&eacute; o m&ecirc;s atual e divide o saldo nos meses seguintes.","Quantidades da linha Conting&ecirc;ncia do Custo Indireto."),
+  contgSalvarReplan:P("Salvar Replan (Conting&ecirc;ncia)","Registra uma c&oacute;pia identificada da conting&ecirc;ncia atual.","Lista de Replans da aba Conting&ecirc;ncia (independente do Replan do Coletor Total)."),
+  contgExcluirReplan:P("Excluir Replan (Conting&ecirc;ncia)","Exclui a c&oacute;pia registrada, mediante login.","Lista de Replans da aba Conting&ecirc;ncia."),
+  exportarContingenciaExcel:P("Exportar Excel (Conting&ecirc;ncia)","Gera a planilha da conting&ecirc;ncia.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
+  // ---------- Importar ----------
+  "inp:inp-efetivo":P("Importar Efetivo de Obra","Importa a planilha do efetivo (abas MOD e MOI, uma coluna por m&ecirc;s).","Custo M.O.D, Custo M.O.I e Resumo M.O."),
+  "inp:inp-crono":P("Importar Cronograma (MS Project)","Importa as tarefas com in&iacute;cio, t&eacute;rmino e %.","Aba Planejamento."),
+  "inp:inp-medicoes":P("Importar Medi&ccedil;&otilde;es / Faturamento","Importa o realizado por centro de custo e pedido.","Sistema de Compras (realizado dos pedidos)."),
+  "inp:inp-coletor":P("Importar EAP (Coletor Total)","Importa a EAP com ITEM, DESCRI&Ccedil;&Atilde;O e Or&ccedil;ado.","Coletor Total e Prev x Real. Reimportar mant&eacute;m RAO, Real, Saldo a Contratar e anota&ccedil;&otilde;es."),
+  // ---------- DRE ----------
+  drgSalvarModal:P("Salvar linha","Grava a linha da DRE.","Tabela da DRE."),
+  editarImpostoPct:P("Percentual do imposto","Altera o percentual do imposto.","Linhas de imposto da DRE."),
+  abrirObservacaoIndireto:P("Observa&ccedil;&atilde;o (&#128172;)","Abre a observa&ccedil;&atilde;o da linha, com texto e imagens coladas (at&eacute; 10).","&Iacute;cone &#128172; da linha; vis&iacute;vel ao passar o mouse."),
+  toggleSelecaoComp:P("Sele&ccedil;&atilde;o para composi&ccedil;&atilde;o","Marca a linha para compor uma composi&ccedil;&atilde;o.","Bot&atilde;o Compilar Selecionados em Composi&ccedil;&atilde;o (exige duas ou mais linhas do mesmo grupo de EAP)."),
+  "#ctr-distratado":P("Distratado","Indica que o contrato da linha foi distratado.","Coluna Jur&iacute;dico da linha, que passa a exibir Distratado."),
+  confirmarSalvarPrevisto:P("Salvar e Fixar Tudo","Registra uma c&oacute;pia identificada dos previstos atuais e os bloqueia.","Coluna Replan do Coletor Total e Ver Previsto Salvo."),
+  toggleTipoHoraMod:P("Horista / Mensalista","Define se a fun&ccedil;&atilde;o &eacute; horista ou mensalista.","Somente horistas CLT recebem hora extra."),
+  toggleTipoHoraMoi:P("Horista / Mensalista","Define se o colaborador &eacute; horista ou mensalista.","Somente horistas CLT recebem hora extra."),
+  "sel:drgModalVis":P("Tipo da linha (DRE)","Define o tipo da linha: Valor, Soma do grupo, F&oacute;rmula, Imposto, Percentual ou R&oacute;tulo.","Campos exibidos no editor da linha da DRE.")
+});
+AJUDA_LIVRE.push("var","togglePw","fecharLoginEng","cancelarReauthSalvar","cancelarNotaSatc","drgFecharModal","bexVoltar","fecharBaseExternaMod","receitaSetSubTab","receitaToggleNode","receitaAbrirDescModal","toggleMoiMatGrupo","grupoEapToggle","razaoMarcarTodos","razaoToggleValor","razaoLimparColuna","razaoAplicarFiltro","ocvAplicar","abrirApresHEMod","apresHEIr","saldoFormulaRender","this");
+})();
+
 function ajudaChave(el){
   var a=el.getAttribute("onclick")||el.getAttribute("onchange")||"";
   a=a.replace(/^\s*((event\.stopPropagation|fecharEng)\(\);?\s*)+/,"");
+  var g=a.match(/getElementById\(['"]([\w-]+)['"]\)\.(click\(\)|classList\.(add|remove)\(['"]on['"]\))/); // Rev79: botoes que abrem arquivo/janela
+  if(g)return g[2]==="click()"?"inp:"+g[1]:(g[3]==="add"?"abrir:"+g[1]:"");
   var m=a.match(/^[A-Za-z_$][\w$]*/),k=m?m[0]:(el.id?"#"+el.id:"");
   return el.tagName==="SELECT"&&k?"sel:"+k:k;
 }
@@ -3255,13 +3455,17 @@ function abrirApresAjuda(k,el){
 }
 function toggleModoAjuda(){
   MODO_AJUDA=!MODO_AJUDA;document.body.classList.toggle("modo-ajuda",MODO_AJUDA);
-  var b=document.getElementById("btn-ajuda");if(b)b.innerHTML=MODO_AJUDA?"&#10067; Ajuda: ligada":"&#10067; Ajuda";
+  ["btn-ajuda","btn-ajuda-landing"].forEach(function(id){var b=document.getElementById(id);if(b)b.innerHTML=MODO_AJUDA?"&#10067; Ajuda: ligada":"&#10067; Ajuda";}); // Rev79
   document.getElementById("ajuda-faixa").style.display=MODO_AJUDA?"flex":"none";
 }
 document.addEventListener("click",function(e){
   if(!MODO_AJUDA)return;
-  var el=e.target.closest("button,select,input[type=checkbox],[onclick],[onchange]");if(!el)return;
-  if(el.closest("#modal-apres-atl,#ajuda-faixa,.ctl-wrap")||el.classList.contains("mc")||el.classList.contains("mtab")||el.id==="btn-ajuda")return;
+  var el=e.target.closest("button,select,input[type=checkbox],[onclick]");if(!el)return;
+  // Rev79: campos de digitacao, campos dos formularios de cadastro e botoes de fechar/cancelar funcionam normalmente
+  if((el.tagName==="INPUT"&&el.type!=="checkbox")||el.tagName==="TEXTAREA")return;
+  if(el.tagName!=="BUTTON"&&el.closest("[id^='modal-edit-']"))return;
+  if(/^(x|\u2715|\u00d7|cancelar|fechar|voltar|ok)$/i.test((el.textContent||"").trim()))return;
+  if(el.closest("#modal-apres-atl,#ajuda-faixa,.ctl-wrap")||el.classList.contains("mc")||el.classList.contains("mtab")||el.id==="btn-ajuda"||el.id==="btn-ajuda-landing")return;
   var k=ajudaChave(el);if(!k||AJUDA_LIVRE.indexOf(k)>=0)return;
   e.preventDefault();e.stopImmediatePropagation();abrirApresAjuda(k,el);
 },true);
@@ -3561,7 +3765,7 @@ function mesesComPresenca(){
 }
 function recalc(){S.obraIni=document.getElementById("obra-ini").value;S.obraFim=document.getElementById("obra-fim").value;var ma=getMA();var meses=mesesObra();var mesesSel=mesesComPresenca();if(!S.mesSel||mesesSel.indexOf(S.mesSel)<0){S.mesSel=mesesSel.indexOf(ma)>=0?ma:(mesesSel[mesesSel.length-1]||"");}document.getElementById("hdr-meses").textContent=meses.length;var mAc=[];for(var i=0;i<meses.length;i++){if(meses[i]<=S.mesSel)mAc.push(meses[i]);}document.getElementById("cfg-info").innerHTML="Total: <b style='color:#fff'>"+meses.length+" meses</b><br>Realizados: <b style='color:#fff'>"+mAc.length+"</b> Restantes: <b style='color:#fff'>"+(meses.length-mAc.length)+"</b>";var ids=["mes0","mes1","mes3","mes-mod"];for(var si=0;si<ids.length;si++){var el=document.getElementById(ids[si]);if(!el)continue;var h="";for(var mi=0;mi<mesesSel.length;mi++){h+="<option value='"+mesesSel[mi]+"'"+(mesesSel[mi]===S.mesSel?" selected":"")+">"+mlbl(mesesSel[mi])+(mesesSel[mi]===ma?" (atual)":"")+"</option>";}el.innerHTML=h;}renderEfetivo();renderCustoMO();renderDRE();renderDash();renderCrono();}
 function syncMes(v){S.mesSel=v;var ids=["mes0","mes1","mes3","mes-mod"];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.value=v;}renderEfetivo();renderCustoMO();renderDRE();renderDash();if(document.getElementById("sec10")&&document.getElementById("sec10").className.indexOf(" on")>=0)renderCustoModTab();}
-function renderHeader(){document.getElementById("proj-name").textContent=S.projNome;document.getElementById("proj-sub-el").innerHTML="Lucro Presumido - Grau de Risco 3 - <span id='hdr-meses'>"+mesesObra().length+"</span> meses"+(S.projSub?" - "+S.projSub:"");if(S.logoB64){document.getElementById("logo-img").src=S.logoB64;document.getElementById("logo-img").style.display="block";document.getElementById("logo-hint").style.display="none";}}
+function renderHeader(){document.getElementById("proj-name").textContent=S.projNome;var sub=document.getElementById("proj-sub-el");sub.innerHTML="<span id='hdr-meses' style='display:none'>"+mesesObra().length+"</span>"+(S.projSub?String(S.projSub).replace(/</g,"&lt;"):"");sub.style.display=S.projSub?"":"none";if(S.logoB64){document.getElementById("logo-img").src=S.logoB64;document.getElementById("logo-img").style.display="block";document.getElementById("logo-hint").style.display="none";}}
 function toggleCfg(){var b=document.getElementById("cfg-box");b.style.display=b.style.display==="flex"?"none":"flex";}
 document.getElementById("logo-wrap").onclick=function(){document.getElementById("inp-logo").click();};
 document.getElementById("inp-logo").onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){S.logoB64=ev.target.result;renderHeader();};r.readAsDataURL(f);};
@@ -7451,6 +7655,88 @@ function indiretoReexibirPrevisto(categoria){
   S.indiretoData.forEach(function(it){if(it.categoria===categoria){normIndireto(it);it.mostrarPrevisto=true;}});
   renderIndiretoMatrix(categoria);
 }
+
+// ===================== Rev79: Ocultar / Reexibir com opcoes (Previsto, Quantidade, Valor) nas abas de custo =====================
+// Previsto = linhas PREVISTO dos itens (mesmo efeito dos antigos botoes Ocultar/Reexibir Previsto).
+// Quantidade / Valor = subcolunas Qtd e Valor (R$) de cada mes. Sempre fica pelo menos uma das duas visivel.
+// As colunas sao escondidas depois de cada renderizacao, pela posicao no cabecalho (nao muda o codigo das tabelas).
+S.ocVis=S.ocVis||{};
+function ocvCfg(k){S.ocVis=S.ocVis||{};var c=S.ocVis[k];if(!c)c=S.ocVis[k]={qtd:true,valor:true};return c;}
+function ocvPrevistoVisivel(k){
+  var arr=k==="MOI"?S.moiData:k==="MOD"?S.modData:(S.indiretoData||[]).filter(function(it){return it.categoria===k;});
+  return (arr||[]).some(function(x){return x.mostrarPrevisto!==false;});
+}
+function ocvRender(k){if(k==="MOI")renderCustoMOMatrix();else if(k==="MOD")renderCustoModMatrix();else renderIndiretoMatrix(k);}
+function ocvMenu(btn,acao,k){
+  ocvFecharMenu();
+  var c=ocvCfg(k),prevVis=ocvPrevistoVisivel(k),oc=acao==="ocultar";
+  var ops=[["previsto","Previsto","Linhas PREVISTO dos itens",prevVis],["qtd","Quantidade","Subcoluna Qtd de cada mês",c.qtd],["valor","Valor","Subcoluna Valor (R$) de cada mês",c.valor]];
+  var d=document.createElement("div");d.id="ocv-menu";
+  d.style.cssText="position:fixed;z-index:9500;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 10px 28px rgba(15,23,42,.22);padding:6px;min-width:250px;font-size:12.5px";
+  d.innerHTML="<div style='padding:6px 10px 8px;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px'>"+(oc?"Ocultar":"Reexibir")+"</div>"+ops.map(function(o){
+    var ja=oc?!o[3]:o[3];
+    return "<button type='button' onclick=\"ocvAplicar('"+acao+"','"+k+"','"+o[0]+"')\" style='display:flex;width:100%;align-items:center;gap:10px;border:none;background:none;padding:8px 10px;border-radius:7px;cursor:pointer;text-align:left;"+(ja?"opacity:.45":"")+"' onmouseover=\"this.style.background='#f1f5f9'\" onmouseout=\"this.style.background='none'\">"+
+      "<span style='flex:1'><b style='color:#1e293b'>"+o[1]+"</b><span style='display:block;font-size:11px;color:#64748b'>"+o[2]+"</span></span>"+
+      "<span style='font-size:10.5px;font-weight:700;color:"+(o[3]?"#15803d":"#94a3b8")+"'>"+(o[3]?"visível":"oculto")+"</span></button>";
+  }).join("");
+  document.body.appendChild(d);
+  var r=btn.getBoundingClientRect(),w=d.offsetWidth,h=d.offsetHeight;
+  d.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+"px";
+  d.style.top=(r.bottom+6+h>window.innerHeight?Math.max(8,r.top-h-6):r.bottom+6)+"px";
+  setTimeout(function(){document.addEventListener("mousedown",ocvFora,true);},0);
+}
+function ocvFora(e){var m=document.getElementById("ocv-menu");if(m&&!m.contains(e.target))ocvFecharMenu();}
+function ocvFecharMenu(){var m=document.getElementById("ocv-menu");if(m)m.remove();document.removeEventListener("mousedown",ocvFora,true);}
+function ocvAplicar(acao,k,o){
+  var mostrar=acao==="reexibir";ocvFecharMenu();
+  if(o==="previsto"){
+    if(k==="MOI"){if(mostrar)moiReexibirPrevisto();else moiOcultarPrevisto();}
+    else if(k==="MOD"){if(mostrar)modReexibirPrevisto();else modOcultarPrevisto();}
+    else{if(mostrar)indiretoReexibirPrevisto(k);else indiretoOcultarPrevisto(k);}
+    return;
+  }
+  var c=ocvCfg(k),outro=o==="qtd"?"valor":"qtd";
+  if(!mostrar&&!c[outro]){alert("Quantidade e Valor não podem ficar ocultos ao mesmo tempo: pelo menos uma das colunas permanece visível em cada mês.");return;}
+  c[o]=mostrar;ocvRender(k);
+}
+// Esconde as subcolunas Qtd / Valor (R$) dos meses de uma tabela (respeita rowspan/colspan do cabecalho e das linhas de total)
+function ocvAplicarTabela(tb,c){
+  if(!tb||!tb.tHead)return;
+  if(c.qtd&&c.valor)return;
+  var rows=tb.rows,grid=[],ini=[];
+  for(var r=0;r<rows.length;r++){
+    var col=0,cells=rows[r].cells;grid[r]=grid[r]||[];
+    for(var i=0;i<cells.length;i++){
+      var cell=cells[i];while(grid[r][col])col++;
+      var cs=cell.colSpan||1,rs=cell.rowSpan||1;
+      for(var a=0;a<rs;a++){grid[r+a]=grid[r+a]||[];for(var b=0;b<cs;b++)grid[r+a][col+b]=cell;}
+      ini.push([cell,col,cs]);col+=cs;
+    }
+  }
+  var nh=tb.tHead.rows.length,ocultas={};
+  for(var r=1;r<nh;r++){(grid[r]||[]).forEach(function(cell,col){
+    if(!cell||cell.parentNode!==rows[r])return;
+    var txt=(cell.textContent||"").trim(),acima=grid[r-1]&&grid[r-1][col];
+    if(!acima||!/^[A-Za-zÀ-ÿ]{3}\/\d{2}/.test((acima.textContent||"").trim()))return;
+    if((txt==="Qtd"&&!c.qtd)||(txt==="Valor (R$)"&&!c.valor))ocultas[col]=true;
+  });}
+  ini.forEach(function(x){
+    var n=0;for(var b=0;b<x[2];b++)if(ocultas[x[1]+b])n++;
+    if(!n)return;
+    if(n>=x[2])x[0].style.display="none";else x[0].colSpan=x[2]-n;
+  });
+}
+function ocvAplicarAba(k){
+  var c=ocvCfg(k);if(c.qtd&&c.valor)return;
+  var btn=document.querySelector("[onclick=\"ocvMenu(this,'ocultar','"+k+"')\"]"),sec=btn&&btn.closest(".sec");if(!sec)return;
+  sec.querySelectorAll("table").forEach(function(tb){ocvAplicarTabela(tb,c);});
+}
+(function(){
+  var rI=renderIndiretoMatrix,rMod=renderCustoModMatrix,rMoi=renderCustoMOMatrix;
+  renderIndiretoMatrix=function(cat){var x=rI.apply(this,arguments);try{ocvAplicarAba(cat);}catch(e){console.error("Rev79 ocultar colunas:",e);}return x;};
+  renderCustoModMatrix=function(){var x=rMod.apply(this,arguments);try{ocvAplicarAba("MOD");}catch(e){console.error("Rev79 ocultar colunas:",e);}return x;};
+  renderCustoMOMatrix=function(){var x=rMoi.apply(this,arguments);try{ocvAplicarAba("MOI");}catch(e){console.error("Rev79 ocultar colunas:",e);}return x;};
+})();
 // Fixa/libera o valor Previsto de um item (composicao, equipamento normal ou filho de composicao): uma vez fixado, para de ser editavel mes a mes.
 function equipTogglePrevistoFixado(idx){
   var it=S.indiretoData[idx];if(!it)return;normIndireto(it);
