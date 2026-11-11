@@ -762,6 +762,49 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
 @keyframes bvLuz{from{transform:translate(-120px,-60px)}to{transform:translate(140px,80px)}}
 @media (prefers-reduced-motion:reduce){#bv-tela *{animation:none!important}.bv-barra i{width:100%}}
 </style>
+<style id="rev80-assistente">
+/* Rev80: Assistente do Controle (perguntas e respostas) */
+#assist-btn{position:fixed;left:18px;bottom:18px;z-index:9100;display:flex;align-items:center;gap:8px;padding:10px 16px 10px 12px;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.8);color:#0f172a;font:600 13px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 8px 24px rgba(15,23,42,.22);transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+#assist-btn span{font-size:18px}
+#assist-btn:hover{transform:translateY(-2px) scale(1.03);box-shadow:inset 0 1px 0 #fff,0 12px 28px rgba(15,23,42,.28)}
+#assist-btn.aberto{background:rgba(0,122,255,.92);color:#fff;border-color:rgba(255,255,255,.45)}
+#assist-painel{position:fixed;left:18px;bottom:72px;z-index:9100;width:min(400px,calc(100vw - 36px));height:min(560px,calc(100vh - 110px));display:none;flex-direction:column;overflow:hidden;
+  border-radius:20px;border:1px solid rgba(255,255,255,.85);background:rgba(248,250,252,.82);-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+  box-shadow:inset 0 1px 0 #fff,0 24px 60px rgba(15,23,42,.30);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;transform-origin:bottom left}
+#assist-painel.on{display:flex;animation:asEntra .28s cubic-bezier(.34,1.4,.64,1)}
+@keyframes asEntra{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:none}}
+.as-cab{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(135deg,var(--pal-base,#1e3a5f),#0f172a);color:#fff;font-weight:700;font-size:14px}
+.as-x{all:unset;cursor:pointer;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.16);font-size:12px}
+.as-x:hover{background:rgba(255,255,255,.28)}
+.as-msgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.as-msg{max-width:92%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.5;color:#1e293b;animation:asMsg .22s ease-out}
+@keyframes asMsg{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.as-msg.bot{background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:6px;align-self:flex-start;box-shadow:0 2px 8px rgba(15,23,42,.06)}
+.as-msg.eu{background:#007aff;color:#fff;border-bottom-right-radius:6px;align-self:flex-end}
+.as-tit{font-weight:800;font-size:13.5px;color:#0f172a;margin-bottom:6px}
+.as-txt{margin:0 0 6px}.as-onde{margin:0 0 6px;font-size:12px;color:#475569}
+.as-passos{margin:4px 0 0 18px;padding:0}.as-passos li{margin:4px 0}
+.as-bts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.as-bt{all:unset;cursor:pointer;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;color:#0a58ca;background:rgba(0,122,255,.10);border:1px solid rgba(0,122,255,.25)}
+.as-bt:hover{background:rgba(0,122,255,.18)}
+.as-outros{margin-top:8px;font-size:11.5px;color:#64748b}.as-outros a{color:#0a58ca}
+.as-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.as-chip{all:unset;cursor:pointer;padding:6px 11px;border-radius:999px;font-size:12px;color:#334155;background:#fff;border:1px solid #e2e8f0}
+.as-chip:hover{border-color:#007aff;color:#0a58ca}
+.as-form{display:flex;gap:8px;padding:10px;border-top:1px solid rgba(15,23,42,.08);background:rgba(255,255,255,.6)}
+.as-form input{flex:1;border:1.5px solid #e2e8f0;border-radius:999px;padding:9px 14px;font-size:13px;outline:none;background:#fff}
+.as-form input:focus{border-color:#007aff;box-shadow:0 0 0 3px rgba(0,122,255,.15)}
+.as-env{all:unset;cursor:pointer;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#007aff;color:#fff;font-size:15px}
+.as-env:hover{background:#0a84ff}
+.as-dig{display:inline-flex;gap:4px}.as-dig i{width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:asDig 1s infinite}
+.as-dig i:nth-child(2){animation-delay:.15s}.as-dig i:nth-child(3){animation-delay:.3s}
+@keyframes asDig{0%,60%,100%{transform:none;opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+body.modo-view #assist-btn{left:18px}
+@media print{#assist-btn,#assist-painel{display:none!important}}
+</style>
 <style id="rev80-enxuto">
 /* Rev80: filtro Todos / Take In / Take Out como seletor deslizante (segmentado) do iPhone */
 .tio-seg{display:inline-flex;gap:0;padding:3px;border-radius:999px;background:rgba(118,118,128,.14)}
@@ -4051,7 +4094,7 @@ document.addEventListener("click",function(e){
   if((el.tagName==="INPUT"&&el.type!=="checkbox")||el.tagName==="TEXTAREA")return;
   if(el.tagName!=="BUTTON"&&el.closest("[id^='modal-edit-']"))return;
   if(/^(x|\u2715|\u00d7|cancelar|fechar|voltar|ok)$/i.test((el.textContent||"").trim()))return;
-  if(el.closest("#modal-apres-atl,#ajuda-faixa,.ctl-wrap")||el.classList.contains("mc")||el.classList.contains("mtab")||el.id==="btn-ajuda"||el.id==="btn-ajuda-landing")return;
+  if(el.closest("#modal-apres-atl,#ajuda-faixa,.ctl-wrap,#assist-painel,#assist-btn")||el.classList.contains("mc")||el.classList.contains("mtab")||el.id==="btn-ajuda"||el.id==="btn-ajuda-landing")return;
   var k=ajudaChave(el);if(!k||AJUDA_LIVRE.indexOf(k)>=0)return;
   e.preventDefault();e.stopImmediatePropagation();abrirApresAjuda(k,el);
 },true);
@@ -13056,6 +13099,190 @@ window.addEventListener("load",function(){
   var falta=[];if(!window.XLSX)falta.push("Excel (importar/exportar)");if(!window.Chart)falta.push("gr\u00e1ficos do Dashboard");
   if(falta.length)setTimeout(function(){janelaAviso("N\u00e3o foi poss\u00edvel carregar: "+falta.join(" e ")+".\n\nVerifique a internet ou se a rede da empresa bloqueia cdn.sheetjs.com, cdnjs.cloudflare.com e cdn.jsdelivr.net. O restante do controle funciona normalmente.","erro");},600);
 });
+// ===================== Rev80: Assistente do Controle (perguntas e respostas, sem IA externa) =====================
+// Responde "como faco X?" com passo a passo. Procura nas TAREFAS abaixo (escritas a mao) e nas ~190 apresentacoes do
+// Modo Ajuda (AJUDA). Nada sai do navegador. Entende sinonimos, plural e pequenos erros de digitacao.
+var ASSIST_TAREFAS=[
+ {t:"Incluir um novo colaborador (M.O.I)",p:"incluir novo colaborador funcionario pessoa moi mao de obra indireta cadastrar adicionar",aba:1,aj:"novoColaboradorMoi",
+  passos:["Abra <b>☰ Menu → Custos → Custo M.O.I</b>.","Clique em <b>➕ Novo Colaborador</b>.","Preencha <b>Nome</b>, <b>Cargo</b> e <b>Salário</b> e escolha o <b>Regime</b> (CLT ou PJ) e as <b>Horas</b> (Horista ou Mensalista).","Escolha a <b>Área</b> e o <b>Setor</b> (o ➕ ao lado cria um novo).","Em <b>Alojamento</b>, escolha N/A, Familiar ou República; na Moradia, escolha Valor calculado, Valor próprio ou Rateio.","Marque os <b>Adicionais</b> que valem (insalubridade, transferência, noturno, horas adicionais).","Clique em <b>Salvar</b> e depois digite a <b>quantidade</b> de cada mês na coluna Qtd da linha."]},
+ {t:"Incluir uma nova função (M.O.D)",p:"incluir nova funcao mod mao de obra direta cargo profissional cadastrar adicionar pedreiro armador",aba:10,aj:"novaFuncaoMod",
+  passos:["Abra <b>☰ Menu → Custos → Custo M.O.D</b>.","Clique em <b>➕ Nova Função</b>.","Preencha <b>Função</b> e <b>Salário</b>, escolha <b>Regime</b>, <b>Horas</b> e <b>Alojamento</b>.","Em <b>Distribuição de trabalho (EAP)</b>, use <b>➕ Adicionar atividade</b> até somar 100%.","Marque os <b>Adicionais</b> que valem e clique em <b>Salvar</b>.","Digite a <b>quantidade de pessoas</b> de cada mês na coluna Qtd."]},
+ {t:"Editar ou excluir um colaborador / função",p:"editar alterar mudar corrigir excluir apagar remover colaborador funcao moi mod lapis lixeira",aba:1,
+  passos:["Abra <b>Custo M.O.I</b> (colaboradores) ou <b>Custo M.O.D</b> (funções).","Na linha, clique no <b>✎ lápis</b> para editar ou na <b>🗑 lixeira</b> para excluir.","Na edição, altere os campos e clique em <b>Salvar</b>.","A exclusão pede confirmação."]},
+ {t:"Desmobilizar um colaborador ou função",p:"desmobilizar desmobilizado sair obra demitir desligar bloquear colaborador funcao",aba:1,
+  passos:["Abra <b>Custo M.O.I</b> ou <b>Custo M.O.D</b> e clique no <b>✎ lápis</b> da linha.","Marque <b>⛔ Desmobilizado</b> e clique em <b>Salvar</b>.","A linha fica cinza e as quantidades ficam bloqueadas. Para liberar, desmarque a opção."]},
+ {t:"Incluir um item no Custo Indireto, Serviço, Material ou Equipamento",p:"incluir novo item linha custo indireto servico material equipamento seguro cadastrar adicionar despesa pedido fornecedor",aba:11,aj:"novoItemIndireto",
+  passos:["Abra <b>☰ Menu → Custos</b> e escolha a aba (Custo Indireto, Serviço, Material ou Equipamento).","Clique em <b>➕ Novo Item</b>.","Preencha <b>Descrição</b>, <b>Nº do Pedido</b>, <b>Fornecedor</b>, <b>Unidade</b> e <b>Valor Unitário</b>.","Informe o <b>Item EAP</b> (opcional) e a <b>Classificação</b>.","Em <b>Quantidade</b>, escolha <b>Manual</b> ou uma opção automática (Todo o efetivo, Só alojados, Efetivo M.O.D/M.O.I, Progressão, Regressão ou República).","Clique em <b>Salvar</b>. Na quantidade Manual, digite a Qtd ou o Valor de cada mês."]},
+ {t:"Quantidade automática pelo efetivo (alimentação, exames, EPI...)",p:"quantidade automatica efetivo alimentacao exame admissional demissional epi progressao regressao alojados todo efetivo",aba:11,
+  passos:["No <b>Custo Indireto</b>, abra o item com o <b>✎ lápis</b> (ou crie um com ➕ Novo Item).","Em <b>Quantidade</b>, escolha:<br>• <b>Todo o efetivo</b>: pessoas da M.O.I + M.O.D por mês;<br>• <b>Só alojados</b>: só quem está em República;<br>• <b>Efetivo M.O.D</b> ou <b>M.O.I</b>;<br>• <b>Progressão</b>: só quem entrou no mês (ex.: exame admissional);<br>• <b>Regressão</b>: só quem saiu (ex.: exame demissional).","Informe só o <b>Valor Unitário</b> e clique em <b>Salvar</b>; a quantidade de cada mês vem pronta."]},
+ {t:"Cadastrar uma república e ratear a moradia",p:"republica moradia alojamento rateio casa aluguel ratear colaborador",aba:11,
+  passos:["No <b>Custo Indireto</b>, crie o item da casa com <b>➕ Novo Item</b> (Valor Unitário = aluguel mensal).","Em <b>Quantidade</b>, escolha <b>República</b> e clique em <b>Salvar</b>.","Na <b>M.O.I</b> ou <b>M.O.D</b>, edite cada morador: Alojamento = <b>República</b> e Moradia = <b>Rateio</b>, escolhendo a república na lista.","O valor é dividido entre os moradores de cada mês."]},
+ {t:"Lançar a quantidade ou o valor de um mês",p:"lancar digitar quantidade valor mes coluna qtd preencher mensal",aba:11,
+  passos:["Abra a aba de custo desejada.","Na linha do item, use a coluna do mês: <b>Qtd</b> ou <b>Valor (R$)</b>.","Preencha uma das duas; a outra é calculada (Valor = Qtd × Valor Unitário).","Meses em <b>verde</b> já estão com o Real do Razão aplicado."]},
+ {t:"Ocultar ou reexibir o Previsto, colunas, quantidade ou valor",p:"ocultar esconder reexibir mostrar exibir previsto colunas quantidade valor meses",aba:1,aj:"ocvMenu",
+  passos:["Na aba de custo, clique em <b>👁 Ocultar/Reexibir ▾</b>.","Use as <b>chaves</b>: verde = visível, cinza = oculto (Previsto, Colunas, Quantidade, Valor).","A tabela muda na hora; os valores e totais não são alterados."]},
+ {t:"Exportar uma aba para o Excel",p:"exportar excel planilha baixar xlsx relatorio gerar",aba:11,
+  passos:["Abra a aba desejada.","Clique em <b>💾 Exportar Excel</b> (na M.O.D, em <b>📊 Excel ▾ → Exportar Excel</b>).","Escolha se quer com ou sem o Previsto, quando perguntado.","O arquivo é baixado para o seu computador."]},
+ {t:"Salvar o trabalho (nuvem ou arquivo JSON)",p:"salvar gravar guardar backup nuvem firebase json versao arquivo",abrir:"abrirEng()",abrirTxt:"⚙️ Abrir Configurações",
+  passos:["Abra <b>☰ Menu → ⚙️ Configurações 🔒</b> (pede a senha) e vá em <b>Ferramentas</b>.","Escolha:<br>• <b>☁ Salvar na Nuvem</b>: salvamento rápido;<br>• <b>☁ Salvar Nova Versão</b>: cria uma versão com nome;<br>• <b>Salvar em versão existente</b>: atualiza uma versão do projeto;<br>• <b>💾 Salvar JSON</b>: baixa uma cópia no computador.","Para salvar na nuvem, confirme seu e-mail e senha.","Ao sair ou fechar a página com alterações, o controle também oferece essas opções."]},
+ {t:"Abrir uma versão da nuvem ou um arquivo JSON",p:"abrir carregar importar versao nuvem json base dados obra arquivo",
+  passos:["Na <b>tela inicial</b>, clique em <b>Importar</b>.","Escolha <b>Versão na nuvem</b> (lista as versões salvas) ou <b>Arquivo JSON</b> (arquivo do computador).","Aguarde a animação de carregamento terminar.","Depois, entre como <b>Visualizador</b> ou <b>Controlador</b>."]},
+ {t:"Começar um projeto novo",p:"projeto novo obra nova comecar zero criar em branco",
+  passos:["Na <b>tela inicial</b>, clique em <b>Projeto novo</b> (pede a senha mestre).","Informe nome, local, período e engenheiro responsável.","O controle abre a aba <b>Dados da Obra</b> para completar as informações."]},
+ {t:"Criar o acesso (login) de um colaborador",p:"criar acesso login usuario senha colaborador engenheiro controlador administrador permissao",
+  passos:["Na <b>tela inicial</b>, clique em <b>Administrador</b> e informe a senha mestre.","No Painel do Administrador, preencha <b>Nome</b>, <b>E-mail</b> e <b>Senha</b> e clique em <b>+ Adicionar acesso</b>.","Salve a base (nuvem ou JSON) para o acesso valer nas próximas aberturas."]},
+ {t:"Ver a senha de um colaborador que esqueceu",p:"esqueci senha esqueceu recuperar ver senha colaborador login",
+  passos:["Na <b>tela inicial</b>, clique em <b>Administrador</b> e informe a senha mestre.","Na lista de acessos, clique no <b>👁 olho</b> da coluna Senha.","A senha aparece só na tela; ela não fica legível no JSON."]},
+ {t:"Importar o Razão (notas fiscais)",p:"importar razao notas fiscais nf contabil relatorio documentos",aba:24,
+  passos:["Abra <b>☰ Menu → Contábil → Razão</b>.","Clique em <b>➕ Importar arquivo</b> e escolha a planilha do Razão.","Use o <b>▼</b> de cada coluna para filtrar e <b>☰ Selecionar colunas</b> para escolher o que aparece."]},
+ {t:"Classificar as linhas do Razão",p:"classificar razao classificacao notas vincular item copiar colar",aba:25,
+  passos:["Abra <b>☰ Menu → Contábil → Classificar Razão</b>.","Em cada linha, escolha a classificação (item das abas de custo).","Atalhos: <b>Ctrl+C</b> copia a classificação, <b>Ctrl+V</b> cola em outra linha e <b>Enter</b> vai para a linha de baixo.","Linhas classificadas ficam verde-claro; use o filtro “(Não classificados)” para ver o que falta."]},
+ {t:"Aplicar o Real do Razão até um mês",p:"aplicar real razao incorrido mes vigencia dashboard realizado",aba:4,aj:"razaoVigenciaDashboard",
+  passos:["Abra <b>☰ Menu → Visão Gerencial → Dashboard</b>.","Escolha o mês no seletor do topo.","Clique em <b>Real do Razão</b> e confirme.","Até esse mês, Custo Indireto, Serviço, Material e Equipamento passam a usar as notas classificadas; nas tabelas, os meses ficam em verde."]},
+ {t:"Lançar uma medição (BM) da Receita",p:"lancar medicao bm boletim medir receita faturamento",aba:15,
+  passos:["Abra <b>☰ Menu → Receita → Receita</b> e vá em <b>2. Lançar Medição</b>.","Clique em <b>+ Nova Medição (BM)</b>.","Preencha as quantidades ou percentuais medidos e salve.","Para atualizar o Dashboard pelo arquivo do BM, use <b>↻ Atualizar Dashboard pelo BM</b>."]},
+ {t:"Importar ou editar a EAP da Receita",p:"eap receita importar editar estrutura itens venda preco",aba:15,aj:"menuReceitaEap",
+  passos:["Abra <b>Receita → 1. Cadastro do Item</b>.","Clique em <b>📋 EAP ▾</b> e escolha <b>Editar EAP</b>, <b>Importar EAP (Excel)</b> ou <b>Exportar EAP / Modelo</b>.","Importar substitui a EAP e apaga as medições lançadas.","Use <b>☰ Níveis ▾</b> para abrir a EAP até o nível desejado."]},
+ {t:"Lançar um Take In ou Take Out",p:"take in take out acrescimo reducao escopo aditivo contrato",aba:21,aj:"menuTioNovo",
+  passos:["Abra <b>☰ Menu → Receita → Take In / Take Out</b>.","Clique em <b>➕ Novo ▾</b> e escolha <b>Take In</b> (acréscimo) ou <b>Take Out</b> (redução).","Preencha descrição, quantidade e valor unitário na linha criada."]},
+ {t:"Cadastrar uma contingência",p:"contingencia cadastrar nova risco reserva percentual replan redistribuir",aba:18,
+  passos:["Abra <b>☰ Menu → Custos → Contingência</b>.","Clique em <b>➕ Cadastrar Contingência</b>, informe descrição, valor do serviço e % adotada e salve.","Em <b>📌 Replan ▾</b>: <b>Salvar Replan</b> guarda uma cópia; <b>Redistribuir</b> espalha o valor até o fim da obra."]},
+ {t:"Salvar o Previsto (Replan) e comparar com o Real",p:"salvar previsto replan comparar prev real orcado planejado desvio",aba:16,
+  passos:["Para salvar: <b>☰ Menu → ⚙️ Configurações → ⚡ Atalhos → Salvar Previsto a partir do Real</b>.","Para comparar: <b>☰ Menu → Visão Gerencial → Prev x Real</b> e clique em <b>👁 Ver Previsto Salvo</b>.","Use <b>👁 Ocultar/Reexibir ▾</b> para mostrar Previstos/Desvios, meses ou só os itens com desvio."]},
+ {t:"Transferir linhas entre abas de custo",p:"transferir transferencia mover linha aba servico material equipamento indireto reclassificar",abrir:"abrirEng()",abrirTxt:"⚙️ Abrir Configurações",
+  passos:["Abra <b>☰ Menu → ⚙️ Configurações 🔒 → ⚡ Atalhos</b>.","Clique em <b>⇄ Abrir Transferência de Custo</b>.","Escolha a aba de origem (DE) e a de destino (PARA), marque as linhas e confirme com login e senha."]},
+ {t:"Criar uma coluna de saldo",p:"coluna saldo nova travar totais formula",aba:11,aj:"saldoColAbrirNova",
+  passos:["Na aba de custo, clique em <b>🔒 Nova Coluna de Saldo</b> (pede a senha).","Dê um nome e escolha a fórmula.","A coluna aparece à direita da tabela."]},
+ {t:"Ver a Curva ABC",p:"curva abc ranking maiores custos classe",aba:22,
+  passos:["Abra <b>☰ Menu → Visão Gerencial → Curvas ABC</b>.","Escolha a base no seletor (Total, M.O.D, M.O.I, Custo Indireto, Equipamento, Material ou Serviço).","Ajuste os limites das classes A e B, se quiser, e use <b>💾 Exportar Excel</b>."]},
+ {t:"Ajustar a DRE",p:"dre demonstrativo resultado linha vincular lucro",aba:20,
+  passos:["Abra <b>☰ Menu → Visão Gerencial → DRE</b>.","Use <b>➕ Nova linha</b> para incluir uma linha ou o ✎ para editar.","<b>↺ Restaurar modelo</b> volta à DRE padrão."]},
+ {t:"Importar a EAP do orçamento (Coletor Total)",p:"importar eap orcamento orcado coletor total planilha",aba:7,
+  passos:["Abra <b>☰ Menu → Dados → Importar</b>.","No cartão da <b>EAP</b>, clique em <b>📄 Importar EAP</b> e escolha a planilha.","O Coletor Total passa a mostrar o Orçado de cada item."]},
+ {t:"Alterar os dados e o período da obra",p:"dados obra periodo datas inicio fim contrato nome local prazo",aba:9,
+  passos:["Abra <b>☰ Menu → Dados → Dados da Obra</b>.","Altere nome, local e as datas de início e fim do contrato.","As colunas de meses de todas as abas se ajustam sozinhas."]},
+ {t:"Configurar horas extras, encargos, alojamento e coeficientes",p:"configurar hora extra he encargos alojamento coeficientes parametros configuracoes",abrir:"abrirEng()",abrirTxt:"⚙️ Abrir Configurações",
+  passos:["Abra <b>☰ Menu → ⚙️ Configurações 🔒</b>.","Use as abas <b>Alojamento</b>, <b>H. Extras</b>, <b>Coeficientes</b> e <b>Encargos</b>.","Clique em <b>Salvar configuração</b>; os custos são recalculados."]},
+ {t:"Marcar uma informação como validada",p:"validar validada conferida verde conferir",aba:11,
+  passos:["Abra o item ou colaborador com o <b>✎ lápis</b>.","Marque <b>✅ Informação Validada</b> e salve.","A linha fica verde-clara na tabela."]},
+ {t:"Marcar um item como Faturamento Direto",p:"faturamento direto fd marcar etiqueta",aba:11,
+  passos:["No Custo Indireto (ou Serviço, Material, Equipamento), abra o item com o <b>✎ lápis</b>.","Marque <b>💰 Faturamento Direto</b> e salve.","A linha passa a mostrar a etiqueta FATURAMENTO DIRETO."]},
+ {t:"Usar o Modo Ajuda",p:"ajuda modo ajuda apresentacao botao explicar como funciona",
+  passos:["Clique em <b>❓ Ajuda</b> no topo (fica laranja).","Clique em qualquer botão para ver a apresentação dele, sem executar.","Clique em <b>Desligar</b> na faixa de baixo para voltar ao normal."]},
+ {t:"Trocar o logo da obra",p:"trocar logo logotipo imagem marca empresa",
+  passos:["Clique no <b>logo</b> no canto superior esquerdo.","Escolha a imagem do computador.","As cores das tabelas se ajustam ao novo logo."]},
+ {t:"Sair ou trocar de perfil",p:"sair trocar perfil usuario logout voltar tela inicial",
+  passos:["Abra <b>☰ Menu → ↶ Sair/Trocar</b>.","Se houver alterações não salvas, escolha salvar ou <b>Sair sem salvar</b>."]}
+];
+var ASSIST_SIN=[ // grupos de sinonimos (a primeira palavra e a usada na busca)
+ ["incluir","adicionar","cadastrar","criar","inserir","novo","nova","colocar","acrescentar","registrar"],
+ ["colaborador","funcionario","pessoa","empregado","trabalhador","profissional","moi","indireta"],
+ ["funcao","mod","direta","cargo","oficio"],
+ ["excluir","apagar","remover","deletar","tirar","eliminar"],
+ ["editar","alterar","mudar","modificar","corrigir","atualizar","ajustar"],
+ ["salvar","gravar","guardar","backup","armazenar"],
+ ["nuvem","firebase","online","internet"],
+ ["importar","carregar","subir","upload","abrir"],
+ ["exportar","baixar","download","extrair"],
+ ["razao","nota","nf","fiscal","contabil","notas"],
+ ["ocultar","esconder","sumir","reexibir","mostrar","exibir"],
+ ["senha","login","acesso","usuario","conta"],
+ ["medicao","bm","boletim","medir"],
+ ["quantidade","qtd","quantia"],
+ ["valor","preco","custo","r"],
+ ["item","linha","despesa"],
+ ["republica","moradia","alojamento","casa"],
+ ["transferir","transferencia","mover","passar","reclassificar"],
+ ["obra","projeto"],
+ ["mes","mensal","meses"]
+];
+var ASSIST_STOP={"como":1,"eu":1,"faco":1,"fazer":1,"faz":1,"posso":1,"consigo":1,"para":1,"pra":1,"um":1,"uma":1,"o":1,"a":1,"os":1,"as":1,"de":1,"do":1,"da":1,"dos":1,"das":1,"no":1,"na":1,"nos":1,"nas":1,"e":1,"em":1,"que":1,"qual":1,"onde":1,"quero":1,"preciso":1,"gostaria":1,"devo":1,"se":1,"meu":1,"minha":1,"ao":1,"por":1,"com":1,"tem":1,"ter":1,"isso":1,"esse":1,"essa":1,"este":1,"esta":1,"aqui":1,"la":1,"ja":1,"mais":1,"sobre":1,"vou":1,"vai":1,"pode":1,"saber":1,"ajuda":0};
+var _assistIdx=null,_assistMapa=null;
+function assistNorm(s){return String(s||"").replace(/<[^>]+>/g," ").replace(/&[a-z]+;/gi,function(e){var x=document.createElement("textarea");x.innerHTML=e;return x.value;})
+  .normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
+function assistRaiz(w){if(w.length>4&&/oes$/.test(w))w=w.slice(0,-3)+"ao";else if(w.length>4&&/aes$/.test(w))w=w.slice(0,-3)+"ao";else if(w.length>4&&/ais$/.test(w))w=w.slice(0,-3)+"al";else if(w.length>4&&/eis$/.test(w))w=w.slice(0,-3)+"el";else if(w.length>3&&/s$/.test(w))w=w.slice(0,-1);
+  var m=w.match(/^(.{4,}?)(ando|endo|indo|ado|ido|ar|er|ir|ei|ou|o|a|e)$/);return m&&!/(cao|sao|dor|tor)$/.test(w)?m[1]:w;} // Rev80: verbos conjugados (salvo/salvar, incluo/incluir...)
+function assistCanon(w){if(!_assistMapa){_assistMapa={};ASSIST_SIN.forEach(function(g){g.forEach(function(x){_assistMapa[assistRaiz(x)]=g[0];});});}w=assistRaiz(w);return _assistMapa[w]||w;}
+function assistTokens(s){return assistNorm(s).split(" ").filter(function(w){return w&&!ASSIST_STOP[w];}).map(assistCanon);}
+function assistLev(a,b){if(Math.abs(a.length-b.length)>1)return 9;var m=a.length,n=b.length,d=[];for(var i=0;i<=m;i++){d[i]=[i];}for(var j=0;j<=n;j++)d[0][j]=j;
+  for(i=1;i<=m;i++)for(j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n];}
+function assistAbaDoBotao(k){try{var el=document.querySelector("[onclick^=\""+k+"(\"]");var s=el&&el.closest("[id^=sec]");var n=s&&parseInt(s.id.slice(3),10);return isNaN(n)?null:n;}catch(e){return null;}}
+function assistIndice(){
+  if(_assistIdx)return _assistIdx;var docs=[];
+  ASSIST_TAREFAS.forEach(function(x,i){docs.push({tipo:"tarefa",i:i,t:x.t,pesos:[[assistTokens(x.t),3],[assistTokens(x.p),3],[assistTokens(x.passos.join(" ")),1]],bonus:1.35});});
+  Object.keys(typeof AJUDA==="object"?AJUDA:{}).forEach(function(k){var d=AJUDA[k];if(!d||!d.t)return;var ps=[];(d.telas||[]).forEach(function(tl){(tl.passos||[]).forEach(function(p){ps.push(p);});});
+    docs.push({tipo:"ajuda",k:k,t:d.t,pesos:[[assistTokens(d.t),3],[assistTokens(d.f||""),1.5],[assistTokens(ps.join(" ")+" "+(d.o||"")),0.6]],bonus:1});});
+  docs.forEach(function(d){d.mapa={};d.pesos.forEach(function(par){par[0].forEach(function(w){d.mapa[w]=Math.max(d.mapa[w]||0,par[1]);});});d.palavras=Object.keys(d.mapa);});
+  return (_assistIdx=docs);
+}
+function assistBuscar(perg){
+  var q=assistTokens(perg);if(!q.length)return [];
+  var uq=q.filter(function(w,i){return q.indexOf(w)===i;});
+  return assistIndice().map(function(d){var sc=0,achou=0;
+    uq.forEach(function(w){var p=d.mapa[w];
+      if(!p&&w.length>=5){for(var i=0;i<d.palavras.length;i++){var x=d.palavras[i];if(x.length>=5&&assistLev(w,x)<=1){p=(d.mapa[x]||0)*0.7;break;}}}
+      if(!p&&w.length>=4){for(var j=0;j<d.palavras.length;j++){var y=d.palavras[j];if(y.length>=6&&y.indexOf(w)===0){p=(d.mapa[y]||0)*0.6;break;}}}
+      if(p){sc+=p;achou++;}});
+    return {d:d,sc:sc*d.bonus*(achou/uq.length),cob:achou/uq.length};
+  }).filter(function(r){return r.sc>0;}).sort(function(a,b){return b.sc-a.sc;});
+}
+function assistEsc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function assistMsg(html,quem){var box=document.getElementById("assist-msgs");var m=document.createElement("div");m.className="as-msg "+(quem||"bot");m.innerHTML=html;box.appendChild(m);box.scrollTop=box.scrollHeight;return m;}
+function assistResposta(r){
+  var d=r.d,h="",botoes=[];
+  if(d.tipo==="tarefa"){var x=ASSIST_TAREFAS[d.i];
+    h="<div class='as-tit'>"+x.t+"</div><ol class='as-passos'>"+x.passos.map(function(p){return "<li>"+p+"</li>";}).join("")+"</ol>";
+    if(x.aba!=null)botoes.push("<button type='button' class='as-bt' onclick='assistIrAba("+x.aba+")'>📍 Ir para a aba</button>");
+    if(x.abrir)botoes.push("<button type='button' class='as-bt' onclick=\"assistFechar();"+x.abrir+"\">"+(x.abrirTxt||"Abrir")+"</button>");
+    if(x.aj&&AJUDA[x.aj])botoes.push("<button type='button' class='as-bt' onclick=\"assistVerAjuda('"+x.aj+"')\">❓ Ver apresentação</button>");
+  }else{var a=AJUDA[d.k],ps=[];(a.telas||[]).forEach(function(tl){(tl.passos||[]).forEach(function(p){ps.push(p);});});
+    h="<div class='as-tit'>"+a.t+"</div><p class='as-txt'>"+a.f+"</p>"+(a.o?"<p class='as-onde'>📍 "+a.o+"</p>":"")+(ps.length?"<ol class='as-passos'>"+ps.slice(0,6).map(function(p){return "<li>"+p+"</li>";}).join("")+"</ol>":"");
+    var aba=assistAbaDoBotao(d.k);if(aba!=null)botoes.push("<button type='button' class='as-bt' onclick='assistIrAba("+aba+")'>📍 Ir para a aba</button>");
+    botoes.push("<button type='button' class='as-bt' onclick=\"assistVerAjuda('"+d.k+"')\">❓ Ver apresentação</button>");}
+  return h+(botoes.length?"<div class='as-bts'>"+botoes.join("")+"</div>":"");
+}
+function assistEnviar(texto){
+  var inp=document.getElementById("assist-inp"),perg=(texto!=null?texto:inp.value).trim();if(!perg)return;inp.value="";
+  assistMsg(assistEsc(perg),"eu");
+  var sug=document.getElementById("assist-sug");if(sug)sug.style.display="none";
+  var res=assistBuscar(perg),m=assistMsg("<span class='as-dig'><i></i><i></i><i></i></span>","bot");
+  setTimeout(function(){
+    if(res.length&&res[0].cob>=0.5&&res[0].sc>=2.4){
+      var outros=res.slice(1).filter(function(r){return r.sc>=res[0].sc*0.55;}).slice(0,2);
+      m.innerHTML=assistResposta(res[0])+(outros.length?"<div class='as-outros'>Talvez você queira: "+outros.map(function(r){return "<a href='#' onclick=\"assistEnviar(this.textContent);return false\">"+assistEsc(assistNorm(r.d.t)===r.d.t?r.d.t:r.d.t.replace(/<[^>]+>/g,"").replace(/&[a-z]+;/gi,function(e){var x=document.createElement("textarea");x.innerHTML=e;return x.value;}))+"</a>";}).join(" · ")+"</div>":"");
+    }else if(res.length){
+      m.innerHTML="Não encontrei uma resposta exata. Algum destes assuntos ajuda?<div class='as-chips'>"+res.slice(0,4).map(function(r){var t=r.d.t.replace(/<[^>]+>/g,"").replace(/&[a-z]+;/gi,function(e){var x=document.createElement("textarea");x.innerHTML=e;return x.value;});return "<button type='button' class='as-chip' onclick=\"assistEnviar(this.textContent)\">"+assistEsc(t)+"</button>";}).join("")+"</div>";
+    }else{
+      m.innerHTML="Ainda não sei responder isso. Tente com outras palavras, por exemplo <i>“como incluir um colaborador”</i>, ou use o <b>❓ Ajuda</b> no topo e clique no botão que quer entender.";
+    }
+    document.getElementById("assist-msgs").scrollTop=1e9;
+  },380);
+}
+function assistIrAba(n){assistFechar();try{setTab(n);window.scrollTo(0,0);}catch(e){}}
+function assistVerAjuda(k){abrirApresAjuda(k);}
+function assistAbrir(){
+  var p=document.getElementById("assist-painel");
+  if(!p){p=document.createElement("div");p.id="assist-painel";
+    p.innerHTML="<div class='as-cab'><span>💬 Assistente do Controle</span><button type='button' class='as-x' onclick='assistFechar()' title='Fechar'>✕</button></div>"+
+      "<div class='as-msgs' id='assist-msgs'><div class='as-msg bot'>Olá! Pergunte como fazer algo no controle, por exemplo: <i>“como incluo um novo colaborador?”</i></div>"+
+      "<div class='as-chips' id='assist-sug'>"+["Como incluir um colaborador?","Como salvar na nuvem?","Como lançar uma medição?","Como importar o Razão?","Como criar o login de alguém?","Exame admissional automático"].map(function(s){return "<button type='button' class='as-chip' onclick=\"assistEnviar(this.textContent)\">"+s+"</button>";}).join("")+"</div></div>"+
+      "<form class='as-form' onsubmit='assistEnviar();return false'><input id='assist-inp' type='text' autocomplete='off' placeholder='Digite sua pergunta…'><button type='submit' class='as-env' title='Enviar'>➤</button></form>";
+    document.body.appendChild(p);}
+  p.classList.add("on");document.getElementById("assist-btn").classList.add("aberto");
+  setTimeout(function(){document.getElementById("assist-inp").focus();},60);
+}
+function assistFechar(){var p=document.getElementById("assist-painel");if(p)p.classList.remove("on");var b=document.getElementById("assist-btn");if(b)b.classList.remove("aberto");}
+function assistAlternar(){var p=document.getElementById("assist-painel");if(p&&p.classList.contains("on"))assistFechar();else assistAbrir();}
+(function(){
+  var b=document.createElement("button");b.type="button";b.id="assist-btn";b.title="Assistente: pergunte como fazer algo no controle";b.innerHTML="<span>💬</span><b>Assistente</b>";b.onclick=assistAlternar;document.body.appendChild(b);
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"){var p=document.getElementById("assist-painel");if(p&&p.classList.contains("on"))assistFechar();}});
+  // so aparece dentro do controle (some na tela inicial)
+  var tela=document.getElementById("landing-screen");
+  function sync(){var dentro=!tela||tela.style.display==="none";b.style.display=dentro?"":"none";if(!dentro)assistFechar();}
+  if(tela)new MutationObserver(sync).observe(tela,{attributes:true,attributeFilter:["style"]});sync();
+  if(typeof AJUDA_LIVRE!=="undefined")["assistAlternar","assistAbrir","assistFechar","assistEnviar","assistIrAba","assistVerAjuda"].forEach(function(k){AJUDA_LIVRE.push(k);});
+})();
+
 // ===================== Rev80: tela de boas-vindas ao entrar no controle =====================
 // Aparece quando a tela inicial fecha (Visualizador, Controlador, Comecar do zero, Projeto novo). Some em 5 s ou com qualquer tecla/clique.
 var _bvTimer=null;
