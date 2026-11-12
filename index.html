@@ -646,43 +646,40 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
 #equip-menu-global{padding:6px!important}
 </style>
 <style id="rev80-carregando">
-/* Rev80: tela de carregamento ao importar (vidro claro, anel girando em volta do logo, barra deslizando e check no final) */
-#car-overlay{position:fixed;inset:0;z-index:10080;display:none;align-items:center;justify-content:center;
-  background:rgba(15,23,42,.28);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;animation:carFade .25s ease-out}
-#car-overlay.on{display:flex}
+/* Rev80: tela de carregamento (opcao A): logo ao centro, barra nas cores da logo e as etapas sendo marcadas */
+#car-overlay{position:fixed;inset:0;z-index:10080;display:none;align-items:center;justify-content:center;flex-direction:column;gap:26px;
+  background:#fff;font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,sans-serif;color:#0f172a;
+  --car-g:linear-gradient(90deg,#1e3a5f,#2f6f5e)}
+#car-overlay.on{display:flex;animation:carFade .25s ease-out}
 #car-overlay.saindo{animation:carSai .35s ease-in forwards}
-.car-card{width:min(340px,86vw);padding:30px 26px 24px;border-radius:24px;text-align:center;
-  background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
-  border:1px solid rgba(255,255,255,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 24px 60px rgba(15,23,42,.30);animation:carEntra .45s cubic-bezier(.34,1.56,.64,1)}
-.car-anel{position:relative;width:112px;height:112px;margin:0 auto 18px}
-.car-giro{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(30,58,95,0) 0deg,var(--pal-base,#1e3a5f) 250deg,var(--pal-inc,#2f6f5e) 330deg,rgba(30,58,95,0) 360deg);
-  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));animation:carGira 1s linear infinite}
-.car-centro{position:absolute;inset:12px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(15,23,42,.12);overflow:hidden;animation:carPulsa 1.6s ease-in-out infinite}
-.car-centro img{max-width:70%;max-height:60%;object-fit:contain}
-#car-ico{font-size:34px}
-.car-ok{position:absolute;inset:0;width:100%;height:100%;opacity:0;background:#fff}
-.car-ok circle{fill:none;stroke:#34c759;stroke-width:3;stroke-dasharray:151;stroke-dashoffset:151}
-.car-ok path{fill:none;stroke:#34c759;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40}
-#car-overlay.ok .car-giro{animation:none;background:#34c759;transition:background .3s}
-#car-overlay.ok .car-centro{animation:none}
-#car-overlay.ok .car-ok{opacity:1;transition:opacity .2s}
-#car-overlay.ok .car-ok circle{animation:carTraco .45s ease-out forwards}
-#car-overlay.ok .car-ok path{animation:carTraco .35s .3s ease-out forwards}
-#car-overlay.erro .car-giro{animation:none;background:#ef4444}
-.car-tit{font-size:16px;font-weight:700;color:#0f172a;letter-spacing:-.2px}
-.car-sub{font-size:12.5px;color:#475569;margin-top:4px;min-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.car-barra{position:relative;height:5px;border-radius:999px;background:rgba(15,23,42,.08);overflow:hidden;margin-top:16px}
-.car-barra i{position:absolute;top:0;bottom:0;width:40%;border-radius:999px;background:linear-gradient(90deg,var(--pal-base,#1e3a5f),var(--pal-inc,#2f6f5e));animation:carBarra 1.2s ease-in-out infinite}
-#car-overlay.ok .car-barra i{left:0!important;width:100%;animation:none;background:#34c759;transition:width .3s}
+.car-marca{display:flex;align-items:center;justify-content:center;min-height:60px;animation:carSobe .5s ease both}
+.car-marca img{max-width:240px;max-height:96px;object-fit:contain;display:block}
+.car-marca span{font-size:22px;font-weight:700;color:#1e3a5f;letter-spacing:-.2px}
+.car-caixa{width:min(380px,86vw);opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
+#car-overlay.pronto .car-caixa{opacity:1;transform:none}
+.car-marca img{animation:carSobe .55s ease both}
+.car-lin{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px}
+.car-tit{font-size:13.5px;font-weight:600;color:#0f172a}
+.car-pct{font-size:12.5px;color:#64748b;font-variant-numeric:tabular-nums}
+.car-barra{height:6px;border-radius:6px;background:#e8edf4;overflow:hidden}
+.car-barra i{display:block;height:100%;width:0;border-radius:6px;background:var(--car-g);transition:width .35s ease}
+.car-sub{font-size:11.5px;color:#94a3b8;margin-top:6px;min-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.car-etapas{list-style:none;margin:10px 0 0;padding:0;font-size:13px;color:#94a3b8}
+.car-etapas li{display:flex;align-items:center;gap:10px;padding:5px 0;transition:color .3s}
+.car-etapas .ic{width:18px;height:18px;border-radius:50%;border:2px solid #d5dce6;flex:none;position:relative;transition:background .3s,border-color .3s}
+.car-etapas li.at{color:#0f172a}.car-etapas li.at .ic{border-color:var(--car-c1,#1e3a5f);border-top-color:transparent;animation:carGira .8s linear infinite}
+.car-etapas li.ok{color:#334155}.car-etapas li.ok .ic{background:#34c759;border-color:#34c759}
+.car-etapas li.ok .ic::after{content:"";position:absolute;left:5px;top:2px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.car-etapas li.er{color:#b91c1c}.car-etapas li.er .ic{background:#ef4444;border-color:#ef4444}
+.car-etapas li.er .ic::after{content:"!";position:absolute;inset:0;color:#fff;font-size:11px;font-weight:800;text-align:center;line-height:14px}
+#car-overlay.ok .car-barra i{background:#34c759}
+#car-overlay.erro .car-barra i{background:#ef4444}#car-overlay.erro .car-tit{color:#b91c1c}
+.car-rod{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:11px;color:#a0a9b8}
 @keyframes carGira{to{transform:rotate(360deg)}}
-@keyframes carPulsa{0%,100%{transform:scale(1)}50%{transform:scale(.95)}}
-@keyframes carBarra{0%{left:-40%}100%{left:100%}}
-@keyframes carTraco{to{stroke-dashoffset:0}}
 @keyframes carFade{from{opacity:0}to{opacity:1}}
 @keyframes carSai{to{opacity:0}}
-@keyframes carEntra{from{transform:scale(.85) translateY(10px);opacity:0}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.car-giro,.car-centro,.car-barra i{animation:none}}
+@keyframes carSobe{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#car-overlay *{animation:none!important}}
 </style>
 <style id="rev80-privacidade">
 /* Rev80: Aviso de Privacidade / Termos de Uso */
@@ -730,37 +727,31 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
 @media(max-width:560px){.mx-ads,.mx-3{grid-template-columns:1fr}}
 </style>
 <style id="rev80-boasvindas">
-/* Rev80: tela de boas-vindas */
+/* Rev80: tela de boas-vindas (opcao 2): o controle desfocado ao fundo e um cartao de vidro com a logo e a saudacao */
 #bv-tela{position:fixed;inset:0;z-index:10090;display:none;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
-  background:radial-gradient(1200px 700px at 30% 20%,rgba(255,255,255,.10),transparent 60%),linear-gradient(135deg,var(--pal-base,#1e3a5f),#0f172a 75%);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;color:#fff}
-#bv-tela.on{display:flex;animation:bvFade .45s ease-out}
-#bv-tela.saindo{animation:bvSai .5s ease-in forwards}
-#bv-tela .bv-luz{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,var(--pal-inc,#2f6f5e) 0%,transparent 65%);opacity:.35;filter:blur(30px);animation:bvLuz 6s ease-in-out infinite alternate}
-.bv-card{position:relative;text-align:center;padding:40px 48px 30px;border-radius:28px;min-width:min(420px,88vw);
-  background:rgba(255,255,255,.10);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
-  border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 30px 80px rgba(0,0,0,.35);animation:bvEntra .7s cubic-bezier(.34,1.56,.64,1)}
-.bv-logo{width:132px;height:132px;margin:0 auto 18px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 0 6px rgba(255,255,255,.12),0 12px 30px rgba(0,0,0,.30);animation:bvPulsa 2.4s ease-in-out infinite}
-.bv-logo img{max-width:74%;max-height:62%;object-fit:contain}
-.bv-logo span{font-size:46px}
-.bv-ola{font-size:15px;letter-spacing:.4px;opacity:.85;animation:bvSobe .6s .15s both}
-.bv-perfil{display:inline-block;margin:10px 0 6px;padding:4px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
-  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);animation:bvSobe .6s .3s both}
-.bv-nome{font-size:30px;font-weight:800;letter-spacing:-.4px;line-height:1.15;animation:bvSobe .6s .45s both}
-.bv-obra{font-size:13px;opacity:.75;margin-top:8px;animation:bvSobe .6s .6s both}
-.bv-barra{height:4px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden;margin:22px auto 10px;width:70%}
-.bv-barra i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#fff,rgba(255,255,255,.6))}
-#bv-tela.on .bv-barra i{animation:bvBarra 5s linear forwards}
-.bv-dica{font-size:11.5px;opacity:.6}
+  background:rgba(1,24,80,.28);-webkit-backdrop-filter:blur(7px) saturate(120%);backdrop-filter:blur(7px) saturate(120%);
+  font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,sans-serif;color:#0f172a}
+#bv-tela.on{display:flex;animation:bvFade .4s ease-out}
+#bv-tela.saindo{animation:bvSai .45s ease-in forwards}
+.bv-card{width:min(440px,90vw);text-align:center;padding:30px 32px 24px;border-radius:22px;
+  background:rgba(255,255,255,.80);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);
+  border:1px solid rgba(255,255,255,.92);box-shadow:0 24px 60px rgba(1,24,80,.28);animation:bvEntra .6s ease both}
+.bv-logo{display:flex;align-items:center;justify-content:center;min-height:56px;margin:0 auto 18px}
+.bv-logo img{max-width:190px;max-height:84px;object-fit:contain;display:block}
+.bv-logo span{font-size:40px}
+.bv-ola{margin:0;font-size:24px;font-weight:600;color:var(--bv-cor,#011850);letter-spacing:-.2px;line-height:1.2}
+.bv-obra{color:#5b6474;font-size:13.5px;margin:6px 0 18px}
+.bv-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.bv-chips span{font-size:12px;background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:5px 11px;color:#334155}
+.bv-cont{display:flex;align-items:center;justify-content:center;gap:10px;font-size:12.5px;color:#5b6474}
+.bv-cont svg{width:26px;height:26px}
+.bv-cont .bv-anel{stroke:var(--bv-cor,#011850);stroke-dasharray:94.2;stroke-dashoffset:94.2}
+#bv-tela.on .bv-anel{animation:bvAnel 5s linear forwards}
 @keyframes bvFade{from{opacity:0}to{opacity:1}}
-@keyframes bvSai{to{opacity:0;transform:scale(1.03)}}
-@keyframes bvEntra{from{opacity:0;transform:scale(.88) translateY(16px)}to{opacity:1;transform:none}}
-@keyframes bvSobe{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes bvPulsa{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-@keyframes bvBarra{to{width:100%}}
-@keyframes bvLuz{from{transform:translate(-120px,-60px)}to{transform:translate(140px,80px)}}
-@media (prefers-reduced-motion:reduce){#bv-tela *{animation:none!important}.bv-barra i{width:100%}}
+@keyframes bvSai{to{opacity:0}}
+@keyframes bvEntra{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes bvAnel{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){#bv-tela *{animation:none!important}.bv-cont .bv-anel{stroke-dashoffset:0}}
 </style>
 <style id="rev80-assistente">
 /* Rev80: Assistente do Controle (perguntas e respostas) */
@@ -790,6 +781,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
 .as-bts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .as-bt{all:unset;cursor:pointer;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;color:#0a58ca;background:rgba(0,122,255,.10);border:1px solid rgba(0,122,255,.25)}
 .as-bt:hover{background:rgba(0,122,255,.18)}
+.as-tab{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}.as-tab td{padding:5px 2px;border-bottom:1px solid #f1f5f9;vertical-align:top}.as-tab td.as-v{text-align:right;white-space:nowrap;font-family:ui-monospace,Consolas,monospace;color:#0f172a}.as-tab small{color:#64748b;font-family:inherit}
 .as-outros{margin-top:8px;font-size:11.5px;color:#64748b}.as-outros a{color:#0a58ca}
 .as-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .as-chip{all:unset;cursor:pointer;padding:6px 11px;border-radius:999px;font-size:12px;color:#334155;background:#fff;border:1px solid #e2e8f0}
@@ -2810,7 +2802,7 @@ async function carregarVersaoEscolhida(id,nome){
   try{
     var d=await window.firebaseCarregarVersaoPorId(id);
     if(!d){carregandoFim(false,"Vers\u00e3o n\u00e3o encontrada");return;}
-    carregandoTexto("Montando as abas",nome);await carregandoPintar();
+    await carregandoLogo(d.logoB64);await carregandoTexto("Montando as abas",nome);await carregandoPintar();
     aplicarDadosImportados(d);
     carregandoTexto("Carregando anexos",nome);
     await mesclarAnexosDaNuvem(id);
@@ -12137,7 +12129,7 @@ if(d.receitaImportadoDeArquivo){
   S.receitaImportadoDeArquivo=true;
 }
 if(d.receitaFaturamentoDireto)S.receitaFaturamentoDireto=d.receitaFaturamentoDireto;document.getElementById("obra-ini").value=S.obraIni;document.getElementById("obra-fim").value=S.obraFim;renderHeader();recalc();renderCrono();renderPedCompraMatrix();renderFluxoMateriais();renderImportStatus();renderColetorTotal();popularDadosObra();renderTodasCategoriasIndireto();renderCustoModMatrix();renderCustoMOMatrix();renderDash();}
-document.getElementById("inp-json").onchange=function(e){var f=e.target.files[0];if(!f)return;carregandoMostrar("Lendo o arquivo",f.name);/* Rev80: animacao de carregamento */var reader=new FileReader();reader.onload=async function(ev){try{carregandoTexto("Montando as abas",f.name);await carregandoPintar();var d=JSON.parse(ev.target.result);aplicarDadosImportados(d);registrarHistoricoEngCustos("Carregou o arquivo JSON \""+f.name+"\"");carregandoFim(true,"Base carregada");}catch(ex){carregandoFim(false);alert("Erro: "+ex.message);}};reader.onerror=function(){carregandoFim(false);};reader.readAsText(f);e.target.value="";};
+document.getElementById("inp-json").onchange=function(e){var f=e.target.files[0];if(!f)return;carregandoMostrar("Lendo o arquivo",f.name);/* Rev80: animacao de carregamento */var reader=new FileReader();reader.onload=async function(ev){try{var d=JSON.parse(ev.target.result);await carregandoLogo(d&&d.logoB64);await carregandoTexto("Montando as abas",f.name);await carregandoPintar();aplicarDadosImportados(d);registrarHistoricoEngCustos("Carregou o arquivo JSON \""+f.name+"\"");carregandoFim(true,"Base carregada");}catch(ex){carregandoFim(false);alert("Erro: "+ex.message);}};reader.onerror=function(){carregandoFim(false);};reader.readAsText(f);e.target.value="";};
 function baixarHTML(){var html=document.documentElement.outerHTML;var blob=new Blob([html],{type:"text/html;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=S.projNome.replace(/\s+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".html";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
 var engDesbloqueado=false; // em memoria apenas - reseta ao fechar/recarregar a pagina, nao e salvo no JSON
 var pendingEngCallback=null; // callback executado apos desbloqueio da senha Eng.Custos (ex: abrir memoria de calculo)
@@ -13145,7 +13137,7 @@ var ASSIST_TAREFAS=[
   passos:["Abra <b>Receita → 1. Cadastro do Item</b>.","Clique em <b>📋 EAP ▾</b> e escolha <b>Editar EAP</b>, <b>Importar EAP (Excel)</b> ou <b>Exportar EAP / Modelo</b>.","Importar substitui a EAP e apaga as medições lançadas.","Use <b>☰ Níveis ▾</b> para abrir a EAP até o nível desejado."]},
  {t:"Lançar um Take In ou Take Out",p:"take in take out acrescimo reducao escopo aditivo contrato",aba:21,aj:"menuTioNovo",
   passos:["Abra <b>☰ Menu → Receita → Take In / Take Out</b>.","Clique em <b>➕ Novo ▾</b> e escolha <b>Take In</b> (acréscimo) ou <b>Take Out</b> (redução).","Preencha descrição, quantidade e valor unitário na linha criada."]},
- {t:"Cadastrar uma contingência",p:"contingencia cadastrar nova risco reserva percentual replan redistribuir",aba:18,
+ {t:"Cadastrar uma contingência",p:"contingencia cadastrar nova risco reserva percentual redistribuir",aba:18,
   passos:["Abra <b>☰ Menu → Custos → Contingência</b>.","Clique em <b>➕ Cadastrar Contingência</b>, informe descrição, valor do serviço e % adotada e salve.","Em <b>📌 Replan ▾</b>: <b>Salvar Replan</b> guarda uma cópia; <b>Redistribuir</b> espalha o valor até o fim da obra."]},
  {t:"Salvar o Previsto (Replan) e comparar com o Real",p:"salvar previsto replan comparar prev real orcado planejado desvio",aba:16,
   passos:["Para salvar: <b>☰ Menu → ⚙️ Configurações → ⚡ Atalhos → Salvar Previsto a partir do Real</b>.","Para comparar: <b>☰ Menu → Visão Gerencial → Prev x Real</b> e clique em <b>👁 Ver Previsto Salvo</b>.","Use <b>👁 Ocultar/Reexibir ▾</b> para mostrar Previstos/Desvios, meses ou só os itens com desvio."]},
@@ -13196,7 +13188,7 @@ var ASSIST_SIN=[ // grupos de sinonimos (a primeira palavra e a usada na busca)
  ["obra","projeto"],
  ["mes","mensal","meses"]
 ];
-var ASSIST_STOP={"como":1,"eu":1,"faco":1,"fazer":1,"faz":1,"posso":1,"consigo":1,"para":1,"pra":1,"um":1,"uma":1,"o":1,"a":1,"os":1,"as":1,"de":1,"do":1,"da":1,"dos":1,"das":1,"no":1,"na":1,"nos":1,"nas":1,"e":1,"em":1,"que":1,"qual":1,"onde":1,"quero":1,"preciso":1,"gostaria":1,"devo":1,"se":1,"meu":1,"minha":1,"ao":1,"por":1,"com":1,"tem":1,"ter":1,"isso":1,"esse":1,"essa":1,"este":1,"esta":1,"aqui":1,"la":1,"ja":1,"mais":1,"sobre":1,"vou":1,"vai":1,"pode":1,"saber":1,"ajuda":0};
+var ASSIST_STOP={"como":1,"eu":1,"faco":1,"fazer":1,"faz":1,"posso":1,"consigo":1,"para":1,"pra":1,"um":1,"uma":1,"o":1,"a":1,"os":1,"as":1,"de":1,"do":1,"da":1,"dos":1,"das":1,"no":1,"na":1,"nos":1,"nas":1,"e":1,"em":1,"que":1,"qual":1,"onde":1,"quero":1,"preciso":1,"gostaria":1,"devo":1,"se":1,"meu":1,"minha":1,"ao":1,"por":1,"com":1,"tem":1,"ter":1,"isso":1,"esse":1,"essa":1,"este":1,"esta":1,"aqui":1,"la":1,"ja":1,"mais":1,"sobre":1,"vou":1,"vai":1,"pode":1,"saber":1,"significa":1,"significado":1,"definicao":1,"conceito":1,"quer":1,"dizer":1,"seria":1,"ajuda":0};
 var _assistIdx=null,_assistMapa=null;
 function assistNorm(s){return String(s||"").replace(/<[^>]+>/g," ").replace(/&[a-z]+;/gi,function(e){var x=document.createElement("textarea");x.innerHTML=e;return x.value;})
   .normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
@@ -13209,7 +13201,7 @@ function assistLev(a,b){if(Math.abs(a.length-b.length)>1)return 9;var m=a.length
 function assistAbaDoBotao(k){try{var el=document.querySelector("[onclick^=\""+k+"(\"]");var s=el&&el.closest("[id^=sec]");var n=s&&parseInt(s.id.slice(3),10);return isNaN(n)?null:n;}catch(e){return null;}}
 function assistIndice(){
   if(_assistIdx)return _assistIdx;var docs=[];
-  ASSIST_TAREFAS.forEach(function(x,i){docs.push({tipo:"tarefa",i:i,t:x.t,pesos:[[assistTokens(x.t),3],[assistTokens(x.p),3],[assistTokens(x.passos.join(" ")),1]],bonus:1.35});});
+  ASSIST_TAREFAS.forEach(function(x,i){docs.push({tipo:"tarefa",i:i,t:x.t,pesos:[[assistTokens(x.t),3],[assistTokens(x.p),3],[assistTokens((x.passos||[]).join(" ")+" "+(x.texto||"")),1]],bonus:1.35});});
   Object.keys(typeof AJUDA==="object"?AJUDA:{}).forEach(function(k){var d=AJUDA[k];if(!d||!d.t)return;var ps=[];(d.telas||[]).forEach(function(tl){(tl.passos||[]).forEach(function(p){ps.push(p);});});
     docs.push({tipo:"ajuda",k:k,t:d.t,pesos:[[assistTokens(d.t),3],[assistTokens(d.f||""),1.5],[assistTokens(ps.join(" ")+" "+(d.o||"")),0.6]],bonus:1});});
   docs.forEach(function(d){d.mapa={};d.pesos.forEach(function(par){par[0].forEach(function(w){d.mapa[w]=Math.max(d.mapa[w]||0,par[1]);});});d.palavras=Object.keys(d.mapa);});
@@ -13217,13 +13209,15 @@ function assistIndice(){
 }
 function assistBuscar(perg){
   var q=assistTokens(perg);if(!q.length)return [];
+  var nq=assistNorm(perg),querConceito=/\b(o que e|o que sao|o que seria|significa|significado|definicao|conceito|diferenca|quer dizer|explica|explique)\b/.test(nq),querComo=/\b(como|passo a passo|onde)\b/.test(nq)&&!querConceito; // Rev80: intencao da pergunta
   var uq=q.filter(function(w,i){return q.indexOf(w)===i;});
   return assistIndice().map(function(d){var sc=0,achou=0;
     uq.forEach(function(w){var p=d.mapa[w];
       if(!p&&w.length>=5){for(var i=0;i<d.palavras.length;i++){var x=d.palavras[i];if(x.length>=5&&assistLev(w,x)<=1){p=(d.mapa[x]||0)*0.7;break;}}}
       if(!p&&w.length>=4){for(var j=0;j<d.palavras.length;j++){var y=d.palavras[j];if(y.length>=6&&y.indexOf(w)===0){p=(d.mapa[y]||0)*0.6;break;}}}
       if(p){sc+=p;achou++;}});
-    return {d:d,sc:sc*d.bonus*(achou/uq.length),cob:achou/uq.length};
+    var ehConceito=/^O que/.test(d.t),fator=querConceito?(ehConceito?1.9:0.8):(querComo&&ehConceito?0.85:1);
+    return {d:d,sc:sc*d.bonus*fator*(achou/uq.length),cob:achou/uq.length};
   }).filter(function(r){return r.sc>0;}).sort(function(a,b){return b.sc-a.sc;});
 }
 function assistEsc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -13231,7 +13225,7 @@ function assistMsg(html,quem){var box=document.getElementById("assist-msgs");var
 function assistResposta(r){
   var d=r.d,h="",botoes=[];
   if(d.tipo==="tarefa"){var x=ASSIST_TAREFAS[d.i];
-    h="<div class='as-tit'>"+x.t+"</div><ol class='as-passos'>"+x.passos.map(function(p){return "<li>"+p+"</li>";}).join("")+"</ol>";
+    h="<div class='as-tit'>"+x.t+"</div>"+(x.texto?"<p class='as-txt'>"+x.texto+"</p>":"")+(x.passos&&x.passos.length?"<ol class='as-passos'>"+x.passos.map(function(p){return "<li>"+p+"</li>";}).join("")+"</ol>":"");
     if(x.aba!=null)botoes.push("<button type='button' class='as-bt' onclick='assistIrAba("+x.aba+")'>📍 Ir para a aba</button>");
     if(x.abrir)botoes.push("<button type='button' class='as-bt' onclick=\"assistFechar();"+x.abrir+"\">"+(x.abrirTxt||"Abrir")+"</button>");
     if(x.aj&&AJUDA[x.aj])botoes.push("<button type='button' class='as-bt' onclick=\"assistVerAjuda('"+x.aj+"')\">❓ Ver apresentação</button>");
@@ -13247,13 +13241,15 @@ function assistEnviar(texto){
   var sug=document.getElementById("assist-sug");if(sug)sug.style.display="none";
   var res=assistBuscar(perg),m=assistMsg("<span class='as-dig'><i></i><i></i><i></i></span>","bot");
   setTimeout(function(){
+    var nn=assistNorm(perg),cv=assistConversa(nn);if(cv){m.innerHTML=cv;return;} // Rev80: cumprimentos
+    var dd=assistDados(perg);if(dd){m.innerHTML=dd;document.getElementById("assist-msgs").scrollTop=1e9;return;} // Rev80: numeros da obra aberta
     if(res.length&&res[0].cob>=0.5&&res[0].sc>=2.4){
       var outros=res.slice(1).filter(function(r){return r.sc>=res[0].sc*0.55;}).slice(0,2);
       m.innerHTML=assistResposta(res[0])+(outros.length?"<div class='as-outros'>Talvez você queira: "+outros.map(function(r){return "<a href='#' onclick=\"assistEnviar(this.textContent);return false\">"+assistEsc(assistNorm(r.d.t)===r.d.t?r.d.t:r.d.t.replace(/<[^>]+>/g,"").replace(/&[a-z]+;/gi,function(e){var x=document.createElement("textarea");x.innerHTML=e;return x.value;}))+"</a>";}).join(" · ")+"</div>":"");
     }else if(res.length){
       m.innerHTML="Não encontrei uma resposta exata. Algum destes assuntos ajuda?<div class='as-chips'>"+res.slice(0,4).map(function(r){var t=r.d.t.replace(/<[^>]+>/g,"").replace(/&[a-z]+;/gi,function(e){var x=document.createElement("textarea");x.innerHTML=e;return x.value;});return "<button type='button' class='as-chip' onclick=\"assistEnviar(this.textContent)\">"+assistEsc(t)+"</button>";}).join("")+"</div>";
     }else{
-      m.innerHTML="Ainda não sei responder isso. Tente com outras palavras, por exemplo <i>“como incluir um colaborador”</i>, ou use o <b>❓ Ajuda</b> no topo e clique no botão que quer entender.";
+      m.innerHTML="Não encontrei uma resposta para isso. Eu sei ajudar com:<div class='as-chips'>"+["Como funciona o controle","Para que serve cada aba","Qual o lucro da obra?","Quantas pessoas no efetivo?","Quais os maiores custos?","Como incluir um colaborador?"].map(function(s){return "<button type='button' class='as-chip' onclick=\"assistEnviar(this.textContent)\">"+s+"</button>";}).join("")+"</div><div class='as-outros'>Você também pode usar o <b>❓ Ajuda</b> no topo e clicar no botão que quer entender.</div>";
     }
     document.getElementById("assist-msgs").scrollTop=1e9;
   },380);
@@ -13264,8 +13260,8 @@ function assistAbrir(){
   var p=document.getElementById("assist-painel");
   if(!p){p=document.createElement("div");p.id="assist-painel";
     p.innerHTML="<div class='as-cab'><span>💬 Assistente do Controle</span><button type='button' class='as-x' onclick='assistFechar()' title='Fechar'>✕</button></div>"+
-      "<div class='as-msgs' id='assist-msgs'><div class='as-msg bot'>Olá! Pergunte como fazer algo no controle, por exemplo: <i>“como incluo um novo colaborador?”</i></div>"+
-      "<div class='as-chips' id='assist-sug'>"+["Como incluir um colaborador?","Como salvar na nuvem?","Como lançar uma medição?","Como importar o Razão?","Como criar o login de alguém?","Exame admissional automático"].map(function(s){return "<button type='button' class='as-chip' onclick=\"assistEnviar(this.textContent)\">"+s+"</button>";}).join("")+"</div></div>"+
+      "<div class='as-msgs' id='assist-msgs'><div class='as-msg bot'>Olá! Posso explicar <b>como o controle funciona</b>, o que é cada conceito, mostrar o <b>passo a passo</b> de uma tarefa ou os <b>números da obra</b> aberta.</div>"+
+      "<div class='as-chips' id='assist-sug'>"+["Como funciona o controle?","Qual o lucro da obra?","Como incluir um colaborador?","Como salvar na nuvem?","O que é o Replan?","Quantas pessoas no efetivo?"].map(function(s){return "<button type='button' class='as-chip' onclick=\"assistEnviar(this.textContent)\">"+s+"</button>";}).join("")+"</div></div>"+
       "<form class='as-form' onsubmit='assistEnviar();return false'><input id='assist-inp' type='text' autocomplete='off' placeholder='Digite sua pergunta…'><button type='submit' class='as-env' title='Enviar'>➤</button></form>";
     document.body.appendChild(p);}
   p.classList.add("on");document.getElementById("assist-btn").classList.add("aberto");
@@ -13283,6 +13279,93 @@ function assistAlternar(){var p=document.getElementById("assist-painel");if(p&&p
   if(typeof AJUDA_LIVRE!=="undefined")["assistAlternar","assistAbrir","assistFechar","assistEnviar","assistIrAba","assistVerAjuda"].forEach(function(k){AJUDA_LIVRE.push(k);});
 })();
 
+// ===================== Rev80: Assistente - visao geral, conceitos e numeros da obra =====================
+// Amplia o assistente: (1) explica como o controle funciona e para que serve cada aba; (2) glossario "o que e...";
+// (3) responde perguntas sobre os numeros da obra aberta (lucro, custo, receita, efetivo, prazo, maiores custos).
+ASSIST_TAREFAS.push(
+ {t:"Como funciona o controle (visão geral)",p:"como funciona controle sistema explicacao explicar resumo resumida visao geral funcionamento introducao entender usar comecar inicio primeiros passos o que faz serve para que",
+  texto:"O controle acompanha <b>quanto a obra vai custar</b> e <b>quanto ela vai faturar</b>, mês a mês, comparando o que foi <b>previsto</b> com o que está <b>acontecendo de verdade</b>.",
+  passos:["<b>Dados da Obra:</b> nome, local e período do contrato. O período define os meses de todas as tabelas.","<b>Custos:</b> você lança a mão de obra (<b>M.O.I</b> = equipe indireta, <b>M.O.D</b> = equipe direta) e as despesas (<b>Custo Indireto</b>, <b>Serviço</b>, <b>Material</b>, <b>Equipamento</b>, <b>Seguros</b>, <b>Contingência</b>), com quantidade e valor de cada mês.","<b>Receita:</b> a EAP de venda do contrato, as <b>medições (BM)</b> e os <b>Take In / Take Out</b>.","<b>Real (incorrido):</b> o <b>Razão</b> importa as notas fiscais; você classifica cada nota em um item e aplica o Real até o mês do Dashboard. Esses meses ficam em verde.","<b>Previsto x Real:</b> o Previsto salvo (Replan) é comparado com o Real no <b>Prev x Real</b> e no <b>Coletor Total</b> (por item da EAP).","<b>Visão Gerencial:</b> <b>Dashboard</b> (lucro, margem, Curva S, avanço), <b>DRE</b> e <b>Curvas ABC</b> resumem tudo.","<b>Salvar:</b> pelo ☰ Menu → Configurações → Ferramentas, na nuvem ou em arquivo JSON."]},
+ {t:"Para que serve cada aba",p:"para que serve cada aba abas telas menu lista explicar funcao de cada onde fica",
+  texto:"Resumo das abas do <b>☰ Menu</b>:",
+  passos:["<b>📌 Dados:</b> Dados da Obra (período, nome) e Importar (planilhas Excel).","<b>📈 Visão Gerencial:</b> Dashboard (indicadores), Coletor Total (Orçado x RAO x Real por EAP), Prev x Real, DRE e Curvas ABC.","<b>💰 Receita:</b> EAP de venda, medições (BM) e Take In / Take Out.","<b>🚧 Custos:</b> Resumo M.O., Custo M.O.I, Custo M.O.D, Custo Indireto, Serviço, Material, Equipamento e Contingência.","<b>📑 Contábil:</b> Razão (notas fiscais), Classificar Razão e Classificação.","<b>📅 Planejamento</b> e <b>🛒 Sistema de Compras:</b> cronograma e pedidos de compra.","<b>⚙️ Configurações:</b> alojamento, horas extras, coeficientes, encargos, ferramentas (salvar) e atalhos."]},
+ {t:"O que é o Previsto",p:"o que e previsto significa planejado orcado linha previsto amarela",texto:"<b>Previsto</b> é o valor planejado de cada item, mês a mês (as linhas amarelas PREVISTO). Ele serve de referência para comparar com o <b>Real</b>. Pode ser editado, fixado (🔒) ou igualado ao Real (🔁)."},
+ {t:"O que é o Real (incorrido) e a projeção",p:"o que e real incorrido projecao realizado gasto verdadeiro meses verdes",texto:"<b>Real</b> é o que de fato aconteceu. Nos meses <b>incorridos</b> (até o mês em que o Real do Razão foi aplicado, em <b>verde</b>), os valores vêm das notas fiscais classificadas. Os meses seguintes são <b>projeção</b> (estimativa do que ainda vai acontecer)."},
+ {t:"O que é Replan (Previsto salvo)",p:"o que e replan previsto salvo replanejamento versao do previsto",texto:"<b>Replan</b> é uma foto do Previsto guardada com nome e data. Serve para comparar a obra com um planejamento anterior no <b>Prev x Real → 👁 Ver Previsto Salvo</b>. Para criar: ☰ Menu → Configurações → ⚡ Atalhos → Salvar Previsto a partir do Real."},
+ {t:"O que é o Razão",p:"o que e razao notas fiscais contabil relatorio nf",texto:"<b>Razão</b> é o relatório contábil com as <b>notas fiscais</b> da obra. Você importa a planilha na aba Razão, classifica cada nota em um item (Classificar Razão) e aplica o Real no Dashboard; a partir daí os custos dos meses incorridos passam a ser os das notas."},
+ {t:"O que é a EAP",p:"o que e eap estrutura analitica projeto item codigo nivel",texto:"<b>EAP</b> (Estrutura Analítica do Projeto) é a lista de itens da obra organizada em níveis (ex.: 1.1.1.4). Os custos são ligados a um <b>Item EAP</b> para somar no Coletor Total, no Prev x Real e na DRE. A Receita tem uma EAP própria (de venda)."},
+ {t:"O que é o Coletor Total",p:"o que e coletor total orcado rao real saldo eap",aba:8,texto:"<b>Coletor Total</b> mostra, para cada item da EAP, o <b>Orçado</b>, o <b>RAO</b>, o <b>Real</b> e o <b>Saldo</b> (Orçado − Real). O Real é somado automaticamente das abas de custo pelo Item EAP."},
+ {t:"O que é o Prev x Real",p:"o que e prev x real previsto versus real desvio comparacao",aba:16,texto:"<b>Prev x Real</b> compara, em cada item de nível 4 da EAP, o <b>Previsto</b> (atual ou um Replan) com o <b>Real</b>, mostrando o <b>desvio</b>. Use 👁 Ocultar/Reexibir para ver só os itens com desvio."},
+ {t:"O que é a DRE",p:"o que e dre demonstrativo resultado exercicio lucro receita",aba:20,texto:"<b>DRE</b> (Demonstrativo de Resultado) organiza Receita, custos e lucro por mês, ligando cada linha às abas do controle."},
+ {t:"O que é a Curva ABC",p:"o que e curva abc classe a b c ranking pareto",aba:22,texto:"<b>Curva ABC</b> ordena os itens do maior para o menor custo. A <b>classe A</b> são os poucos itens que somam a maior parte do valor (padrão: até 80%), a <b>B</b> os seguintes (até 95%) e a <b>C</b> o restante."},
+ {t:"O que é M.O.I e M.O.D",p:"o que e moi mod mao de obra indireta direta diferenca colaborador funcao",texto:"<b>M.O.I</b> (mão de obra indireta) é a equipe de gestão e apoio, cadastrada por <b>colaborador</b> (nome, cargo, salário). <b>M.O.D</b> (mão de obra direta) é a equipe de produção, cadastrada por <b>função</b> (pedreiro, armador...), com a quantidade de pessoas por mês. Nas duas, o custo inclui encargos, adicionais, horas extras, alojamento e VA/VR."},
+ {t:"O que é o Custo Indireto",p:"o que e custo indireto canteiro despesas apoio administrativo",aba:11,texto:"<b>Custo Indireto</b> reúne as despesas de apoio da obra (canteiro, alimentação, transporte, exames, EPI, aluguel de repúblicas...). Cada linha tem valor unitário e quantidade por mês, que pode ser manual ou automática pelo efetivo."},
+ {t:"O que é Contingência",p:"o que e contingencia reserva risco imprevisto percentual",aba:18,texto:"<b>Contingência</b> é a reserva para imprevistos: um percentual sobre o valor de um serviço. O total entra no Custo Indireto e pode ser redistribuído até o fim da obra."},
+ {t:"O que é Take In / Take Out",p:"o que e take in take out acrescimo reducao escopo aditivo",aba:21,texto:"<b>Take In</b> é acréscimo de escopo no contrato; <b>Take Out</b> é redução. O <b>saldo</b> (Take In − Take Out) mostra o impacto no valor do contrato."},
+ {t:"O que é Faturamento Direto",p:"o que e faturamento direto fd fornecedor fatura cliente",texto:"<b>Faturamento Direto (FD)</b> é quando o fornecedor fatura direto para o cliente. Os itens marcados mostram a etiqueta FATURAMENTO DIRETO, e o Dashboard acompanha o FD previsto e o consumido."},
+ {t:"O que é a Coluna de Saldo",p:"o que e coluna de saldo travar totais formula",aba:11,texto:"<b>Coluna de Saldo</b> é uma coluna extra (à direita) que guarda ou calcula um total por linha com uma fórmula, por exemplo para travar os valores antes de aplicar o Real do Razão."},
+ {t:"O que é uma composição",p:"o que e composicao itens filhos linha mae agrupada",texto:"<b>Composição</b> é uma linha-mãe que agrupa outras linhas (filhas). O valor da mãe é a soma das filhas, e o Valor Unitário dela fica fixo em 1."},
+ {t:"O que são encargos e horas extras",p:"o que e encargos sociais hora extra he fgts inss adicional",texto:"<b>Encargos</b> são os custos sobre o salário CLT (FGTS, INSS, 13º, férias...), configurados em Configurações → Encargos. <b>Horas extras</b> são calculadas por função ou setor (semana e fim de semana) em Configurações → H. Extras; o trabalho noturno soma 20% ao adicional."},
+ {t:"O que são os perfis de acesso",p:"o que e visualizador controlador administrador perfil acesso permissao diferenca",texto:"<b>Visualizador:</b> só consulta. <b>Controlador:</b> edita e salva (login com e-mail e senha). <b>Administrador:</b> cria e remove acessos e vê senhas esquecidas (senha mestre)."},
+ {t:"O que é Back Log (saldo a medir)",p:"o que e back log backlog saldo a medir carteira contrato",aba:4,texto:"<b>Back Log</b> é o <b>saldo a medir</b> do contrato: Valor Total do Contrato − Receita Medida Acumulada. Aparece no Dashboard."}
+);
+function assistMesDaPergunta(n){
+  var nomes=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"],m=n.match(/\b(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*\s*(?:de\s*)?(\d{2,4})?\b/);
+  if(!m)return null;var ano=m[2]?(m[2].length===2?"20"+m[2]:m[2]):String(getToday().getFullYear());
+  return ano+"-"+String(nomes.indexOf(m[1])+1).padStart(2,"0");
+}
+function assistLinha(r,v,forte){return "<tr><td>"+r+"</td><td class='as-v'"+(forte?" style='font-weight:800'":"")+">"+v+"</td></tr>";}
+function assistDados(pergunta){
+  var n=assistNorm(pergunta);if(!n)return null;
+  if(/\b(o que e|o que sao|significa|quer dizer|definicao|conceito|como funciona)\b/.test(n))return null; // pergunta de conceito: responde pelo glossario
+  var semObra=!(S.landingJsonCarregado||(S.moiData||[]).length||(S.modData||[]).length||(S.indiretoData||[]).length);
+  var quer=function(rx){return rx.test(n);};
+  var pergNum=/\b(quanto|quantos|quantas|qual|quais|valor|total|mostre|mostrar|ver)\b/.test(n);
+  try{
+    if(quer(/\b(lucro|margem|prejuizo|resultado da obra|rentabilidade)\b/)){
+      if(semObra)return "Não há uma obra carregada para calcular o lucro.";
+      var rec=receitaTotalContratado(),cus=calcTotalRealGeral(),luc=rec-cus,mg=rec>0?luc/rec*100:null;
+      return "<div class='as-tit'>💰 Lucro e margem — "+assistEsc(S.projNome||"obra")+"</div><table class='as-tab'>"+assistLinha("Valor total do contrato",fmt(rec))+assistLinha("Custo total (real + projeção)",fmt(cus))+assistLinha(luc<0?"Prejuízo":"Lucro",fmt(luc),true)+assistLinha("Margem",mg===null?"—":mg.toLocaleString("pt-BR",{maximumFractionDigits:2})+"%",true)+"</table><div class='as-bts'><button type='button' class='as-bt' onclick='assistIrAba(4)'>📍 Abrir o Dashboard</button></div>";}
+    if(quer(/\b(custo total|custo da obra|quanto custa|quanto vai custar|gasto total|total de custo|total dos custos|custos totais)\b/)||(pergNum&&quer(/\bcusto\b/)&&!quer(/\b(como|incluir|lancar)\b/))){
+      if(semObra)return "Não há uma obra carregada.";
+      var cp=custoPorMes(),mo=0;mesesObra().forEach(function(m){mo+=(cp[m]&&cp[m].total)||0;});
+      var cats=[["Mão de obra (M.O.I + M.O.D)",mo]].concat([["Custo Indireto","Indireto"],["Serviço","Servico"],["Material","Material"],["Equipamento","Equipamento"],["Seguros","Seguro"]].map(function(c){return [c[0],calcTotalIndiretoObra(c[1])];}));
+      var tot=cats.reduce(function(s,c){return s+c[1];},0);
+      return "<div class='as-tit'>🚧 Custo total da obra</div><table class='as-tab'>"+cats.filter(function(c){return c[1];}).sort(function(a,b){return b[1]-a[1];}).map(function(c){return assistLinha(c[0],fmt(c[1])+" <small>("+(tot?(c[1]/tot*100).toFixed(1):0)+"%)</small>");}).join("")+assistLinha("Total",fmt(tot),true)+"</table><div class='as-outros'>Inclui os meses já realizados e a projeção dos próximos.</div>";}
+    if(quer(/\b(receita|contrato|medido|medicao acumulada|saldo a medir|back ?log|faturamento|faturado)\b/)&&(pergNum||quer(/\b(saldo|back)\b/))&&!quer(/\b(como|lancar|importar|editar)\b/)){
+      if(semObra)return "Não há uma obra carregada.";
+      var rc=receitaTotalContratado(),md=receitaMedidoAcumulado(),fd=receitaFatDiretoAcumulado();
+      return "<div class='as-tit'>💰 Receita do contrato</div><table class='as-tab'>"+assistLinha("Valor total do contrato",fmt(rc))+assistLinha("Medido acumulado",fmt(md)+(rc?" <small>("+(md/rc*100).toFixed(2)+"%)</small>":""))+assistLinha("Faturamento direto acumulado",fmt(fd))+assistLinha("Saldo a medir (Back Log)",fmt(rc-md),true)+"</table><div class='as-bts'><button type='button' class='as-bt' onclick='assistIrAba(15)'>📍 Abrir a Receita</button></div>";}
+    if(quer(/\b(quantos|quantas|numero de|total de)\b.*\b(colaborador|colaboradores|pessoa|pessoas|funcionario|funcionarios|efetivo|trabalhador)/)||quer(/\befetivo\b/)&&(pergNum||assistMesDaPergunta(n))&&!quer(/\b(como|automatic|automatica)\b/)){
+      if(semObra)return "Não há uma obra carregada.";
+      var mes=assistMesDaPergunta(n);var ms=mesesObra();if(!mes||ms.indexOf(mes)<0)mes=ms.indexOf(getMA())>=0?getMA():(S.mesSel||ms[0]);
+      var sm=function(arr){return (arr||[]).reduce(function(s,x){return s+((x.qtdPorMes&&x.qtdPorMes[mes])||0);},0);};
+      var moi=sm(S.moiData),mod=sm(S.modData);
+      var ativosMoi=(S.moiData||[]).filter(function(p){return !p.desmobilizado;}).length;
+      return "<div class='as-tit'>👥 Efetivo em "+mlbl(mes)+"</div><table class='as-tab'>"+assistLinha("M.O.I (pessoas no mês)",moi.toLocaleString("pt-BR"))+assistLinha("M.O.D (pessoas no mês)",mod.toLocaleString("pt-BR"))+assistLinha("Total",(moi+mod).toLocaleString("pt-BR"),true)+"</table><div class='as-outros'>Cadastros: "+(S.moiData||[]).length+" colaboradores na M.O.I ("+ativosMoi+" ativos) e "+(S.modData||[]).length+" funções na M.O.D. Para outro mês, pergunte por exemplo <i>“efetivo em mar/27”</i>.</div>";}
+    if(quer(/\b(maior|maiores|mais caro|mais caros|principais custos|top|ranking)\b/)&&quer(/\b(custo|custos|item|itens|gasto|gastos|despesa|despesas)\b/)){
+      if(semObra)return "Não há uma obra carregada.";
+      var ms2=mesesObra(),lista=[];
+      (S.indiretoData||[]).forEach(function(it){if(it.composicaoPai)return;var q=0;ms2.forEach(function(m){q+=(it.qtdPorMes&&it.qtdPorMes[m])||0;});var v=q*(it.valorUnit||0);if(v>0)lista.push([it.descricao||"(sem nome)",(CAT_CFG[it.categoria]||{}).label||it.categoria,v]);});
+      lista.sort(function(a,b){return b[2]-a[2];});
+      return "<div class='as-tit'>🏆 Maiores custos (fora mão de obra)</div><table class='as-tab'>"+lista.slice(0,5).map(function(x,i){return assistLinha((i+1)+". "+assistEsc(x[0])+" <small>· "+assistEsc(x[1])+"</small>",fmt(x[2]));}).join("")+"</table><div class='as-bts'><button type='button' class='as-bt' onclick=\"abrirCurvaAbc('total');assistFechar()\">📍 Ver a Curva ABC</button></div>";}
+    if(quer(/\b(prazo|periodo|quando termina|termino|fim da obra|inicio da obra|tempo de obra|dias restantes|quantos meses|duracao)\b/)){
+      var tp=calcTempoObra(),ms3=mesesObra();
+      return "<div class='as-tit'>📅 Prazo da obra</div><table class='as-tab'>"+assistLinha("Período do contrato",mlbl(S.obraIni)+" a "+mlbl(S.obraFim)+" ("+ms3.length+" meses)")+(tp?assistLinha("Dias decorridos",(tp.naoIniciada?0:tp.decorridosLim)+" de "+tp.prazo)+assistLinha("Tempo consumido",tp.pct.toLocaleString("pt-BR",{maximumFractionDigits:1})+"%",true)+assistLinha("Término previsto",fmtDataBR(tp.fim)):"")+"</table>"+(tp?"":"<div class='as-outros'>Para ver dias decorridos, informe a data de início e o prazo em Dados da Obra.</div>");}
+    if(quer(/\b(real do razao|razao aplicado|real aplicado|ate quando|ultimo mes aplicado|incorrido ate)\b/)){
+      return S.razaoRealAte?"O Real do Razão está aplicado até <b>"+mlbl(S.razaoRealAte)+"</b>. Esses meses aparecem em verde nas tabelas.":"O Real do Razão <b>ainda não foi aplicado</b>. Para aplicar: Dashboard → escolha o mês → botão Real do Razão.";}
+    if(quer(/\b(qual obra|que obra|projeto aberto|obra aberta|nome da obra)\b/)){
+      return "A obra aberta é <b>"+assistEsc(S.projNome||"(sem nome)")+"</b>"+(S.projLocal?", em "+assistEsc(S.projLocal):"")+".";}
+  }catch(e){return null;}
+  return null;
+}
+function assistConversa(n){
+  if(/^(oi|ola|bom dia|boa tarde|boa noite|e ai|opa|hello|hey)\b/.test(n)&&n.split(" ").length<=4)return "Olá! 😊 Posso explicar como o controle funciona, o que é cada conceito, como fazer algo passo a passo ou mostrar os números da obra aberta (lucro, custo, efetivo, prazo).";
+  if(/\b(obrigad|valeu|vlw|brigad|thanks)/.test(n))return "Por nada! Se precisar de mais alguma coisa, é só perguntar. 👍";
+  if(/^(o que voce faz|o que vc faz|o que voce sabe|ajuda|help|menu|como voce funciona)$/.test(n))return null;
+  return null;
+}
+
 // ===================== Rev80: tela de boas-vindas ao entrar no controle =====================
 // Aparece quando a tela inicial fecha (Visualizador, Controlador, Comecar do zero, Projeto novo). Some em 5 s ou com qualquer tecla/clique.
 var _bvTimer=null;
@@ -13294,18 +13377,21 @@ function bvNomeUsuario(){
 }
 function boasVindasMostrar(){
   var o=document.getElementById("bv-tela");
-  if(!o){o=document.createElement("div");o.id="bv-tela";
-    o.innerHTML="<div class='bv-luz'></div><div class='bv-card'><div class='bv-logo'><img id='bv-logo' alt=''><span id='bv-ico'>&#128202;</span></div>"+
-      "<div class='bv-ola'>Bem-vindo(a)</div><div class='bv-perfil' id='bv-perfil'></div><div class='bv-nome' id='bv-nome'></div><div class='bv-obra' id='bv-obra'></div>"+
-      "<div class='bv-barra'><i></i></div><div class='bv-dica'>Clique ou pressione qualquer tecla para continuar</div></div>";
+  if(!o){o=document.createElement("div");o.id="bv-tela";o.setAttribute("role","dialog");o.setAttribute("aria-label","Boas-vindas");
+    o.innerHTML="<div class='bv-card'><div class='bv-logo' id='bv-logo'></div><h2 class='bv-ola' id='bv-ola'></h2><div class='bv-obra' id='bv-obra'></div>"+
+      "<div class='bv-chips' id='bv-chips'></div><div class='bv-cont'><svg viewBox='0 0 36 36'><circle cx='18' cy='18' r='15' stroke='#e2e8f0' stroke-width='3' fill='none'/>"+
+      "<circle class='bv-anel' cx='18' cy='18' r='15' stroke-width='3' fill='none' stroke-linecap='round' transform='rotate(-90 18 18)'/></svg><span>Entrando…</span></div></div>";
     document.body.appendChild(o);
     o.addEventListener("mousedown",boasVindasFechar);o.addEventListener("touchstart",boasVindasFechar,{passive:true});}
-  var u=bvNomeUsuario(),lg=document.getElementById("bv-logo"),ic=document.getElementById("bv-ico");
-  if(S.logoB64){lg.src=S.logoB64;lg.style.display="block";ic.style.display="none";}else{lg.removeAttribute("src");lg.style.display="none";ic.style.display="block";}
-  document.getElementById("bv-perfil").textContent=u.perfil;
-  document.getElementById("bv-nome").textContent=u.perfil==="Visualizador"?"Bom trabalho!":u.nome;
-  document.getElementById("bv-obra").textContent=S.projNome?("\u{1F3D7}️ "+S.projNome):"";
-  o.classList.remove("saindo");void o.offsetWidth;o.classList.add("on");
+  var u=bvNomeUsuario(),h=new Date().getHours(),sd=h<12?"Bom dia":h<18?"Boa tarde":"Boa noite";
+  var lg=document.getElementById("bv-logo");
+  if(S.logoB64){lg.innerHTML="<img alt=''>";lg.firstChild.src=S.logoB64;}else lg.innerHTML="<span>&#128202;</span>";
+  logoCores(function(c){o.style.setProperty("--bv-cor",(c&&c[0])||"#1e3a5f");});
+  document.getElementById("bv-ola").textContent=u.perfil==="Visualizador"?sd+"!":sd+", "+u.nome;
+  document.getElementById("bv-obra").textContent="Bem-vindo(a) ao "+(S.projNome||"Controle de Custos");
+  var ch=[];if(S.projLocal)ch.push("\u{1F4CD} "+S.projLocal);ch.push("\u{1F464} "+u.perfil);ch.push("\u{1F4C5} "+new Date().toLocaleDateString("pt-BR"));
+  var cc=document.getElementById("bv-chips");cc.innerHTML="";ch.forEach(function(x){var s=document.createElement("span");s.textContent=x;cc.appendChild(s);});
+  o.classList.remove("on","saindo");void o.offsetWidth;o.classList.add("on");
   clearTimeout(_bvTimer);_bvTimer=setTimeout(boasVindasFechar,5000);
   setTimeout(function(){document.addEventListener("keydown",boasVindasFechar,true);},150);
 }
@@ -13431,30 +13517,108 @@ function naoSalvoEscolher(op){
   if(typeof carregarExcelJS==="function"){var orig=carregarExcelJS;window.carregarExcelJS=function(){return orig.apply(this,arguments).then(function(v){patchExcelJS();return v;});};}
   patchExcelJS();
 })();
-// ===================== Rev80: tela de carregamento animada (importar JSON ou versao da nuvem) =====================
-var _carIni=0,_carTimer=null;
+// ===================== Rev80: cores tiradas da logo (carregamento e boas-vindas acompanham a logo automaticamente) =====================
+var _logoCoresCache={k:null,c:null};
+function logoChave(){var s=S.logoB64||"";return s?(s.length+":"+s.slice(-40)):"";}
+function logoCores(cb){
+  var k=logoChave();if(!k){cb(null);return;}
+  if(_logoCoresCache.k===k){cb(_logoCoresCache.c);return;}
+  var im=new Image();im.onload=function(){
+    try{var n=64,cv=document.createElement("canvas"),r=Math.min(1,n/Math.max(im.width,im.height));cv.width=Math.max(1,Math.round(im.width*r));cv.height=Math.max(1,Math.round(im.height*r));
+      var cx=cv.getContext("2d");cx.drawImage(im,0,0,cv.width,cv.height);var px=cx.getImageData(0,0,cv.width,cv.height).data,bins={};
+      for(var i=0;i<px.length;i+=4){if(px[i+3]<200)continue;var R=px[i]/255,G=px[i+1]/255,B=px[i+2]/255,mx=Math.max(R,G,B),mn=Math.min(R,G,B),d=mx-mn;
+        if(mx<.18||d/mx<.35)continue; // ignora preto, branco e cinza
+        var h=d===0?0:mx===R?((G-B)/d)%6:mx===G?(B-R)/d+2:(R-G)/d+4;h=(h*60+360)%360;var bk=Math.round(h/20)%18;
+        var o=bins[bk]||(bins[bk]={n:0,r:0,g:0,b:0,h:0});o.n++;o.r+=px[i];o.g+=px[i+1];o.b+=px[i+2];o.h+=h;}
+      var lista=Object.keys(bins).map(function(k){var o=bins[k];return {n:o.n,h:o.h/o.n,cor:"#"+[o.r,o.g,o.b].map(function(v){return ("0"+Math.round(v/o.n).toString(16)).slice(-2);}).join("")};})
+        .filter(function(o){return o.n>=4;}).sort(function(a,b){return b.n-a.n;}).slice(0,4).sort(function(a,b){return b.h-a.h;});
+      var c=lista.length?lista.map(function(o){return o.cor;}):null;_logoCoresCache={k:k,c:c};cb(c);
+    }catch(e){_logoCoresCache={k:k,c:null};cb(null);}
+  };im.onerror=function(){cb(null);};im.src=S.logoB64;
+}
+// ===================== Rev80: tela de carregamento (opcao A: logo, barra nas cores da logo e etapas) =====================
+var _carIni=0,_carTimer=null,_carPasso=null,_car={et:[],at:0,alvo:0,esp:[]},_carLogoTmp=null,_carProntoT=null;
+var CAR_TIPOS=[
+  {re:/^Lendo o arquivo/,tit:"Carregando base de dados",et:["Lendo o arquivo da base","Conferindo a estrutura dos dados","Carregando colaboradores e efetivo","Calculando custos e projeções","Montando as abas"]},
+  {re:/^Baixando da nuvem/,tit:"Carregando base de dados",et:["Baixando da nuvem","Conferindo a estrutura dos dados","Calculando custos e projeções","Montando as abas","Carregando anexos"]},
+  {re:/^(Enviando para a nuvem|Salvando)/,tit:"Salvando na nuvem",et:["Preparando os dados","Enviando para a nuvem","Enviando anexos","Confirmando o salvamento"]},
+  {re:/^Lendo a planilha/,tit:"Importando planilha",et:["Lendo a planilha","Conferindo as colunas","Importando os lançamentos"]},
+  {re:/^Gerando a planilha/,tit:"Exportando para Excel",et:["Reunindo os dados","Gerando a planilha","Preparando o download"]},
+  {re:/Real do Raz/,tit:"Aplicando o Real do Razão",et:["Lendo as notas classificadas","Somando por mês","Atualizando o painel"]}];
+// logo a mostrar: a que esta chegando com a base, a atual, ou a ultima usada neste computador
+function carLogoSrc(){if(_carLogoTmp)return _carLogoTmp;if(S.logoB64)return S.logoB64;try{return localStorage.getItem("cc_logo_ultima")||"";}catch(e){return "";}}
+function carDesenha(){
+  var o=document.getElementById("car-overlay");if(!o)return;if(o.dataset.lk!==(carLogoSrc().length+":"+carLogoSrc().slice(-40)))carLogo(o); // logo trocou: acompanha na hora
+  var n=_car.et.length,lis=o.querySelectorAll(".car-etapas li");
+  lis.forEach(function(li,j){if(li.className!=="er")li.className=j<_car.at?"ok":j===_car.at?"at":"";});
+  var p=o.classList.contains("ok")?100:Math.min(95,Math.round(_car.at/n*100));
+  o.querySelector(".car-barra i").style.width=(o.classList.contains("erro")?Math.max(p,8):p)+"%";o.querySelector(".car-pct").textContent=p+"%";
+  _car.esp=_car.esp.filter(function(w){if(_car.at>=w.i){w.r();return false;}return true;});
+}
+function carLogo(o){
+  var m=o.querySelector(".car-marca"),src=carLogoSrc();o.dataset.lk=src.length+":"+src.slice(-40);
+  if(src){m.innerHTML="<img alt=''>";m.firstChild.src=src;try{if(localStorage.getItem("cc_logo_ultima")!==src)localStorage.setItem("cc_logo_ultima",src);}catch(e){}}
+  else{m.innerHTML="<span></span>";m.firstChild.textContent=S.projNome||"Controle de Custos";}
+  var salva=S.logoB64;S.logoB64=src;logoCores(function(c){c=c&&c.length?c:["#1e3a5f","#2f6f5e"];if(c.length===1)c=[c[0],c[0]];
+    o.style.setProperty("--car-g","linear-gradient(90deg,"+c.join(",")+")");o.style.setProperty("--car-c1",c[0]);});S.logoB64=salva;
+}
+// as etapas so comecam a andar depois que a logo apareceu
+function carPronto(){var o=document.getElementById("car-overlay");if(o&&!o.classList.contains("pronto")){o.classList.add("pronto");carDesenha();}}
 function carregandoMostrar(texto,sub){
   var o=document.getElementById("car-overlay");
-  if(!o){o=document.createElement("div");o.id="car-overlay";
-    o.innerHTML="<div class='car-card'><div class='car-anel'><div class='car-giro'></div><div class='car-centro'><img id='car-logo' alt=''><span id='car-ico'>&#128202;</span><svg class='car-ok' viewBox='0 0 52 52'><circle cx='26' cy='26' r='24'/><path d='M15 27l7 7 15-15'/></svg></div></div>"+
-      "<div class='car-tit' id='car-tit'></div><div class='car-sub' id='car-sub'></div><div class='car-barra'><i></i></div></div>";
-    document.body.appendChild(o);}
-  var lg=document.getElementById("car-logo"),ic=document.getElementById("car-ico");
-  if(S.logoB64){lg.src=S.logoB64;lg.style.display="block";ic.style.display="none";}else{lg.removeAttribute("src");lg.style.display="none";ic.style.display="block";}
-  o.classList.remove("ok","saindo","erro");o.classList.add("on");
-  carregandoTexto(texto,sub);_carIni=Date.now();clearTimeout(_carTimer);
+  if(!o){o=document.createElement("div");o.id="car-overlay";o.setAttribute("role","status");o.setAttribute("aria-live","polite");document.body.appendChild(o);}
+  var tipo=CAR_TIPOS.find(function(x){return x.re.test(texto||"");});
+  _car={et:tipo?tipo.et.slice():[texto||"Carregando"],at:0,alvo:0,esp:[]};_carLogoTmp=null;
+  if(tipo&&/^Salvando/.test(texto||""))_car.et[0]=texto;
+  _car.alvo=Math.max(0,_car.et.length-2); // anda sozinho ate a penultima; a ultima fecha quando o trabalho termina de verdade
+  o.innerHTML="<div class='car-marca'></div><div class='car-caixa'><div class='car-lin'><span class='car-tit'></span><span class='car-pct'>0%</span></div>"+
+    "<div class='car-barra'><i></i></div><div class='car-sub'></div><ul class='car-etapas'>"+_car.et.map(function(e){return "<li><span class='ic'></span><span class='tx'></span></li>";}).join("")+"</ul></div>"+
+    "<div class='car-rod'></div>";
+  o.querySelectorAll(".car-etapas .tx").forEach(function(s,j){s.textContent=_car.et[j];});
+  o.querySelector(".car-tit").textContent=tipo?tipo.tit:(texto||"Carregando");
+  o.querySelector(".car-sub").textContent=sub||"";
+  o.querySelector(".car-rod").textContent=[S.projNome,S.projLocal].filter(Boolean).join(" · ");
+  carLogo(o);
+  o.classList.remove("ok","saindo","erro","pronto");void o.offsetWidth;o.classList.add("on");
+  _carIni=Date.now();clearTimeout(_carTimer);clearInterval(_carPasso);clearTimeout(_carProntoT);carDesenha();
+  _carProntoT=setTimeout(carPronto,900); // tempo para a logo aparecer antes das etapas
+  _carPasso=setInterval(function(){if(o.classList.contains("pronto")&&_car.at<_car.alvo){_car.at++;carDesenha();}},380);
 }
-function carregandoTexto(texto,sub){var t=document.getElementById("car-tit"),s=document.getElementById("car-sub");if(t&&texto!=null)t.textContent=texto;if(s&&sub!=null)s.textContent=sub;}
+// troca a logo da tela pela que veio na base que esta sendo aberta; espera ela aparecer
+function carregandoLogo(src){
+  var o=document.getElementById("car-overlay");if(!o||!src||src===carLogoSrc())return Promise.resolve();
+  _carLogoTmp=src;o.classList.remove("pronto");carLogo(o);clearTimeout(_carProntoT);
+  return new Promise(function(r){_carProntoT=setTimeout(function(){carPronto();r();},800);});
+}
+// texto de uma etapa: a tela anda ate ela, uma etapa por vez; devolve uma promessa que termina quando chegar la
+function carregandoTexto(texto,sub){
+  var o=document.getElementById("car-overlay");if(!o)return Promise.resolve();
+  if(sub!=null){var s=o.querySelector(".car-sub");if(s)s.textContent=sub;}
+  if(texto==null)return Promise.resolve();
+  var i=_car.et.indexOf(texto);
+  if(i<0){var li=o.querySelectorAll(".car-etapas .tx")[_car.at];if(li){li.textContent=texto;_car.et[_car.at]=texto;}carDesenha();return Promise.resolve();}
+  if(i>_car.alvo)_car.alvo=i;
+  if(_car.at>=i)return Promise.resolve();
+  return new Promise(function(r){var w={i:i,r:r};_car.esp.push(w);setTimeout(function(){if(_car.esp.indexOf(w)>=0){_car.esp.splice(_car.esp.indexOf(w),1);r();}},6000);});
+}
 // deixa o navegador desenhar a animacao antes de um trabalho pesado
 function carregandoPintar(){return new Promise(function(r){var feito=false,ok=function(){if(!feito){feito=true;r();}};requestAnimationFrame(function(){setTimeout(ok,30);});setTimeout(ok,80);});} // Rev80: nao trava se a aba estiver em segundo plano
 function carregandoFim(ok,texto){
   var o=document.getElementById("car-overlay");if(!o)return;
-  var espera=Math.max(0,900-(Date.now()-_carIni)); // fica pelo menos ~0,9 s para a animacao ser vista
+  var espera=Math.max(0,1800-(Date.now()-_carIni)); // logo + etapas: fica pelo menos ~1,8 s
+  clearTimeout(_carTimer);
   _carTimer=setTimeout(function(){
-    if(ok){if(S.logoB64){var lg=document.getElementById("car-logo");if(lg){lg.src=S.logoB64;lg.style.display="block";document.getElementById("car-ico").style.display="none";}}
-      o.classList.add("ok");carregandoTexto(texto||"Pronto!","");}
-    else{o.classList.add("erro");carregandoTexto(texto||"Não foi possível carregar","");}
-    _carTimer=setTimeout(function(){o.classList.add("saindo");_carTimer=setTimeout(function(){o.classList.remove("on","saindo","ok","erro");},350);},ok?750:1200);
+    clearInterval(_carPasso);carPronto();_carLogoTmp=null;
+    if(ok){
+      (function marca(){if(_car.at<_car.et.length){_car.at++;carDesenha();_carTimer=setTimeout(marca,140);return;}
+        carLogo(o); // a base pode ter trazido outra logo
+        o.classList.add("ok");o.querySelector(".car-tit").textContent=texto||"Pronto";o.querySelector(".car-sub").textContent="";carDesenha();
+        _carTimer=setTimeout(function(){o.classList.add("saindo");_carTimer=setTimeout(function(){o.classList.remove("on","saindo","ok","erro","pronto");},350);},750);})();
+    }else{
+      o.classList.add("erro");var li=o.querySelectorAll(".car-etapas li")[_car.at];if(li)li.className="er";
+      o.querySelector(".car-tit").textContent=texto||"Não foi possível carregar";carDesenha();
+      _carTimer=setTimeout(function(){o.classList.add("saindo");_carTimer=setTimeout(function(){o.classList.remove("on","saindo","ok","erro","pronto");},350);},1600);
+    }
   },espera);
 }
 // ===================== Rev80: menus de acoes (botoes agrupados), no mesmo vidro do Ocultar/Reexibir =====================
