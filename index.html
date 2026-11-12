@@ -799,6 +799,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
   background:rgba(255,255,255,.16);color:#fff;font-size:9px;vertical-align:middle;line-height:1;transition:background .15s}
 .xf-bt:hover{background:rgba(255,255,255,.32)}
 .xf-bt.on{background:#fbbf24;color:#1e293b}
+thead tr+tr .xf-bt{width:15px;height:15px;margin-left:4px;font-size:8px}
 .xf-pop{position:fixed;z-index:10060;width:290px;max-width:calc(100vw - 16px);background:#fff;border:1px solid #cbd5e1;border-radius:12px;
   box-shadow:0 18px 44px rgba(15,23,42,.28);font:13px "Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,sans-serif;color:#1e293b;padding:8px;text-align:left;font-weight:400}
 .xf-pop .xf-tit{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:4px 6px 6px}
@@ -855,6 +856,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ctc-info
 .as-bt{all:unset;cursor:pointer;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;color:#0a58ca;background:rgba(0,122,255,.10);border:1px solid rgba(0,122,255,.25)}
 .as-bt:hover{background:rgba(0,122,255,.18)}
 .as-tab{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}.as-tab td{padding:5px 2px;border-bottom:1px solid #f1f5f9;vertical-align:top}.as-tab td.as-v{text-align:right;white-space:nowrap;font-family:ui-monospace,Consolas,monospace;color:#0f172a}.as-tab small{color:#64748b;font-family:inherit}
+.as-imp{margin:8px 0 4px;padding:8px 10px;border-radius:10px;background:#f0f9ff;border:1px solid #bae6fd;font-size:12.5px;color:#0c4a6e}
+.as-imp b{color:#075985}.as-imp ul{margin:4px 0 0 16px;padding:0}.as-imp li{margin:3px 0}
+.as-aviso{margin:6px 0;padding:6px 10px;border-radius:9px;background:#fffbeb;border:1px solid #fde68a;font-size:12px;color:#92400e}
+.as-onde2{font-size:12.5px;color:#334155;margin:4px 0}
 .as-outros{margin-top:8px;font-size:11.5px;color:#64748b}.as-outros a{color:#0a58ca}
 .as-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .as-chip{all:unset;cursor:pointer;padding:6px 11px;border-radius:999px;font-size:12px;color:#334155;background:#fff;border:1px solid #e2e8f0}
@@ -7998,7 +8003,7 @@ function renderIndiretoMatrix(categoria){
   if(!thead||!tbody||!tfoot)return;
   var meses=mesesObra();
   var comQtd=(categoria!=="Seguro"),QX=comQtd?1:0;
-  var comFiltro=(categoria!=="Seguro"),fAtual=FILTRO_IND[categoria]||{}; // Rev53: filtro no cabecalho (Descricao / Fornecedor) // Rev53: coluna "Qtd Total" (Indireto/Servico/Material/Equipamento)
+  var comFiltro=false /* Rev80: substituido pelo filtro estilo Excel das colunas */,fAtual=FILTRO_IND[categoria]||{}; // Rev53: filtro no cabecalho (Descricao / Fornecedor) // Rev53: coluna "Qtd Total" (Indireto/Servico/Material/Equipamento)
   var L=[0,110,230];
   var sC=function(i,bg){return "position:sticky;left:"+L[i]+"px;z-index:2;background:"+(bg||"#fff")+";";};
   // Cabecalho em 2 linhas: linha 1 = nome do mes (colspan 2), linha 2 = Qtd / Valor
@@ -13457,8 +13462,8 @@ function tourAchar(sel){
     for(var j=0;j<els.length;j++){if(tourVisivel(els[j]))return els[j];}}
   return null;
 }
-function tourIniciar(chave){
-  var t=TOURS[chave];if(!t||!t.passos||!t.passos.length)return;
+function tourIniciar(chave,cat){
+  var t=(typeof tourVariante==="function")?tourVariante(chave,cat||tourCatAtual(chave)):TOURS[chave];if(!t||!t.passos||!t.passos.length)return;
   tourSair(true);
   ["modal-apres-atl"].forEach(function(id){var m=document.getElementById(id);if(m)m.classList.remove("on");});
   if(typeof assistFechar==="function")assistFechar();
@@ -13477,7 +13482,7 @@ function tourTecla(e){if(!_tour)return;
   else if(e.key==="ArrowRight"||e.key==="Enter"){e.preventDefault();e.stopPropagation();tourIr(1);}
   else if(e.key==="ArrowLeft"){e.preventDefault();e.stopPropagation();tourIr(-1);}
   else if(!e.target.closest||!e.target.closest("#tour-balao")){e.preventDefault();e.stopPropagation();}}
-function tourIr(d){if(!_tour)return;var n=_tour.i+d;if(n<0)return;if(n>=_tour.t.passos.length){tourSair();return;}tourPasso(n);}
+function tourIr(d){if(!_tour)return;_tour.dir=d<0?-1:1;var n=_tour.i+d;if(n<0)return;if(n>=_tour.t.passos.length){tourSair();return;}tourPasso(n);}
 function tourPasso(n){
   var p=_tour.t.passos[n];_tour.i=n;_tour.el=null;
   var b=document.getElementById("tour-balao");if(b)b.classList.add("trocando");
@@ -13487,7 +13492,8 @@ function tourPasso(n){
   (function procurar(){
     if(!_tour||_tour.i!==n)return;
     var el=tourAchar(p.sel);
-    if(!el&&p.sel&&tentativas++<8){setTimeout(procurar,90);return;}
+    if(!el&&p.sel&&tentativas++<(_tour.t.pular?3:8)){setTimeout(procurar,90);return;}
+    if(!el&&p.sel&&_tour.t.pular){var dd=_tour.dir||1,m2=n+dd;if(m2>=0&&m2<_tour.t.passos.length){tourPasso(m2);return;}} // campo que nao existe nesta aba
     _tour.el=el;
     if(el){var r=el.getBoundingClientRect();if(r.top<70||r.bottom>window.innerHeight-40)el.scrollIntoView({block:"center",behavior:"smooth"});}
     tourBalao(p,n);setTimeout(tourPosicionar,30);setTimeout(tourPosicionar,380);
@@ -14704,8 +14710,7 @@ var TOURS_C={
 
  c_lancarMes:{t:"Lançar a quantidade ou o valor de cada mês",passos:[
   {aba:11,sel:"#indireto-cards",tit:"Cartões do topo",txt:"<b>Total</b> da aba (todos os meses), <b>Itens Cadastrados</b> e <b>Custo no Mês Selecionado</b> (mês escolhido no Dashboard). Na aba Serviço não há o cartão do mês."},
-  {sel:"#filt-desc-Indireto",tit:"Filtrar descrição",txt:"Digite parte da descrição para mostrar só as linhas que a contêm (os itens de dentro das composições também são procurados).",info:"Qualquer pedaço do nome do item, sem se preocupar com acento.",ex:"container"},
-  {sel:"#filt-forn-Indireto",tit:"Filtrar fornecedor",txt:"Mesmo filtro, pelo fornecedor. Com filtro ligado aparece o botão <b>✕ Limpar</b> ao lado de Exportar Excel.",ex:"Alfa"},
+  {sel:"#indiretomat-thead .xf-bt",tit:"Filtros &#9660; das colunas",txt:"Cada coluna tem a setinha &#9660;: ela abre o filtro igual ao do Excel (ordenar, pesquisar, marcar valores e, nas colunas de n&uacute;meros, faixa de/at&eacute;). Vale tamb&eacute;m para a Qtd e o Valor de cada m&ecirc;s.",info:"Na Descri&ccedil;&atilde;o ou no Fornecedor, digite parte do texto em Pesquisar e clique em OK.",ex:"container"},
   {sel:"#indiretomat-tbody input[id^='indi-q-']",tit:"Coluna Qtd do mês",txt:"Digite a quantidade do mês. O Valor ao lado é calculado: <b>Valor = Qtd × Valor Unitário</b>.",info:"Quantidade consumida/contratada no mês. Para apagar, deixe vazio ou 0.",ex:"1"},
   {sel:"#indiretomat-tbody input[id^='indi-v-']",tit:"Coluna Valor (R$) do mês",txt:"Ou digite o valor em reais: a quantidade é calculada como <b>Valor ÷ Valor Unitário</b>. Se o Valor Unitário for zero, o valor não grava.",ex:"8.500,00"},
   {sel:"#indiretomat-thead th[data-r1]",tit:"Qtd Total",txt:"Soma das quantidades de todos os meses da linha, com a unidade."},
@@ -14893,7 +14898,7 @@ var ASSIST_C=[
  {t:"O que mostram os cartões do topo da aba de custo?",p:"cartoes cards topo total itens cadastrados custo mes selecionado resumo",aba:11,tour:"c_lancarMes",
   texto:"<b>Total</b> da aba em todos os meses, <b>Itens Cadastrados</b> e <b>Custo no Mês Selecionado</b> (mês escolhido no Dashboard). Na aba Serviço não existe o cartão do mês."},
  {t:"Como filtro por descrição ou fornecedor?",p:"filtrar filtro buscar procurar descricao fornecedor tabela custo limpar",aba:11,aj:"filtroIndiretoLimpar",tour:"c_lancarMes",
-  texto:"Digite nos campos <b>🔍 Filtrar descrição</b> e <b>🔍 Filtrar fornecedor</b> do cabeçalho da tabela. Acentos e maiúsculas não importam, e os itens de dentro das composições também são procurados. Para tirar, clique em <b>✕ Limpar</b>. A aba Seguros não tem esses filtros."},
+  texto:"Clique na setinha <b>&#9660;</b> no cabe&ccedil;alho da coluna <b>Descri&ccedil;&atilde;o</b> ou <b>Fornecedor</b>, digite parte do texto em <b>Pesquisar</b> e clique em <b>OK</b> (igual ao filtro do Excel). D&aacute; para combinar filtros em v&aacute;rias colunas, inclusive na Qtd e no Valor de cada m&ecirc;s. Para tirar, clique em <b>Limpar filtros</b> na faixa amarela acima da tabela."},
  {t:"Como reorganizo a ordem das linhas?",p:"ordem reordenar arrastar mover linha posicao subir descer",aba:11,
   texto:"Arraste a linha pela alça <b>⋮⋮</b> (ao lado do Nº do Pedido) e solte sobre outra linha. Só é possível reordenar dentro da mesma aba e do mesmo grupo de Item EAP."},
  {t:"Como recolho um grupo de Item EAP na tabela?",p:"recolher expandir grupo eap seta esconder linhas grupo",aba:11,
@@ -15759,7 +15764,7 @@ var XF={};
 function xfNum(s){s=String(s||"").replace(/ /g," ").trim();var u=s.match(/^(R\$\s*)?(-?[\d.,]+)\s*(%|[A-Za-zÀ-ÿ\/]{1,12})?$/);if(u)s=u[2];else s=s.replace(/R\$|%|\s/g,"");if(/^-?\d+\.\d{1,2}$/.test(s))return parseFloat(s); // 78.0 (ponto decimal)
   if(!/^-?[\d.]*,?\d+$|^-?\d[\d.]*$/.test(s))return null;var n=parseFloat(s.replace(/\./g,"").replace(",","."));return isNaN(n)?null:n;}
 function xfTexto(td,o){if(!td)return "";var inp=td.querySelector("select,input:not([type=checkbox]):not([type=radio]):not([type=hidden])"),x;
-  if(inp&&!(td.textContent||"").replace(/\s/g,"")){x=inp.tagName==="SELECT"?(inp.options[inp.selectedIndex]||{}).text||"":inp.value;}else x=td.textContent||"";
+  if(inp){x=inp.tagName==="SELECT"?(inp.options[inp.selectedIndex]||{}).text||"":(inp.value!==""?inp.value:(xfNum(inp.placeholder)!==null?inp.placeholder:""));}else x=td.textContent||"";
   x=x.replace(/\s+/g," ").trim();return o&&o.limpa?o.limpa(x):x;}
 // cabecalho: colunas filtraveis = celulas da 1a linha (com a posicao real da coluna nas linhas de dados)
 function xfCols(tab,o){var th=tab.tHead.rows[0],pos=0,cols=[],passouMes=false,real=0;
@@ -15768,7 +15773,13 @@ function xfCols(tab,o){var th=tab.tHead.rows[0],pos=0,cols=[],passouMes=false,re
   if(tab.tHead.rows.length>1&&tab.tBodies[0])Array.prototype.forEach.call(tab.tBodies[0].rows,function(r){if(r.cells.length>real)real=r.cells.length;});
   var tot=0;Array.prototype.forEach.call(th.cells,function(c){tot+=c.colSpan||1;});var dif=real>tot?real-tot:0;
   Array.prototype.forEach.call(th.cells,function(c){if((c.rowSpan||1)===1&&tab.tHead.rows.length>1)passouMes=true;
-    var ok=!o.colOk||o.colOk(c);if(ok)cols.push({th:c,i:pos+((passouMes&&(c.rowSpan||1)>1)?dif:0)});pos+=c.colSpan||1;});return cols;}
+    var ok=!o.colOk||o.colOk(c);if(ok)cols.push({th:c,i:pos+((passouMes&&(c.rowSpan||1)>1)?dif:0)});pos+=c.colSpan||1;});
+  if(o.sub&&tab.tHead.rows.length>1){ // Rev80: Qtd e Valor de cada mes (cada mes tem as duas subcolunas, mesmo quando uma esta oculta)
+    var lead=0,meses=[];Array.prototype.some.call(th.cells,function(c){if((c.rowSpan||1)===1)return true;lead+=c.colSpan||1;return false;});
+    Array.prototype.forEach.call(th.cells,function(c){if((c.rowSpan||1)===1)meses.push(c);});
+    Array.prototype.forEach.call(tab.tHead.rows[1].cells,function(c,k){var m=meses[Math.floor(k/2)];
+      cols.push({th:c,i:lead+k,nome:(m?xfNomeCol(null,m)+" · ":"")+xfNomeCol(null,c)});});}
+  return cols;}
 function xfAnexar(idTbody,o){
   var tb=document.getElementById(idTbody);if(!tb)return;var tab=tb.closest("table");if(!tab||!tab.tHead||!tab.tHead.rows.length)return;
   var st=XF[idTbody]||(XF[idTbody]={f:{},ord:null,o:o||{}});st.o=o||st.o;
@@ -15828,7 +15839,7 @@ function xfAplicar(id){
   else barra.classList.remove("on");
   }finally{setTimeout(function(){st.ocupado=false;},0);}
 }
-function xfNomeColIdx(tab,i){var r="";xfCols(tab,{}).forEach(function(cl){if(cl.i===i)r=xfNomeCol(null,cl.th);});return r;}
+function xfNomeColIdx(tab,i){var r="",cs=xfCols(tab,{sub:true});cs.forEach(function(cl){if(cl.i===i&&cl.nome&&!r)r=cl.nome;});if(!r)cs.forEach(function(cl){if(cl.i===i&&!r)r=xfNomeCol(null,cl.th);});return r;}
 function xfNomeCol(th,i){var c=(i&&i.nodeType===1)?i:th.cells[i];if(!c)return "";var x=c.cloneNode(true);x.querySelectorAll(".xf-bt,div").forEach(function(e){e.remove();});return (x.textContent||"").trim();}
 function xfRecarregar(id){var st=XF[id];if(st&&st.o.render)st.o.render();else{xfAnexar(id,st&&st.o);}}
 function xfFechar(){var p=document.getElementById("xf-pop");if(p)p.remove();document.removeEventListener("mousedown",xfFora,true);document.removeEventListener("keydown",xfTecla,true);}
@@ -15836,7 +15847,7 @@ function xfFora(e){if(!e.target.closest("#xf-pop")&&!e.target.closest(".xf-bt"))
 function xfTecla(e){if(e.key==="Escape"){e.stopPropagation();xfFechar();}}
 function xfAbrir(id,ci,btn){
   xfFechar();var st=XF[id],tb=document.getElementById(id),tab=tb.closest("table"),th=tab.tHead.rows[0];
-  if(!btn||!btn.isConnected){btn=th.querySelector(".xf-bt[data-xfc='"+ci+"']");if(!btn)return;} // a tabela foi redesenhada
+  if(!btn||!btn.isConnected){btn=tab.tHead.querySelector(".xf-bt[data-xfc='"+ci+"']");if(!btn)return;} // a tabela foi redesenhada
   var gs=xfItens(st,tb);
   // valores possiveis respeitando os filtros das OUTRAS colunas (como no Excel)
   var cont={},nums=0,tot=0;
@@ -15899,7 +15910,8 @@ function xfAbrir(id,ci,btn){
 // Abas M.O.I, M.O.D, Custo Indireto, Servico, Material e Equipamento: filtro nas colunas fixas (os meses ficam de fora)
 (function(){
   var LIMPA=function(x){return x.replace(/\s*🏷.*$/,"").replace(/[⋮✎🗑↳▾▼💬✅🔒🔁📊]/g,"")
-    .replace(/️/g,"").replace(/^[\s+−]+(?=\S)/,"").replace(/\s+/g," ").trim()||"-";};
+    .replace(/️/g,"").replace(/^[\s+−]+(?=\S)/,"").replace(/\s+/g," ").trim()
+    .replace(/^-\s*[^\d\s]{1,12}$/,"-").replace(/^(-?[\d.,]+)([A-Za-zÀ-ÿ\/²³]+)$/,"$1 $2")||"-";};
   var GRUPO=function(r){if(r.cells.length>=5)return -1;var od=r.getAttribute("ondrop")||"",m=od.match(/Grupo\(event,'[^']*','([^']*)'/);return m?(m[1]?1:0):0;};
   var PRINC=function(r){if(r.cells.length<5)return false;var c0=r.cells[0],tx=(c0&&c0.textContent||"").trim();if(/^↳/.test(tx))return false;
     if(/PREVISTO/i.test(r.textContent.slice(0,200))&&!r.getAttribute("draggable"))return false;return true;};
@@ -15907,7 +15919,7 @@ function xfAbrir(id,ci,btn){
   var TB=["moimat-tbody","modmat-tbody","indiretomat-tbody","servicomat-tbody","materialmat-tbody","equipamentomat-tbody"];
   var pend={};
   function liga(id){var tb=document.getElementById(id);if(!tb)return;var tab=tb.closest("table");if(!tab||tab._xf)return;tab._xf=true;
-    var o={limpa:LIMPA,grupo:GRUPO,principal:PRINC,colOk:COLOK,somaCol:"Total"};
+    var o={limpa:LIMPA,grupo:GRUPO,principal:PRINC,colOk:COLOK,somaCol:"Total",sub:true};
     // a tabela foi redesenhada (cabecalho sem botao ou linhas novas, ainda nao filtradas): religa o filtro
     var obs=new MutationObserver(function(){if(pend[id])return;pend[id]=1;
       setTimeout(function(){pend[id]=0;var tb2=document.getElementById(id),tab2=tb2&&tb2.closest("table");if(!tab2||!tab2.tHead)return;
@@ -15918,6 +15930,160 @@ function xfAbrir(id,ci,btn){
   function ligaTodas(){TB.forEach(liga);}
   ligaTodas();setTimeout(ligaTodas,1500);
   var st0=setTab;setTab=function(){var r=st0.apply(this,arguments);setTimeout(ligaTodas,0);return r;};
+})();
+// ===================== Rev80: roteiros das abas de custo acompanham a aba =====================
+// Um mesmo roteiro (ex.: incluir um item) vale para Custo Indireto, Servico, Material, Equipamento e Seguros:
+// troca a aba, os identificadores e os textos, e pula os campos que a janela daquela aba nao tem.
+var TOUR_CATS={Indireto:{aba:11,nome:"Custo Indireto",pref:"indireto"},Servico:{aba:12,nome:"Serviço",pref:"servico"},Material:{aba:13,nome:"Material",pref:"material"},
+  Equipamento:{aba:14,nome:"Equipamento",pref:"equipamento"},Seguro:{aba:19,nome:"Seguros",pref:"seguro"}};
+var TOUR_VAR={c_novoItem:"Indireto",c_lancarMes:"Indireto",c_saldoCol:"Indireto",c_previsto:"Indireto",c_contratos:"Indireto",c_obs:"Indireto",c_composicao:"Equipamento"};
+function tourCatAtual(k){if(!TOUR_VAR[k])return null;var a=tourAbaAtual(),r=null;Object.keys(TOUR_CATS).forEach(function(c){if(TOUR_CATS[c].aba===a)r=c;});return r;}
+function tourVariante(k,cat){
+  var t=TOURS[k];if(!t)return t;var base=TOUR_VAR[k];if(!base)return t;
+  if(!cat||!TOUR_CATS[cat])cat=base;var B=TOUR_CATS[base],C=TOUR_CATS[cat];
+  var cod=function(s){if(typeof s!=="string"||cat===base)return s;
+    return s.split("#sec"+B.aba).join("#sec"+C.aba).split(B.pref+"mat-").join(C.pref+"mat-").split(B.pref+"-cards").join(C.pref+"-cards")
+      .split("'"+base+"'").join("'"+cat+"'").split('"'+base+'"').join('"'+cat+'"').split("-"+base).join("-"+cat);};
+  var txt=function(s){return (typeof s==="string"&&cat!==base)?s.split(B.nome).join(C.nome):s;};
+  return {t:txt(t.t),fim:cod(t.fim),pular:true,cat:cat,passos:t.passos.map(function(p){var q={};for(var x in p)q[x]=p[x];
+    if(q.aba===B.aba)q.aba=C.aba;q.antes=cod(q.antes);q.sel=Array.isArray(q.sel)?q.sel.map(cod):cod(q.sel);q.tit=txt(q.tit);q.txt=txt(q.txt);q.info=txt(q.info);return q;})};
+}
+function tourCatDaPergunta(s){var n=String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+  if(/\bservico/.test(n))return "Servico";if(/\bmateria(l|is)\b/.test(n))return "Material";if(/\bequipamento/.test(n))return "Equipamento";
+  if(/\bseguro/.test(n))return "Seguro";if(/\bindireto/.test(n))return "Indireto";return null;}
+// "Incluir item": passos dos campos que so existem em algumas abas (Equipamento: horas extras; Custo Indireto: forma da quantidade)
+(function(){var t=TOURS.c_novoItem;if(!t)return;var ps=t.passos,iV=-1,iS=-1;
+  ps.forEach(function(p,i){if(p.sel==="#em3-valorunit")iV=i;if(String(p.sel).indexOf("salvarEditIndireto")>=0)iS=i;});
+  var depois=[{sel:".em3-qtd",tit:"Como a quantidade é lançada",txt:"Só no <b>Custo Indireto</b>: <b>Manual</b> (você digita a quantidade de cada mês) ou automática pelo efetivo (<b>Todo o efetivo</b>, <b>Efetivo M.O.I</b>, <b>Efetivo M.O.D</b>, <b>Progressão</b>, <b>Regressão</b> ou <b>República</b>).",info:"Escolha Manual para lançar mês a mês; escolha uma opção de efetivo quando o custo acompanha o número de pessoas (alimentação, EPI, exames...).",ex:"Manual"},
+    {sel:"#modal-edit-indireto .em3-flag-fd",tit:"💰 Faturamento Direto",txt:"Marque quando o fornecedor fatura <b>direto para o cliente</b>. A linha ganha a etiqueta FATURAMENTO DIRETO e entra no acompanhamento de FD do Dashboard.",info:"Deixe desmarcado se a nota vem para a obra.",ex:"desmarcado"},
+    {sel:"#modal-edit-indireto .em3-flag-ok",tit:"✅ Informação Validada",txt:"Marque quando os dados da linha já foram conferidos. A linha fica sinalizada como validada.",info:"Opcional: use para controlar o que já foi conferido.",ex:"marcado"}];
+  var he=[{sel:"#em3-he50-valor",tit:"Valor Hora 50% (R$)",txt:"Só no <b>Equipamento</b>: valor da hora extra a 50% do equipamento.",info:"Valor de cada hora extra a 50%.",ex:"180,00"},
+    {sel:"#em3-he50-qtd",tit:"Qtd Horas 50%",txt:"Quantidade de horas extras a 50% por mês.",info:"Número de horas a 50% no mês.",ex:"20"},
+    {sel:"#em3-he100-valor",tit:"Valor Hora 100% (R$)",txt:"Valor da hora extra a 100% (domingos e feriados).",info:"Valor de cada hora extra a 100%.",ex:"240,00"},
+    {sel:"#em3-he100-qtd",tit:"Qtd Horas 100%",txt:"Quantidade de horas extras a 100% por mês. O controle soma as horas extras ao valor base e mostra o valor final.",info:"Número de horas a 100% no mês.",ex:"8"}];
+  if(iS>=0)Array.prototype.splice.apply(ps,[iS,0].concat(depois));
+  if(iV>=0)Array.prototype.splice.apply(ps,[iV+1,0].concat(he));
+})();
+// Assistente: o botao "Mostrar na tela" usa a aba citada na pergunta
+(function(){
+  var oEnv=assistEnviar;assistEnviar=function(texto){var i=document.getElementById("assist-inp");window._assistPerg=texto!=null?texto:(i?i.value:"");return oEnv.apply(this,arguments);};
+  var oResp=assistResposta;assistResposta=function(r){var h=oResp.apply(this,arguments),m=h.match(/tourIniciar\('([^']+)'\)/);
+    if(m&&TOUR_VAR[m[1]]){var cat=tourCatDaPergunta(window._assistPerg)||tourCatAtual(m[1]);
+      if(cat&&TOUR_CATS[cat])h=h.replace("tourIniciar('"+m[1]+"')","tourIniciar('"+m[1]+"','"+cat+"')").replace("&#9654; Mostrar na tela","&#9654; Mostrar na tela ("+TOUR_CATS[cat].nome+")");}
+    return h;};
+})();
+// ===================== Rev80: Assistente - perguntas sobre botoes =====================
+// "O que faz o botao X?" / "Para que serve X?" / "O que acontece se eu clicar em X?": responde o que o botao faz,
+// onde ele fica, o que isso impacta nos outros controles e os cuidados, a partir das apresentacoes do Modo Ajuda.
+var ASSIST_NOMES_ABA={0:"Resumo M.O.",1:"Custo M.O.I",2:"Planejamento",4:"Dashboard",5:"Sistema de Compras",7:"Importar",8:"Coletor Total",9:"Dados da Obra",10:"Custo M.O.D",
+  11:"Custo Indireto",12:"Serviço",13:"Material",14:"Equipamento",15:"Receita",16:"Prev x Real",17:"Classificação",18:"Contingência",19:"Seguros",20:"DRE",21:"Take In / Take Out",22:"Curva ABC",23:"Curva ABC de M.O.D",24:"Razão",25:"Classificar Razão"};
+// o que cada controle sofre quando o botao mexe nele
+var ASSIST_CADEIA=[
+  [/coletor/i,"<b>Coletor Total:</b> o Real do item da EAP ligado à linha é recalculado, e com ele o Saldo do item."],
+  [/prev x real/i,"<b>Prev x Real:</b> muda a comparação entre o Previsto e o Real do item (o desvio)."],
+  [/\bdre\b/i,"<b>DRE:</b> as linhas da DRE ligadas a essas abas são recalculadas, e com elas o lucro."],
+  [/dashboard/i,"<b>Dashboard:</b> os cards (Total de Custos, Lucro, Margem) e os gráficos são atualizados."],
+  [/curva/i,"<b>Curvas ABC:</b> a posição e a classe (A, B ou C) dos itens podem mudar."],
+  [/resumo m\s?o/i,"<b>Resumo M.O.:</b> os totais de mão de obra mudam."],
+  [/receita/i,"<b>Receita:</b> a Receita Medida acumulada e o Back Log (saldo a medir) mudam."],
+  [/replan/i,"<b>Replan:</b> o Replan atual (ao vivo) muda; os Replans já salvos não mudam."]];
+// impacto explicado dos principais botoes (o que muda em cada controle)
+var ASSIST_IMPACTO={
+ saldoColAbrirNova:"Não muda nenhum valor: os totais da aba, o Coletor Total, o Prev x Real, a DRE, o Dashboard e as Curvas ABC continuam iguais. Ela cria colunas à direita da tabela (Qtd Total, Valor Total e A distribuir) para você registrar, com <b>Colar saldo</b>, o contrato de cada linha naquele mês. Depois que o Real do Razão é aplicado, a coluna <b>A distribuir</b> (valor registrado − total atual) mostra quanto do contrato ainda falta lançar ou se a linha passou do contrato.",
+ saldoColColar:"Grava na coluna de saldo a Qtd Total e o Valor Total atuais de cada linha. Nenhum outro controle muda.",
+ saldoColAtualizar:"Recalcula só a coluna A distribuir com os valores atuais das linhas. Nenhum outro controle muda.",
+ saldoColExcluir:"Apaga só a coluna de saldo e o que foi registrado nela. Os valores da aba e dos outros controles não mudam.",
+ razaoVigenciaDashboard:"Até o mês escolhido, o Custo Indireto, o Serviço, o Material e o Equipamento passam a usar o <b>real</b> das notas classificadas (quantidade = soma das NFs ÷ Valor Unitário; mês sem NF fica zerado). Com isso mudam: <b>Coletor Total</b> (Real de cada item da EAP), <b>Prev x Real</b> (desvios), <b>DRE</b> (custos e lucro), <b>Dashboard</b> (Total de Custos, Lucro, Margem e Curva S) e o <b>Custo Incorrido</b> das Curvas ABC. A vigência só avança.",
+ novoItemIndireto:"A nova linha entra no total da aba. Com <b>Item EAP</b>, ela soma no Real do item no <b>Coletor Total</b> e no <b>Prev x Real</b>; entra também nas linhas da <b>DRE</b> ligadas à aba, no <b>Total de Custos do Dashboard</b> e nas <b>Curvas ABC</b>. Com <b>Classificação</b>, ela aparece no Classificar Razão para receber notas fiscais.",
+ salvarEditIndireto:"Grava a linha: o novo valor muda o total da aba, o Real do item da EAP no <b>Coletor Total</b> e no <b>Prev x Real</b>, as linhas da <b>DRE</b> ligadas à aba, o <b>Dashboard</b> e as <b>Curvas ABC</b>.",
+ excluirItemIndireto:"A linha sai do total da aba e deixa de somar no <b>Coletor Total</b>, no <b>Prev x Real</b>, na <b>DRE</b>, no <b>Dashboard</b> e nas <b>Curvas ABC</b>. Não tem como desfazer.",
+ novoColaboradorMoi:"O custo do colaborador (salário, encargos, adicionais, horas extras e alojamento × quantidade de cada mês) entra no <b>Custo M.O.I</b>, no <b>Resumo M.O.</b>, no item de mão de obra do <b>Coletor Total</b>, na <b>DRE</b>, no <b>Dashboard</b> e na <b>Curva ABC</b>.",
+ salvarEditMoi:"Grava o colaborador: o custo dele muda no <b>Custo M.O.I</b>, no <b>Resumo M.O.</b>, no <b>Coletor Total</b>, na <b>DRE</b>, no <b>Dashboard</b> e na <b>Curva ABC</b>.",
+ excluirColaboradorMoi:"O colaborador sai do <b>Custo M.O.I</b> e deixa de somar no <b>Resumo M.O.</b>, no <b>Coletor Total</b>, na <b>DRE</b>, no <b>Dashboard</b> e na <b>Curva ABC</b>. Não tem como desfazer.",
+ novaFuncaoMod:"O custo da função (salário, encargos, adicionais, horas extras e alojamento × número de pessoas de cada mês) entra no <b>Custo M.O.D</b>, no <b>Resumo M.O.</b>, nos itens da EAP da distribuição de trabalho no <b>Coletor Total</b>, na <b>DRE</b>, no <b>Dashboard</b> e na <b>Curva ABC</b>.",
+ salvarEditMod:"Grava a função: o custo dela muda no <b>Custo M.O.D</b>, no <b>Resumo M.O.</b>, no <b>Coletor Total</b>, na <b>DRE</b>, no <b>Dashboard</b> e na <b>Curva ABC</b>.",
+ excluirFuncaoMod:"A função sai do <b>Custo M.O.D</b> e deixa de somar no <b>Resumo M.O.</b>, no <b>Coletor Total</b>, na <b>DRE</b>, no <b>Dashboard</b> e na <b>Curva ABC</b>. Não tem como desfazer.",
+ salvarEng:"Recalcula o custo de todas as pessoas da M.O.I e da M.O.D com os novos parâmetros (alojamento, horas extras, coeficientes e encargos). Mudam: <b>Custo M.O.I</b>, <b>Custo M.O.D</b>, <b>Resumo M.O.</b>, <b>Coletor Total</b>, <b>DRE</b>, <b>Dashboard</b> e <b>Curvas ABC</b>.",
+ abrirTransferenciaCusto:"As linhas escolhidas saem da aba de origem e passam para a aba de destino com todos os meses. O <b>total geral não muda</b>, mas mudam os totais das duas abas, a <b>Composição do Custo</b> no Dashboard, as linhas da <b>DRE</b> ligadas a cada aba e as <b>Curvas ABC</b> por aba. Não tem como desfazer.",
+ confirmarSalvarPrevistoDoReal:"O <b>Previsto</b> de todas as linhas (M.O.D, M.O.I, Custo Indireto, Serviço, Material e Equipamento) passa a ser igual ao Real e fica travado: a partir daí os desvios do <b>Prev x Real</b> começam do zero. Uma cópia com o nome informado fica disponível na coluna <b>Replan</b> do Coletor Total e em <b>Ver Previsto Salvo</b>. O Real, a DRE e o Dashboard não mudam.",
+ ocvMenu:"Só muda o que aparece na tabela desta aba. Nenhum valor, total, controle ou exportação é alterado.",
+ salvarJSON:"Só baixa uma cópia da base no seu computador. Nada muda no controle.",
+ salvarNaNuvem:"Grava a base atual na nuvem, por cima do salvamento rápido do projeto. Os dados do controle não mudam; quem abrir essa versão vai ver os dados de agora.",
+ salvarNovaVersaoNuvem:"Cria uma versão nova, com nome, na nuvem. As versões anteriores continuam guardadas e nada muda no controle.",
+ abrirModalSalvarVersaoExistente:"A versão que você escolher na nuvem é substituída pelos dados atuais e perde o conteúdo anterior. Nada muda no controle aberto.",
+ drgRestaurar:"Só a <b>DRE</b> muda: todas as linhas e valores digitados nela voltam ao modelo padrão. As abas de custo, o Coletor e o Dashboard não mudam.",
+ receitaAbrirModalNovaMedicao:"O valor medido entra na <b>Receita Medida</b>, que alimenta o <b>Dashboard</b> (receita medida acumulada, Back Log e Curva S) e as linhas de Receita da <b>DRE</b>.",
+ receitaExcluirMedicaoCol:"A medição sai da <b>Receita Medida</b>: mudam o <b>Dashboard</b> (receita medida acumulada, Back Log e Curva S) e as linhas de Receita da <b>DRE</b>. Não tem como desfazer.",
+ tioNovo:"A linha entra no saldo do <b>Take In / Take Out</b>. Se alguma linha da <b>DRE</b> estiver ligada ao Take In/Out, ela também muda.",
+ abrirNovaContingencia:"A soma das contingências vira o Valor Unitário da linha <b>Contingência</b> do Custo Indireto. Com isso mudam o <b>Custo Indireto</b>, o <b>Coletor Total</b>, a <b>DRE</b>, o <b>Dashboard</b> e as <b>Curvas ABC</b>.",
+ contgRedistribuir:"Muda a distribuição por mês da linha <b>Contingência</b> do Custo Indireto (o total não muda): o que já passou fica, e o saldo é dividido nos meses seguintes. Mudam os valores mensais do Custo Indireto, da DRE e dos gráficos mensais do Dashboard.",
+ "inp:inp-razao":"Carrega as notas fiscais na aba <b>Razão</b> e no <b>Classificar Razão</b>. Os custos só mudam depois que as notas são classificadas e o <b>Real do Razão</b> é aplicado no Dashboard.",
+ classificarLinhaRazao:"A nota passa a contar no Real da linha escolhida nos meses em que o Real do Razão já foi aplicado: mudam a aba de custo, o <b>Coletor Total</b>, o <b>Prev x Real</b>, a <b>DRE</b>, o <b>Dashboard</b> e o <b>Custo Incorrido</b> das Curvas ABC.",
+ razaoLimparDados:"Apaga as notas importadas: o Real das abas de custo nos meses aplicados e o Custo Incorrido das Curvas ABC ficam sem as notas. Não tem como desfazer.",
+ "inp:inp-efetivo":"Substitui <b>todos</b> os colaboradores da M.O.I e as funções da M.O.D pelos da planilha. Mudam o <b>Custo M.O.I</b>, o <b>Custo M.O.D</b>, o <b>Resumo M.O.</b>, as linhas do Custo Indireto com quantidade automática pelo efetivo (alimentação, EPI, exames...), o <b>Coletor Total</b>, a <b>DRE</b> e o <b>Dashboard</b>.",
+ equipIgualarComReal:"Só o Previsto desta linha muda (fica igual ao Real): o desvio dela no <b>Prev x Real</b> vai a zero e o Replan atual muda. O Real, a DRE e o Dashboard não mudam.",
+ moiIgualarComReal:"Só o Previsto deste colaborador muda (fica igual ao Real): o desvio dele no <b>Prev x Real</b> vai a zero e o Replan atual muda. O Real, a DRE e o Dashboard não mudam.",
+ modIgualarComReal:"Só o Previsto desta função muda (fica igual ao Real): o desvio dela no <b>Prev x Real</b> vai a zero e o Replan atual muda. O Real, a DRE e o Dashboard não mudam.",
+ compilarSelecionadosEmComposicao:"O total da aba não muda: as linhas marcadas viram filhas de uma linha-mãe que soma todas. Muda a forma de ver e classificar: as notas do Razão passam a ser classificadas só na linha-mãe, e a Curva ABC mostra a composição como um item só.",
+ "inp:inp-coletor":"Cria ou atualiza os itens da EAP com o Orçado no <b>Coletor Total</b> e no <b>Prev x Real</b>. Reimportar mantém o RAO, o Real, o Saldo a Contratar e as anotações."};
+["exportarIndiretoExcelPerguntar","exportarMoiExcelPerguntar","exportarModExcelPerguntar","exportarCurvaAbcExcel","exportarCompiladoExcelPerguntar","exportarContingenciaExcel","exportarComposicaoExcel","exportarCurvaAbcModExcel","receitaExportarEAPExcel","exportarEfetivo","exportarModeloModExcel","gerarTemplate"].forEach(function(k){ASSIST_IMPACTO[k]="Só gera um arquivo Excel no seu computador. Nada no controle muda.";});
+var ASSIST_BOTAO_GATILHO=/\b(botao|botoes|o que faz|o que ele faz|para que serve|pra que serve|serve para|serve pra|o que acontece (se|quando)|se eu clicar|quando eu clico|ao clicar|funcao do|funcao da)\b/;
+var ASSIST_BOTAO_IGN={botao:1,botoes:1,serve:1,servir:1,acontece:1,acontecer:1,clicar:1,clico:1,clique:1,aperto:1,apertar:1,aperta:1,funcao:1,ele:1,ela:1,quando:1,nele:1,nela:1,aba:1,impacta:1,impacto:1,afeta:1,muda:1};
+function assistBotaoNomes(){ // nomes de cada botao: titulo da apresentacao + textos reais dos botoes na tela
+  var nomes={};Object.defineProperty(nomes,"_abas",{value:{},enumerable:false});Object.keys(AJUDA).forEach(function(k){var d=AJUDA[k];if(d&&d.t)nomes[k]=[d.t];});
+  var vistos=0;document.querySelectorAll("button,[onclick],select").forEach(function(el){if(vistos++>6000)return;if(el.closest("#assist-painel,#tour-veu,#modal-apres-atl"))return;
+    var k;try{k=ajudaChave(el);}catch(e){k="";}if(!k||!AJUDA[k])return;
+    var sec=el.closest("[id^=sec]");if(sec){var na=parseInt(sec.id.slice(3),10);(nomes._abas[k]=nomes._abas[k]||{})[na]=1;}
+    var tx=(el.tagName==="SELECT"?"":(el.textContent||""))+" "+(el.title||"");tx=tx.replace(/\s+/g," ").trim();if(tx&&tx.length<70&&nomes[k].indexOf(tx)<0)nomes[k].push(tx);});
+  return nomes;}
+function assistBotaoAbas(k){var abas={};document.querySelectorAll("button,[onclick],select").forEach(function(el){var kk;try{kk=ajudaChave(el);}catch(e){kk="";}if(kk!==k)return;
+  var s=el.closest("[id^=sec]");if(s){var n=parseInt(s.id.slice(3),10);if(ASSIST_NOMES_ABA[n])abas[n]=1;}});return Object.keys(abas).map(Number);}
+// botoes que so aparecem em certas situacoes (ex.: linha PREVISTO aberta): a aba e deduzida pelo nome da funcao
+function assistBotaoAbaPeloNome(k){var m=[[/^equip|Indireto/,[11,12,13,14,19]],[/moi/i,[1]],[/mod(?!al)/i,[10]],[/^drg/,[20]],[/^receita/,[15]],[/coletor|satc/i,[8]],[/prevreal|desvio/i,[16]],[/contg|conting/i,[18]],[/^tio/,[21]],[/abc/i,[22]],[/razao/i,[24,25]]];
+  for(var i=0;i<m.length;i++)if(m[i][0].test(k))return m[i][1];return [];}
+function assistBotaoBuscar(perg){
+  if(!ASSIST_BOTAO_IGN._c){var c={};Object.keys(ASSIST_BOTAO_IGN).forEach(function(w){c[w]=1;c[assistCanon(w)]=1;});c.o=1;ASSIST_BOTAO_IGN._c=c;}
+  var q=assistTokens(perg).filter(function(w){return !ASSIST_BOTAO_IGN._c[w];});if(!q.length)return null;
+  var uq=q.filter(function(w,i){return q.indexOf(w)===i;}),nomes=assistBotaoNomes(),aba=tourAbaAtual(),melhor=null;
+  Object.keys(nomes).forEach(function(k){nomes[k].forEach(function(nm){var nt=assistTokens(nm);if(!nt.length)return;var un=nt.filter(function(w,i){return nt.indexOf(w)===i;});
+    var inter=uq.filter(function(w){return un.indexOf(w)>=0;}).length;if(!inter)return;
+    var cov=inter/uq.length,prec=inter/un.length,sc=cov*0.65+prec*0.35;
+    // prefere o botao da aba aberta e o nome com as mesmas palavras da pergunta (sem trocar por sinonimos)
+    if(aba!=null&&((nomes._abas[k]&&nomes._abas[k][aba])||assistBotaoAbaPeloNome(k).indexOf(aba)>=0))sc+=0.15;
+    var rq=assistNorm(perg).split(" "),rn=assistNorm(nm).split(" ").filter(function(w){return w.length>2;});
+    if(rn.length)sc+=0.12*rn.filter(function(w){return rq.indexOf(w)>=0;}).length/rn.length;
+    if(!melhor||sc>melhor.sc)melhor={k:k,sc:sc,cov:cov,prec:prec};});});
+  return melhor&&melhor.cov>=0.6&&melhor.prec>=0.5?melhor:null;}
+function assistBotaoResposta(k,perg){
+  var d=AJUDA[k],lim=function(s){return String(s||"");},ps=[],av=[];
+  (d.telas||[]).forEach(function(tl){(tl.passos||[]).forEach(function(p){ps.push(p);});if(tl.aviso)av.push(tl.aviso);});
+  var abas=assistBotaoAbas(k),txtO=lim(d.o),semDados=/(n(&atilde;|ã)o (s(&atilde;|ã)o|é|&eacute;) alterad|o controle n(&atilde;|ã)o|n(&atilde;|ã)o altera)/i.test(txtO+" "+lim(d.f));
+  var cad=[],imp=ASSIST_IMPACTO[k];
+  var h="<div class='as-tit'>&#128280; Bot&atilde;o &ldquo;"+d.t+"&rdquo;</div>"+
+    "<p class='as-txt'><b>O que faz:</b> "+lim(d.f)+"</p>"+
+    (abas.length?"<p class='as-onde2'><b>&#128205; Onde fica:</b> "+abas.map(function(n){return ASSIST_NOMES_ABA[n];}).join(", ")+"</p>":"")+
+    "<div class='as-imp'><b>&#128279; O que isso impacta:</b> "+(imp?imp:(semDados?"n&atilde;o altera os dados do controle. ":"")+txtO)+
+      (cad.length?"<ul>"+cad.map(function(c){return "<li>"+c+"</li>";}).join("")+"</ul>":"")+"</div>"+
+    av.slice(0,2).map(function(a){return "<div class='as-aviso'>&#9888;&#65039; "+a+"</div>";}).join("")+
+    (ps.length?"<div style='font-size:12px;color:#475569;margin-top:6px'><b>Detalhes:</b></div><ol class='as-passos'>"+ps.slice(0,5).map(function(p){return "<li>"+p+"</li>";}).join("")+"</ol>":"");
+  var bt=[];
+  if(d.tour&&TOURS[d.tour]){var cat=TOUR_VAR[d.tour]?(tourCatDaPergunta(perg)||tourCatAtual(d.tour)):null;
+    bt.push("<button type='button' class='as-bt as-bt-tour' onclick=\"tourIniciar('"+d.tour+"'"+(cat?",'"+cat+"'":"")+")\">&#9654; Mostrar na tela"+(cat&&TOUR_CATS[cat]?" ("+TOUR_CATS[cat].nome+")":"")+"</button>");}
+  bt.push("<button type='button' class='as-bt' onclick=\"assistVerAjuda('"+k+"')\">&#10067; Ver apresenta&ccedil;&atilde;o</button>");
+  if(abas.length)bt.push("<button type='button' class='as-bt' onclick='assistIrAba("+(abas.indexOf(tourAbaAtual())>=0?tourAbaAtual():abas[0])+")'>&#128205; Ir para a aba</button>");
+  return h+"<div class='as-bts'>"+bt.join("")+"</div>";
+}
+(function(){
+  var oEnv=assistEnviar;
+  assistEnviar=function(texto){
+    var inp=document.getElementById("assist-inp"),perg=(texto!=null?texto:(inp?inp.value:"")).trim();
+    var n=assistNorm(perg),achou=perg&&ASSIST_BOTAO_GATILHO.test(n)?assistBotaoBuscar(perg):null;
+    if(!achou)return oEnv.apply(this,arguments);
+    window._assistPerg=perg;if(inp)inp.value="";
+    assistMsg(assistEsc(perg),"eu");var sug=document.getElementById("assist-sug");if(sug)sug.style.display="none";
+    var m=assistMsg("<span class='as-dig'><i></i><i></i><i></i></span>","bot");
+    setTimeout(function(){m.innerHTML=assistBotaoResposta(achou.k,perg);document.getElementById("assist-msgs").scrollTop=1e9;},380);
+  };
 })();
 // ===================== Rev80: tela de boas-vindas ao entrar no controle =====================
 // Aparece quando a tela inicial fecha (Visualizador, Controlador, Comecar do zero, Projeto novo). Some em 5 s ou com qualquer tecla/clique.
