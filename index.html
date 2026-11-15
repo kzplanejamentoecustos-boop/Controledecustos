@@ -17630,6 +17630,320 @@ function alApresCfg(pag){
 })();
 </script>
 
+<script type="module" id="rev80-portal-kz">
+/* ===================== Rev80: login do Portal KZ (uma senha so) =====================
+   Aberto pelo Portal KZ (mesmo site e mesmo Firebase), quem ja entrou no Portal e reconhecido aqui.
+   O papel da pessoa no Controle de Custos daquela obra (definido pelo gestor no Portal) libera os perfis:
+     Leitor -> so Visualizador | Editor -> Visualizador e Controlador | Admin -> todos, inclusive Administrador.
+   Onde o controle pedia senha (entrada, Configuracoes avancadas, salvar na nuvem, transferencia...), o acesso
+   conferido no painel basta: nao pede senha. Sem o login do Portal (sem internet, ou arquivo aberto do
+   computador), o controle continua aceitando as senhas antigas (reserva). */
+import * as fbApp from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import * as fa from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import * as fs from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+const KZ_CFG = {
+  apiKey: "AIzaSyCk1hdv3h8A2gDOcaZDRuRtceDiG2bvXOc",
+  authDomain: "kz-planejamento-e-custos.firebaseapp.com",
+  projectId: "kz-planejamento-e-custos",
+  storageBucket: "kz-planejamento-e-custos.firebasestorage.app",
+  messagingSenderId: "755715307647",
+  appId: "1:755715307647:web:6573d0437b23b880bae74a",
+};
+const CONTROLE = "custos";
+const PAPEL_TXT = { leitor: "Leitor", editor: "Editor", admin: "Admin" };
+const NIVEL = { "": 0, leitor: 1, editor: 2, admin: 3 };
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let auth = null, db = null;
+const KZ = window.KZ = { carregado: true, ativo: false, papel: "", nome: "", email: "", obra: "", sigla: "", confirmado: false, entrouPeloPainel: false };
+
+function iniciar() {
+  if (auth) return;
+  const apps = fbApp.getApps();
+  const padrao = apps.find((a) => a.name === "[DEFAULT]");
+  // mesmo app do Portal ([DEFAULT] com a config da KZ): o login fica compartilhado
+  const app = (padrao && padrao.options.projectId === KZ_CFG.projectId && padrao.options.apiKey === KZ_CFG.apiKey)
+    ? padrao
+    : (apps.find((a) => a.name === "kz-portal") || fbApp.initializeApp(KZ_CFG, "kz-portal"));
+  auth = fa.getAuth(app);
+  db = fs.getFirestore(app);
+}
+
+function traduzir(e) {
+  const c = (e && e.code) || "";
+  if (/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)) return "E-mail ou senha incorretos.";
+  if (/too-many-requests/.test(c)) return "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
+  if (/network-request-failed/.test(c)) return "Sem conexão com a internet.";
+  if (/user-disabled/.test(c)) return "Este usuário foi desativado. Fale com o gestor.";
+  if (/permission-denied/.test(c)) return "Sem permissão para ler seu acesso. Fale com o gestor.";
+  return (e && e.message) || "Não foi possível concluir.";
+}
+
+/** Obra: vem do Portal (?obra=wsf3) ou da ultima obra escolhida no Portal (mesmo site). */
+function obraDaUrl() {
+  let o = new URLSearchParams(location.search).get("obra");
+  if (!o) { try { o = localStorage.getItem("kz-portal-obra"); } catch (e) { o = null; } }
+  return String(o || "").toLowerCase().replace(/[^a-z0-9-]/g, "");
+}
+function papelNoControle(m) {
+  if (!m) return "";
+  if (m.gestor) return "admin";
+  const p = m.papeis || {};
+  const r = p[CONTROLE] || p["*"] || "";
+  return PAPEL_TXT[r] ? r : "";
+}
+async function papelNaObra(obra) {
+  const u = auth.currentUser;
+  const [gg, m, o, cad] = await Promise.all([
+    fs.getDoc(fs.doc(db, "gestores_gerais", u.uid)),
+    fs.getDoc(fs.doc(db, "obras", obra, "membros", u.uid)),
+    fs.getDoc(fs.doc(db, "obras", obra)),
+    fs.getDoc(fs.doc(db, "usuarios", u.uid)),
+  ]);
+  const nome = (cad.exists() && cad.data().nome) || u.displayName || u.email;
+  if (!o.exists()) return { papel: "", obra: null, nome };
+  return { papel: gg.exists() ? "admin" : (m.exists() ? papelNoControle(m.data()) : ""), obra: { id: obra, ...o.data() }, nome };
+}
+async function obrasComAcesso() {
+  const u = auth.currentUser;
+  const [gg, obras] = await Promise.all([fs.getDoc(fs.doc(db, "gestores_gerais", u.uid)), fs.getDocs(fs.collection(db, "obras"))]);
+  const lista = await Promise.all(obras.docs.map(async (o) => {
+    if (o.data().situacao === "encerrada" && !gg.exists()) return null;
+    let papel = gg.exists() ? "admin" : "";
+    if (!papel) { const m = await fs.getDoc(fs.doc(db, "obras", o.id, "membros", u.uid)); if (m.exists()) papel = papelNoControle(m.data()); }
+    return papel ? { id: o.id, nome: o.data().nome, sigla: o.data().sigla, papel } : null;
+  }));
+  return lista.filter(Boolean).sort((a, b) => String(a.nome).localeCompare(String(b.nome), "pt-BR"));
+}
+function primeiroEstado() {
+  return new Promise((r) => { const parar = fa.onAuthStateChanged(auth, (u) => { parar(); r(u && !u.isAnonymous ? u : null); }); });
+}
+
+/* ---------- janelas (mesmo visual das janelas do controle) ---------- */
+function janela(id, html) {
+  let bg = document.getElementById(id);
+  if (bg) bg.remove();
+  bg = document.createElement("div");
+  bg.className = "modal-bg kz-modal";
+  bg.id = id;
+  bg.style.zIndex = "10070";
+  bg.innerHTML = "<div class='modal' style='max-width:420px;width:100%;padding:20px 22px;box-sizing:border-box'>" + html + "</div>";
+  document.body.appendChild(bg);
+  requestAnimationFrame(() => bg.classList.add("on"));
+  return bg;
+}
+const CAB = (t, s) => "<div style='display:flex;align-items:center;gap:10px;margin-bottom:6px'><div style='width:36px;height:36px;border-radius:10px;background:#1e3a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px'>KZ</div><div><div style='font-size:16px;font-weight:700;color:#0f172a'>" + t + "</div><div style='font-size:12px;color:#64748b'>" + s + "</div></div></div>";
+const CAMPO = "width:100%;padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:14px;margin-top:4px";
+const ROT = "display:block;font-size:12px;font-weight:600;color:#334155;margin-top:12px";
+
+function pedirLogin(motivo) {
+  return new Promise((resolver) => {
+    const bg = janela("kz-login", CAB("Entrar com o login do painel", "Mesmo e-mail e senha do Portal KZ") +
+      (motivo ? "<p style='font-size:12.5px;color:#475569;margin:8px 0 0'>" + esc(motivo) + "</p>" : "") +
+      "<label style='" + ROT + "'>E-mail<input id='kz-email' type='email' autocomplete='username' style='" + CAMPO + "'></label>" +
+      "<label style='" + ROT + "'>Senha<input id='kz-senha' type='password' autocomplete='current-password' style='" + CAMPO + "'></label>" +
+      "<div id='kz-err' style='display:none;color:#b91c1c;font-size:12.5px;margin-top:8px'></div>" +
+      "<div style='display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap'>" +
+      "<a href='#' id='kz-esqueci' style='font-size:12.5px;color:#1d4ed8'>Esqueci a senha</a>" +
+      "<div style='display:flex;gap:8px'><button class='btn' id='kz-cancelar'>Cancelar</button><button class='btn b-blue' id='kz-entrar'>Entrar</button></div></div>");
+    const $ = (i) => bg.querySelector("#" + i);
+    const erro = (t, ok) => { const e = $("kz-err"); e.textContent = t; e.style.color = ok ? "#15803d" : "#b91c1c"; e.style.display = t ? "block" : "none"; };
+    const fechar = (u) => { bg.remove(); resolver(u || null); };
+    const entrar = async () => {
+      const email = $("kz-email").value.trim(), senha = $("kz-senha").value;
+      if (!email || !senha) { erro("Informe o e-mail e a senha."); return; }
+      $("kz-entrar").disabled = true; erro("");
+      try { const r = await fa.signInWithEmailAndPassword(auth, email, senha); fechar(r.user); }
+      catch (e) { erro(traduzir(e)); $("kz-entrar").disabled = false; }
+    };
+    $("kz-entrar").onclick = entrar;
+    $("kz-cancelar").onclick = () => fechar(null);
+    $("kz-senha").onkeydown = (e) => { if (e.key === "Enter") entrar(); };
+    $("kz-email").onkeydown = (e) => { if (e.key === "Enter") $("kz-senha").focus(); };
+    $("kz-esqueci").onclick = async (e) => {
+      e.preventDefault();
+      const email = $("kz-email").value.trim();
+      if (!email) { erro("Digite seu e-mail acima e clique de novo em \"Esqueci a senha\"."); return; }
+      try { await fa.sendPasswordResetEmail(auth, email); } catch (x) { /* nao revela se o e-mail existe */ }
+      erro("Se este e-mail tiver acesso, chegará uma mensagem para criar uma nova senha.", true);
+    };
+    setTimeout(() => $("kz-email").focus(), 80);
+  });
+}
+
+/** Confirma a identidade com a senha do painel (reautenticacao no Firebase). */
+KZ._confirmar = function () {
+  return new Promise((resolver) => {
+    const bg = janela("kz-confirmar", CAB("Confirme com a senha do painel", esc(KZ.nome) + " · " + esc(PAPEL_TXT[KZ.papel] || "") + " · obra " + esc(KZ.sigla)) +
+      "<p style='font-size:12.5px;color:#475569;margin:8px 0 0'>Por segurança, digite a mesma senha que você usa no Portal KZ. Vale até você fechar o controle.</p>" +
+      "<label style='" + ROT + "'>Senha do painel<input id='kz-csenha' type='password' autocomplete='current-password' style='" + CAMPO + "'></label>" +
+      "<div id='kz-cerr' style='display:none;color:#b91c1c;font-size:12.5px;margin-top:8px'></div>" +
+      "<div style='display:flex;gap:8px;justify-content:flex-end;margin-top:16px'><button class='btn' id='kz-ccancelar'>Cancelar</button><button class='btn b-blue' id='kz-cok'>Confirmar</button></div>");
+    const $ = (i) => bg.querySelector("#" + i);
+    const fechar = (ok) => { bg.remove(); resolver(ok); };
+    const ok = async () => {
+      const senha = $("kz-csenha").value;
+      if (!senha) return;
+      $("kz-cok").disabled = true;
+      try {
+        await fa.reauthenticateWithCredential(auth.currentUser, fa.EmailAuthProvider.credential(auth.currentUser.email, senha));
+        fechar(true);
+      } catch (e) { const er = $("kz-cerr"); er.textContent = traduzir(e).replace("E-mail ou senha", "Senha"); er.style.display = "block"; $("kz-cok").disabled = false; }
+    };
+    $("kz-cok").onclick = ok;
+    $("kz-ccancelar").onclick = () => fechar(false);
+    $("kz-csenha").onkeydown = (e) => { if (e.key === "Enter") ok(); };
+    setTimeout(() => $("kz-csenha").focus(), 80);
+  });
+};
+
+function escolherObra(lista) {
+  return new Promise((resolver) => {
+    const bg = janela("kz-obra", CAB("Qual obra?", "Obras em que você tem acesso ao Controle de Custos") +
+      "<div style='display:flex;flex-direction:column;gap:8px;margin-top:12px'>" +
+      lista.map((o, i) => "<button class='btn' data-i='" + i + "' style='justify-content:flex-start;text-align:left'>" + esc((o.sigla ? o.sigla + " — " : "") + (o.nome || o.id)) + " <span style='color:#64748b;font-weight:400'>(" + esc(PAPEL_TXT[o.papel]) + ")</span></button>").join("") +
+      "</div><div style='display:flex;justify-content:flex-end;margin-top:14px'><button class='btn' id='kz-ocancelar'>Cancelar</button></div>");
+    bg.querySelectorAll("[data-i]").forEach((b) => { b.onclick = () => { bg.remove(); resolver(lista[+b.getAttribute("data-i")].id); }; });
+    bg.querySelector("#kz-ocancelar").onclick = () => { bg.remove(); resolver(""); };
+  });
+}
+
+/* ---------- estado e tela de entrada ---------- */
+KZ._definirAcesso = function (a) {
+  Object.assign(KZ, { ativo: true, papel: a.papel, nome: a.nome, email: a.email || "", obra: a.obra, sigla: a.sigla || a.obra });
+  atualizarEntrada();
+};
+function aviso(t, tipo) { try { janelaAviso(t, tipo || "erro"); } catch (e) { alert(t); } }
+
+async function conectar(user) {
+  let obra = obraDaUrl();
+  if (!obra) {
+    const lista = await obrasComAcesso();
+    if (!lista.length) { aviso("Seu login do painel não tem acesso ao Controle de Custos em nenhuma obra. Fale com o gestor da obra."); return; }
+    obra = lista.length === 1 ? lista[0].id : await escolherObra(lista);
+    if (!obra) return;
+  }
+  const a = await papelNaObra(obra);
+  if (!a.obra) { aviso("A obra \"" + obra + "\" não foi encontrada no painel. Confira o link recebido."); return; }
+  if (!a.papel) { aviso("Seu login do painel não tem acesso ao Controle de Custos na obra " + (a.obra.sigla || obra) + ". Fale com o gestor da obra."); return; }
+  KZ._definirAcesso({ papel: a.papel, nome: a.nome, email: user.email, obra, sigla: a.obra.sigla || obra });
+}
+
+function atualizarEntrada() {
+  const tela = document.getElementById("landing-screen");
+  if (!tela) return;
+  let box = document.getElementById("kz-status");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "kz-status";
+    const sub = [].slice.call(tela.querySelectorAll("p")).find((p) => /Escolha como deseja acessar/.test(p.textContent));
+    if (sub) sub.insertAdjacentElement("afterend", box); else tela.firstElementChild && tela.firstElementChild.prepend(box);
+  }
+  const perfis = [["landingEntrarVisualizador", "leitor"], ["landingEntrarEngenheiro", "editor"], ["landingAbrirAdmin", "admin"]];
+  if (KZ.ativo) {
+    box.style.cssText = "display:flex;gap:10px;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;border-radius:12px;padding:9px 12px;font-size:12.5px;margin:0 0 14px;text-align:left";
+    box.innerHTML = "<span style='font-size:18px'>&#128272;</span><span><b>Conectado pelo painel KZ:</b> " + esc(KZ.nome) + " · " + esc(PAPEL_TXT[KZ.papel]) + " · obra " + esc(KZ.sigla) +
+      "<br><span style='color:#166534'>Acesso conferido pelo painel: não precisa de senha.</span></span>";
+  } else {
+    box.style.cssText = "display:flex;gap:10px;align-items:center;justify-content:space-between;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;border-radius:12px;padding:8px 12px;font-size:12.5px;margin:0 0 14px;text-align:left";
+    box.innerHTML = "<span style='flex:1;min-width:0'>&#128272; Tem login do Portal KZ? Entre com ele e use a senha do painel.</span><button class='btn b-sm' id='kz-btn-entrar' style='white-space:nowrap;flex:none;padding:6px 12px'>Entrar com o painel</button>";
+    box.querySelector("#kz-btn-entrar").onclick = async () => {
+      try { iniciar(); let u = auth.currentUser || await primeiroEstado(); if (!u) u = await pedirLogin(); if (u) await conectar(u); }
+      catch (e) { aviso(traduzir(e)); }
+    };
+  }
+  perfis.forEach(([fn, min]) => {
+    const b = tela.querySelector("button[onclick^='" + fn + "']");
+    if (!b) return;
+    const pode = !KZ.ativo || NIVEL[KZ.papel] >= NIVEL[min];
+    b.style.opacity = pode ? "" : ".45";
+    b.title = pode ? (b.getAttribute("data-kz-tit") || b.title) : "Seu acesso no painel (" + PAPEL_TXT[KZ.papel] + ") não libera este perfil";
+    if (!b.getAttribute("data-kz-tit")) b.setAttribute("data-kz-tit", b.title || "");
+  });
+}
+
+/* ---------- troca das senhas do controle pela senha do painel ---------- */
+async function exigirPapel(min, oque) {
+  if (NIVEL[KZ.papel] < NIVEL[min]) {
+    aviso("Seu acesso no painel (" + (PAPEL_TXT[KZ.papel] || "sem acesso") + ") não permite " + oque + ". Fale com o gestor da obra.");
+    return false;
+  }
+  // acesso ja conferido no painel (login + papel na obra): nao pede senha de novo
+  return true;
+}
+// aceite do Aviso de Privacidade e dos Termos de Uso continua obrigatorio antes de entrar (uma vez por sessao)
+function comAceite(cb) { if (typeof exigirAceitePrivacidade === "function") exigirAceitePrivacidade(cb); else cb(); }
+const orig = {};
+["landingEntrarEngenheiro", "landingAbrirAdmin", "pedirSenhaEngPara", "abrirEng", "exigirLoginParaSalvar", "landingSairTrocar", "usuarioAtualLabel", "bvNomeUsuario"]
+  .forEach((n) => { orig[n] = window[n]; });
+
+window.landingEntrarEngenheiro = async function () {
+  if (!KZ.ativo) return orig.landingEntrarEngenheiro.apply(this, arguments);
+  if (!S.landingJsonCarregado) { alert("Importe um arquivo JSON antes de continuar, ou use 'Começar do zero'."); return; }
+  if (!(await exigirPapel("editor", "entrar como Controlador"))) return;
+  comAceite(function () {
+    S.usuarioLogado = null;
+    KZ.entrouPeloPainel = true;
+    concederAcessoEngenheiro();
+  });
+};
+window.landingAbrirAdmin = async function () {
+  if (!KZ.ativo) return orig.landingAbrirAdmin.apply(this, arguments);
+  if (!(await exigirPapel("admin", "abrir o Administrador"))) return;
+  comAceite(function () {
+    KZ.entrouPeloPainel = true;
+    abrirPainelAdmin();
+  });
+};
+window.pedirSenhaEngPara = function (callback) {
+  if (!KZ.ativo) return orig.pedirSenhaEngPara.apply(this, arguments);
+  (async () => {
+    if (!(await exigirPapel("editor", "esta ação"))) return;
+    engDesbloqueado = true;
+    KZ.entrouPeloPainel = true;
+    try { redesenharTabelasMaoDeObra(); } catch (e) { /* tabelas ainda nao desenhadas */ }
+    if (callback) callback();
+  })();
+};
+window.abrirEng = function () {
+  if (KZ.ativo && !engDesbloqueado) return window.pedirSenhaEngPara(function () { orig.abrirEng(); });
+  return orig.abrirEng.apply(this, arguments);
+};
+window.exigirLoginParaSalvar = function (callback, opt) {
+  if (!KZ.ativo) return orig.exigirLoginParaSalvar.apply(this, arguments);
+  (async () => { if (await exigirPapel("editor", "salvar ou confirmar esta ação")) { if (callback) callback(); } })();
+};
+window.landingSairTrocar = function () {
+  KZ.entrouPeloPainel = false;
+  const r = orig.landingSairTrocar.apply(this, arguments);
+  atualizarEntrada();
+  return r;
+};
+window.usuarioAtualLabel = function () {
+  if (KZ.ativo && KZ.entrouPeloPainel && KZ.nome) return KZ.nome;
+  return orig.usuarioAtualLabel.apply(this, arguments);
+};
+if (typeof orig.bvNomeUsuario === "function") window.bvNomeUsuario = function () {
+  if (KZ.ativo && KZ.entrouPeloPainel && S.modoAcesso !== "visualizador" && KZ.nome) return { perfil: "Controlador", nome: KZ.nome };
+  return orig.bvNomeUsuario.apply(this, arguments);
+};
+
+/* ---------- ao abrir ---------- */
+(async () => {
+  atualizarEntrada();
+  if (window.__KZ_SEM_AUTO) return; // usado so nos testes
+  try {
+    iniciar();
+    let u = await primeiroEstado();
+    // veio do link do Portal (?obra=) e ainda sem login neste navegador: pede o login do painel
+    if (!u && new URLSearchParams(location.search).has("obra")) u = await pedirLogin("Você abriu o controle pelo Portal KZ. Entre com o mesmo login do painel. (Cancelar mantém as senhas antigas do controle.)");
+    if (u) await conectar(u);
+  } catch (e) {
+    console.warn("[Custos] Login do Portal KZ não detectado:", e && e.message);
+  }
+})();
+</script>
 <!-- Rev80: ExcelJS 4.4.0 embutido (so e ativado quando exporta Excel com cores) -->
 <script type="text/plain" id="lib-exceljs">/*! ExcelJS 19-10-2023 */
 
