@@ -13053,7 +13053,10 @@ init();
   // origem: "padrao" (de fabrica), "local" (configurado neste navegador) ou "json" (veio da base importada)
   let nuvemAtual = null, db = null, NOME_COLECAO = COLECAO_PADRAO, contApps = 0;
   function criarConexao(config) {
-    const app = initializeApp(config, contApps++ ? "ctc-nuvem-" + contApps : undefined);
+    // Rev80: o app padrao fica reservado para a nuvem da KZ (o login do Portal KZ e compartilhado por ele);
+    // outra configuracao de nuvem usa um app com nome proprio
+    const kz = config.apiKey === FIREBASE_CONFIG_PADRAO.apiKey && config.projectId === FIREBASE_CONFIG_PADRAO.projectId;
+    const app = initializeApp(config, (!contApps++ && kz) ? undefined : "ctc-nuvem-" + contApps);
     // Rev80: Analytics desligado (antes: getAnalytics quando havia measurementId)
     return getFirestore(app);
   }
@@ -17656,18 +17659,19 @@ const NIVEL = { "": 0, leitor: 1, editor: 2, admin: 3 };
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 let auth = null, db = null;
-const KZ = window.KZ = { carregado: true, ativo: false, papel: "", nome: "", email: "", obra: "", sigla: "", confirmado: false, entrouPeloPainel: false };
+const KZ = window.KZ = { carregado: true, verificando: true, pronto: null, ativo: false, papel: "", nome: "", email: "", obra: "", sigla: "", confirmado: false, entrouPeloPainel: false };
 
 function iniciar() {
   if (auth) return;
   const apps = fbApp.getApps();
   const padrao = apps.find((a) => a.name === "[DEFAULT]");
-  // mesmo app do Portal ([DEFAULT] com a config da KZ): o login fica compartilhado
-  const app = (padrao && padrao.options.projectId === KZ_CFG.projectId && padrao.options.apiKey === KZ_CFG.apiKey)
-    ? padrao
+  // mesmo app do Portal ([DEFAULT] com a config da KZ): o login fica compartilhado entre o Portal e o controle
+  const app = !padrao ? fbApp.initializeApp(KZ_CFG)
+    : (padrao.options.projectId === KZ_CFG.projectId && padrao.options.apiKey === KZ_CFG.apiKey) ? padrao
     : (apps.find((a) => a.name === "kz-portal") || fbApp.initializeApp(KZ_CFG, "kz-portal"));
   auth = fa.getAuth(app);
   db = fs.getFirestore(app);
+  KZ.appNome = app.name;
 }
 
 function traduzir(e) {
@@ -17830,6 +17834,9 @@ async function conectar(user) {
   KZ._definirAcesso({ papel: a.papel, nome: a.nome, email: user.email, obra, sigla: a.obra.sigla || obra });
 }
 
+/** Se o login do painel ainda esta sendo conferido, espera terminar (no maximo 10 s) antes de decidir. */
+async function aguardar() { if (KZ.verificando && KZ.pronto) { try { await KZ.pronto; } catch (e) { /* segue */ } } }
+
 function atualizarEntrada() {
   const tela = document.getElementById("landing-screen");
   if (!tela) return;
@@ -17841,7 +17848,10 @@ function atualizarEntrada() {
     if (sub) sub.insertAdjacentElement("afterend", box); else tela.firstElementChild && tela.firstElementChild.prepend(box);
   }
   const perfis = [["landingEntrarVisualizador", "leitor"], ["landingEntrarEngenheiro", "editor"], ["landingAbrirAdmin", "admin"]];
-  if (KZ.ativo) {
+  if (!KZ.ativo && KZ.verificando) {
+    box.style.cssText = "display:flex;gap:10px;align-items:center;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:12px;padding:9px 12px;font-size:12.5px;margin:0 0 14px;text-align:left";
+    box.innerHTML = "<span style='font-size:18px'>&#9203;</span><span>Conferindo seu login do painel KZ…</span>";
+  } else if (KZ.ativo) {
     box.style.cssText = "display:flex;gap:10px;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;border-radius:12px;padding:9px 12px;font-size:12.5px;margin:0 0 14px;text-align:left";
     box.innerHTML = "<span style='font-size:18px'>&#128272;</span><span><b>Conectado pelo painel KZ:</b> " + esc(KZ.nome) + " · " + esc(PAPEL_TXT[KZ.papel]) + " · obra " + esc(KZ.sigla) +
       "<br><span style='color:#166534'>Acesso conferido pelo painel: não precisa de senha.</span></span>";
@@ -17879,6 +17889,7 @@ const orig = {};
   .forEach((n) => { orig[n] = window[n]; });
 
 window.landingEntrarEngenheiro = async function () {
+  await aguardar();
   if (!KZ.ativo) return orig.landingEntrarEngenheiro.apply(this, arguments);
   if (!S.landingJsonCarregado) { alert("Importe um arquivo JSON antes de continuar, ou use 'Começar do zero'."); return; }
   if (!(await exigirPapel("editor", "entrar como Controlador"))) return;
@@ -17889,6 +17900,7 @@ window.landingEntrarEngenheiro = async function () {
   });
 };
 window.landingAbrirAdmin = async function () {
+  await aguardar();
   if (!KZ.ativo) return orig.landingAbrirAdmin.apply(this, arguments);
   if (!(await exigirPapel("admin", "abrir o Administrador"))) return;
   comAceite(function () {
@@ -17896,7 +17908,8 @@ window.landingAbrirAdmin = async function () {
     abrirPainelAdmin();
   });
 };
-window.pedirSenhaEngPara = function (callback) {
+window.pedirSenhaEngPara = async function (callback) {
+  await aguardar();
   if (!KZ.ativo) return orig.pedirSenhaEngPara.apply(this, arguments);
   (async () => {
     if (!(await exigirPapel("editor", "esta ação"))) return;
@@ -17906,11 +17919,13 @@ window.pedirSenhaEngPara = function (callback) {
     if (callback) callback();
   })();
 };
-window.abrirEng = function () {
+window.abrirEng = async function () {
+  await aguardar();
   if (KZ.ativo && !engDesbloqueado) return window.pedirSenhaEngPara(function () { orig.abrirEng(); });
   return orig.abrirEng.apply(this, arguments);
 };
-window.exigirLoginParaSalvar = function (callback, opt) {
+window.exigirLoginParaSalvar = async function (callback, opt) {
+  await aguardar();
   if (!KZ.ativo) return orig.exigirLoginParaSalvar.apply(this, arguments);
   (async () => { if (await exigirPapel("editor", "salvar ou confirmar esta ação")) { if (callback) callback(); } })();
 };
@@ -17930,9 +17945,7 @@ if (typeof orig.bvNomeUsuario === "function") window.bvNomeUsuario = function ()
 };
 
 /* ---------- ao abrir ---------- */
-(async () => {
-  atualizarEntrada();
-  if (window.__KZ_SEM_AUTO) return; // usado so nos testes
+async function verificarAoAbrir() {
   try {
     iniciar();
     let u = await primeiroEstado();
@@ -17942,7 +17955,15 @@ if (typeof orig.bvNomeUsuario === "function") window.bvNomeUsuario = function ()
   } catch (e) {
     console.warn("[Custos] Login do Portal KZ não detectado:", e && e.message);
   }
-})();
+}
+if (window.__KZ_SEM_AUTO) { KZ.verificando = false; atualizarEntrada(); } // usado so nos testes
+else {
+  // espera no maximo 10 s; depois disso as senhas antigas voltam a valer (o login do painel ainda pode ser feito depois)
+  let limite;
+  KZ.pronto = Promise.race([verificarAoAbrir(), new Promise((r) => { limite = setTimeout(r, 10000); })])
+    .finally(() => { clearTimeout(limite); KZ.verificando = false; atualizarEntrada(); });
+  atualizarEntrada();
+}
 </script>
 <!-- Rev80: ExcelJS 4.4.0 embutido (so e ativado quando exporta Excel com cores) -->
 <script type="text/plain" id="lib-exceljs">/*! ExcelJS 19-10-2023 */
