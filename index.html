@@ -17776,6 +17776,113 @@ function alApresCfg(pag){
   montarTodas();
 })();
 </script>
+<script id="rev80-engrenagem-linhas">
+/* ===================== Rev80: engrenagem de opcoes nas linhas do Custo M.O.D e do Custo M.O.I =====================
+   Os icones de cada linha (Editar, Excluir e Memoria de calculo) ficam guardados num botao de engrenagem:
+   um clique abre um menu com as mesmas opcoes. As acoes sao exatamente as mesmas de antes (o menu so "clica"
+   no icone original, que continua na linha, escondido). A engrenagem e desenhada por CSS (::before), entao
+   nao entra no texto da celula: filtros e buscas continuam iguais. */
+(function () {
+  var TB = ["moimat-tbody", "modmat-tbody"];
+  var ALVO = /^(abrirEditMoi|abrirEditMod|excluirColaboradorMoi|excluirFuncaoMod|abrirCalcMoi|abrirCalcMod)\(/;
+  var ROTULO = { abrirEditMoi: ["&#9998;", "Editar colaborador"], abrirEditMod: ["&#9998;", "Editar função"],
+    abrirCalcMoi: ["&#128202;", "Memória de cálculo"], abrirCalcMod: ["&#128202;", "Memória de cálculo"],
+    excluirColaboradorMoi: ["&#128465;", "Excluir colaborador"], excluirFuncaoMod: ["&#128465;", "Excluir função"] };
+  var ORDEM = ["abrirEdit", "abrirCalc", "excluir"]; // Editar, Memoria de calculo, Excluir (por ultimo, separado)
+
+  var css = document.createElement("style");
+  css.textContent =
+    ".eng-gear{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:6px;border-radius:7px;cursor:pointer;vertical-align:middle;color:#64748b;transition:background .15s,color .15s}" +
+    ".eng-gear::before{content:'\\2699';font-size:15px;line-height:1}" +
+    ".eng-gear:hover,.eng-gear.on{background:#e2e8f0;color:#1e3a5f}" +
+    ".eng-ocultos{display:none}" +
+    "#eng-menu{position:fixed;z-index:10080;min-width:200px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 14px 34px rgba(15,23,42,.18);padding:6px;font-family:'Segoe UI',system-ui,sans-serif;animation:engIn .12s ease-out}" +
+    "#eng-menu .eng-tit{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:6px 10px 4px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    "#eng-menu button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:8px 10px;border-radius:8px;font-size:13px;color:#0f172a;cursor:pointer}" +
+    "#eng-menu button:hover,#eng-menu button:focus{background:#f1f5f9}" +
+    "#eng-menu button.perigo{color:#b91c1c}#eng-menu button.perigo:hover{background:#fef2f2}" +
+    "#eng-menu hr{border:0;border-top:1px solid #f1f5f9;margin:4px 2px}" +
+    "@keyframes engIn{from{transform:translateY(-4px)}to{transform:none}}";
+  document.head.appendChild(css);
+
+  // Coloca o menu logo abaixo (ou acima) da engrenagem; se a engrenagem saiu da tela, fecha
+  function posicionar(m) {
+    var gear = m._gear; if (!gear || !document.body.contains(gear)) { fecharMenu(); return; }
+    var rc = gear.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+    if (rc.bottom < 0 || rc.top > window.innerHeight) { fecharMenu(); return; }
+    m.style.left = Math.max(8, Math.min(rc.left, window.innerWidth - w - 8)) + "px";
+    m.style.top = (rc.bottom + 6 + h > window.innerHeight ? Math.max(8, rc.top - h - 6) : rc.bottom + 6) + "px";
+  }
+  function nomeFn(el) { var m = (el.getAttribute("onclick") || "").match(/^([A-Za-z]+)\(/); return m ? m[1] : ""; }
+
+  function fecharMenu() {
+    var m = document.getElementById("eng-menu"); if (m) m.remove();
+    document.querySelectorAll(".eng-gear.on").forEach(function (g) { g.classList.remove("on"); });
+    document.removeEventListener("mousedown", fora, true);
+  }
+  function fora(e) { var m = document.getElementById("eng-menu"); if (m && !m.contains(e.target) && !e.target.closest(".eng-gear")) fecharMenu(); }
+
+  function abrirMenu(gear) {
+    var ja = gear.classList.contains("on"); fecharMenu(); if (ja) return;
+    var box = gear.nextElementSibling; if (!box || !box.classList.contains("eng-ocultos")) return;
+    var itens = Array.prototype.slice.call(box.children).sort(function (a, b) {
+      var ia = ORDEM.findIndex(function (p) { return nomeFn(a).indexOf(p) === 0; }), ib = ORDEM.findIndex(function (p) { return nomeFn(b).indexOf(p) === 0; });
+      return ia - ib;
+    });
+    var cel = gear.closest("td"), nome = "";
+    if (cel) { var cl = cel.cloneNode(true); cl.querySelectorAll(".eng-ocultos,span[onclick],span[title]").forEach(function (x) { x.remove(); }); nome = (cl.textContent || "").replace(/^[^A-Za-zÀ-ÿ0-9]+/, "").trim(); }
+    var m = document.createElement("div"); m.id = "eng-menu"; m.setAttribute("role", "menu");
+    m.innerHTML = "<div class='eng-tit'></div>";
+    m.querySelector(".eng-tit").textContent = nome || "Opções";
+    itens.forEach(function (orig) {
+      var fn = nomeFn(orig), r = ROTULO[fn] || ["&#8226;", orig.title || fn], perigo = fn.indexOf("excluir") === 0;
+      if (perigo && m.querySelector("button")) m.appendChild(document.createElement("hr"));
+      var b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem");
+      if (perigo) b.className = "perigo";
+      b.innerHTML = "<span style='width:18px;text-align:center'>" + r[0] + "</span><span>" + r[1] + "</span>";
+      b.onclick = function () { fecharMenu(); orig.click(); };
+      m.appendChild(b);
+    });
+    document.body.appendChild(m);
+    gear.classList.add("on");
+    m._gear = gear;
+    posicionar(m);
+    var b1 = m.querySelector("button"); if (b1) b1.focus({ preventScroll: true });
+    setTimeout(function () { document.addEventListener("mousedown", fora, true); }, 0);
+  }
+
+  function montar(id) {
+    var tb = document.getElementById(id); if (!tb) return;
+    Array.prototype.forEach.call(tb.rows, function (r) {
+      var c = r.cells[0]; if (!c || c.querySelector(".eng-gear")) return;
+      // os pontinhos de arrastar saem da tela: a linha inteira continua podendo ser arrastada
+      Array.prototype.forEach.call(c.querySelectorAll("span[title^='Arraste para']"), function (x) { x.remove(); });
+      var icones = Array.prototype.filter.call(c.children, function (el) { return el.tagName === "SPAN" && ALVO.test(el.getAttribute("onclick") || ""); });
+      if (!icones.length) return;
+      var gear = document.createElement("span");
+      gear.className = "eng-gear"; gear.title = "Opções (editar, memória de cálculo, excluir)";
+      gear.setAttribute("role", "button"); gear.setAttribute("tabindex", "0"); gear.setAttribute("aria-label", "Opções");
+      gear.addEventListener("click", function (e) { e.stopPropagation(); abrirMenu(gear); });
+      gear.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrirMenu(gear); } });
+      gear.addEventListener("mousedown", function (e) { e.stopPropagation(); });
+      var box = document.createElement("span"); box.className = "eng-ocultos";
+      c.insertBefore(gear, icones[0]);
+      c.insertBefore(box, icones[0]);
+      icones.forEach(function (el) { box.appendChild(el); });
+    });
+  }
+  function montarTodas() { TB.forEach(function (id) { try { montar(id); } catch (e) { console.error("Rev80 engrenagem:", e); } }); }
+  window.engrenagemLinhasMontar = montarTodas;
+  ["renderCustoModMatrix", "renderCustoMOMatrix"].forEach(function (n) {
+    var o = window[n]; if (typeof o !== "function") return;
+    window[n] = function () { var x = o.apply(this, arguments); montarTodas(); return x; };
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") fecharMenu(); });
+  window.addEventListener("scroll", function () { var m = document.getElementById("eng-menu"); if (m) posicionar(m); }, true);
+  window.addEventListener("resize", fecharMenu);
+  montarTodas();
+})();
+</script>
 <script type="module" id="rev80-portal-kz">
 /* ===================== Rev80: login do Portal KZ (uma senha so) =====================
    Aberto pelo Portal KZ (mesmo site e mesmo Firebase), quem ja entrou no Portal e reconhecido aqui.
