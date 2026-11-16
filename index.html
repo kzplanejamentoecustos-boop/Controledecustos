@@ -11706,38 +11706,39 @@ function prevRealItem3Linhas(it,nv,mostrarToggle,temFilhos,colapsado,realVal,pre
   var padL=(nv-1)*12+6;
   var toggleHtml=mostrarToggle&&temFilhos?"<span onclick=\"toggleColetorNode('"+it.item.replace(/'/g,"&#39;")+"')\" style='cursor:pointer;display:inline-block;width:14px;color:"+cor.text+";font-weight:700;user-select:none'>"+(colapsado?"&#9656;":"&#9662;")+"</span>":"<span style='display:inline-block;width:14px'></span>";
   var togglePD="<span onclick=\"togglePrevistoDesvioItem('"+it.item.replace(/'/g,"&#39;")+"')\" style='cursor:pointer;display:inline-block;width:14px;color:#b45309;font-weight:900;user-select:none' title='"+(expandidoPD?"Recolher Previsto/Desvio":"Mostrar Previsto/Desvio")+"'>"+(expandidoPD?"&#8722;":"&#43;")+"</span>";
-  var h="";
-  h+="<tr style='background:"+cor.bg+";border-left:3px solid "+cor.border+"'>";
+  // Rev80: com Previsto/Desvio aberto, o item vira um bloco (painel azul): PREVISTO em cima, REAL no meio, DESVIO embaixo
+  var h="",hP="",hD="";
+  h+="<tr"+(expandidoPD?" class='blk-r'":"")+" style='background:"+cor.bg+";border-left:3px solid "+cor.border+"'>";
   h+="<td style='padding-left:"+padL+"px;font-family:monospace;font-size:11px;white-space:nowrap;color:"+cor.text+";font-weight:"+cor.peso+"'>"+togglePD+toggleHtml+it.item+"</td>";
   h+="<td style='max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer' onclick=\"abrirDescColetor('"+it.item.replace(/'/g,"&#39;")+"')\">"+it.descricao+"</td>";
   h+="<td class='mono tr' style='font-weight:700'>"+fmt(realVal)+"</td>";
   if(linhaMesesReal){linhaMesesReal.forEach(function(v){h+="<td class='mono tr' style='font-size:11px;color:"+(v?"#334155":"#cbd5e1")+"'>"+(v?fmt(v):"-")+"</td>";});}
   h+="</tr>";
   if(expandidoPD){
-    h+="<tr style='background:#fffbeb'>";
-    h+="<td style='padding-left:"+padL+"px;font-size:11px;color:#b45309;font-weight:700'><span style='display:inline-block;width:14px'></span>&#8627; "+it.item+"</td>";
-    h+="<td style='color:#92400e;font-size:11px'>PREVISTO - "+it.descricao+"</td>";
-    h+="<td class='mono tr' style='color:#b45309;font-weight:700'>"+fmt(previstoVal)+"</td>";
-    if(linhaMesesPrevisto){linhaMesesPrevisto.forEach(function(v){h+="<td class='mono tr' style='font-size:11px;color:"+(v?"#b45309":"#fde68a")+"'>"+(v?fmt(v):"-")+"</td>";});}
-    h+="</tr>";
+    hP+="<tr class='blk-p' style='background:#fffbeb'>";
+    hP+="<td style='padding-left:"+padL+"px;font-size:11px;color:#b45309;font-weight:700;background:#fffbeb'><span style='display:inline-block;width:14px'></span>"+it.item+"</td>";
+    hP+="<td style='color:#92400e;font-size:11px;background:#fffbeb'><b>PREVISTO</b> - "+it.descricao+"</td>";
+    hP+="<td class='mono tr' style='color:#b45309;font-weight:700;background:#fffbeb'>"+fmt(previstoVal)+"</td>";
+    if(linhaMesesPrevisto){linhaMesesPrevisto.forEach(function(v){hP+="<td class='mono tr' style='font-size:11px;background:#fffbeb;color:"+(v?"#b45309":"#fde68a")+"'>"+(v?fmt(v):"-")+"</td>";});}
+    hP+="</tr>";
   }
   if(expandidoPD){
     var desvio=previstoVal-realVal;
     var corDesvio=desvio<0?"#dc2626":(desvio>0?"#15803d":"#64748b");
-    h+="<tr style='background:#fafafa'>";
-    h+="<td style='padding-left:"+padL+"px;font-size:11px;color:"+corDesvio+";font-weight:700'><span style='display:inline-block;width:14px'></span>&#8627; "+it.item+"</td>";
-    h+="<td style='color:#64748b;font-size:11px'>DESVIO (Previsto - Real)"+(desvio<0?" &#9650; real acima":desvio>0?" &#9660; real abaixo":"")+"</td>";
-    h+="<td class='mono tr' style='color:"+corDesvio+";font-weight:700'>"+(desvio!==0?((desvio>0?"+":"")+fmt(desvio)):"-")+"</td>";
+    hD+="<tr class='blk-s' style='background:#fafafa'>";
+    hD+="<td style='padding-left:"+padL+"px;font-size:11px;color:"+corDesvio+";font-weight:700'><span style='display:inline-block;width:14px'></span>"+it.item+"</td>";
+    hD+="<td style='color:#64748b;font-size:11px'><span class='blk-tag s'>DESVIO</span>Previsto &minus; Real"+(desvio<0?" &#9650; real acima":desvio>0?" &#9660; real abaixo":"")+"</td>";
+    hD+="<td class='mono tr' style='color:"+corDesvio+";font-weight:700'>"+(desvio!==0?((desvio>0?"+":"")+fmt(desvio)):"-")+"</td>";
     if(linhaMesesReal&&linhaMesesPrevisto){
       for(var mi=0;mi<linhaMesesReal.length;mi++){
         var dv=linhaMesesPrevisto[mi]-linhaMesesReal[mi];
         var corDv=dv<0?"#dc2626":(dv>0?"#15803d":"#cbd5e1");
-        h+="<td class='mono tr' style='font-size:11px;color:"+corDv+"'>"+(dv?((dv>0?"+":"")+fmt(dv)):"-")+"</td>";
+        hD+="<td class='mono tr' style='font-size:11px;color:"+corDv+"'>"+(dv?((dv>0?"+":"")+fmt(dv)):"-")+"</td>";
       }
     }
-    h+="</tr>";
+    hD+="</tr>";
   }
-  return h;
+  return hP+h+hD;
 }
 function renderPrevReal(){
   var tb=document.getElementById("tb-prevreal");if(!tb)return;
@@ -16020,9 +16021,10 @@ function xfAnexar(idTbody,o){
 function xfEhPrincipal(st,r){return st.o.principal?st.o.principal(r):(r.cells.length>2&&r.cells[0]&&(r.cells[0].textContent||"").trim()!=="");}
 function xfNivelGrupo(st,r){return st.o.grupo?st.o.grupo(r):-1;}
 // blocos: [{tipo:"g",r,nivel} | {tipo:"i",p,f:[]}]
-function xfBlocos(st,tb){var b=[];Array.prototype.forEach.call(tb.rows,function(r){
-    var nv=xfNivelGrupo(st,r);if(nv>=0){b.push({tipo:"g",r:r,nivel:nv});return;}
-    if(xfEhPrincipal(st,r)){b.push({tipo:"i",p:r,f:[]});return;}
+function xfBlocos(st,tb){var b=[],antes=[];Array.prototype.forEach.call(tb.rows,function(r){
+    var nv=xfNivelGrupo(st,r);if(nv>=0){antes.forEach(function(x){b.push({tipo:"x",r:x});});antes=[];b.push({tipo:"g",r:r,nivel:nv});return;}
+    if(r.hasAttribute("data-xf-antes")){antes.push(r);return;} // Rev80: linha PREVISTO que fica acima do Real (vai junto com o item de baixo)
+    if(xfEhPrincipal(st,r)){b.push({tipo:"i",p:r,f:[],a:antes});antes=[];return;}
     for(var k=b.length-1;k>=0;k--){if(b[k].tipo==="i"){b[k].f.push(r);return;}if(b[k].tipo==="g")break;}
     b.push({tipo:"x",r:r});});
   return b;}
@@ -16041,13 +16043,13 @@ function xfAplicar(id){
     // ordena dentro de cada grupo (os itens continuam embaixo do seu grupo)
     var corrida=[],nova=[];var fecha=function(){corrida.sort(cmp);nova=nova.concat(corrida);corrida=[];};
     bl.forEach(function(x){if(x.tipo==="i")corrida.push(x);else{fecha();nova.push(x);}});fecha();
-    nova.forEach(function(x){if(x.tipo==="i"){tb.appendChild(x.p);x.f.forEach(function(y){tb.appendChild(y);});}else tb.appendChild(x.r);});bl=nova;}
+    nova.forEach(function(x){if(x.tipo==="i"){(x.a||[]).forEach(function(y){tb.appendChild(y);});tb.appendChild(x.p);x.f.forEach(function(y){tb.appendChild(y);});}else tb.appendChild(x.r);});bl=nova;}
   Array.prototype.forEach.call(tb.rows,function(r){r._xf=1;}); // marca as linhas ja tratadas
   var itens=bl.filter(function(x){return x.tipo==="i";}),vis=0,soma=0,ci=-1;
   if(st.o.somaCol)xfCols(tab,{}).forEach(function(cl){if(ci<0&&xfNomeCol(th,cl.th)===st.o.somaCol)ci=cl.i;});
   if(st.o.somaCol&&ci<0)xfCols(tab,{}).forEach(function(cl){if(ci<0&&xfNomeCol(th,cl.th).indexOf(st.o.somaCol)===0)ci=cl.i;});
   itens.forEach(function(g){var ok=xfPassa(st,g.p);g.vis=ok;
-    g.p.style.display=ok?"":"none";g.f.forEach(function(x){x.style.display=ok?"":"none";});
+    g.p.style.display=ok?"":"none";g.f.forEach(function(x){x.style.display=ok?"":"none";});(g.a||[]).forEach(function(x){x.style.display=ok?"":"none";});
     if(ok){vis++;if(ci>=0){var n=xfNum(xfValor(st,g.p,ci));if(n)soma+=n;}}});
   // grupos: aparecem se algum item do seu escopo (ate o proximo grupo de nivel igual ou maior) aparece
   bl.forEach(function(x,k){if(x.tipo!=="g")return;var tem=false;
@@ -16138,7 +16140,7 @@ function xfAbrir(id,ci,btn){
     .replace(/️/g,"").replace(/^[\s+−]+(?=\S)/,"").replace(/\s+/g," ").trim()
     .replace(/^-\s*[^\d\s]{1,12}$/,"-").replace(/^(-?[\d.,]+)([A-Za-zÀ-ÿ\/²³]+)$/,"$1 $2")||"-";};
   var GRUPO=function(r){if(r.cells.length>=5)return -1;var od=r.getAttribute("ondrop")||"",m=od.match(/Grupo\(event,'[^']*','([^']*)'/);return m?(m[1]?1:0):0;};
-  var PRINC=function(r){if(r.cells.length<5)return false;var c0=r.cells[0],tx=(c0&&c0.textContent||"").trim();if(/^↳/.test(tx))return false;
+  var PRINC=function(r){if(r.cells.length<5)return false;if(r.hasAttribute("data-xf-seg")||r.hasAttribute("data-xf-antes"))return false;var c0=r.cells[0],tx=(c0&&c0.textContent||"").trim();if(/^↳/.test(tx))return false;
     if(/PREVISTO/i.test(r.textContent.slice(0,200))&&!r.getAttribute("draggable"))return false;return true;};
   var COLOK=function(c){return (c.rowSpan||1)>1||(c.colSpan||1)===1&&(c.parentNode.parentNode.rows.length===1);};
   var TB=["moimat-tbody","modmat-tbody","indiretomat-tbody","servicomat-tbody","materialmat-tbody","equipamentomat-tbody"];
@@ -17633,6 +17635,147 @@ function alApresCfg(pag){
 })();
 </script>
 
+<script id="rev80-blocos-prev-real">
+/* ===================== Rev80: blocos Previsto / Real / Saldo por item =====================
+   Nas tabelas com linhas PREVISTO (Custo M.O.I, Custo M.O.D, Custo Indireto, Servico, Material e Equipamento),
+   cada item vira um bloco bem marcado:
+     PREVISTO (em cima)  ->  REAL (no meio, a linha que ja existia)  ->  SALDO = Previsto - Real (embaixo)
+   O visual do bloco segue o estilo escolhido (body[data-blk-estilo]).
+   So reorganiza a tela depois de desenhada: nao muda nenhum calculo nem dado salvo. O Saldo e lido dos proprios
+   valores mostrados nas linhas Previsto e Real, e e refeito sempre que um valor e alterado. */
+(function () {
+  var TB = ["moimat-tbody", "modmat-tbody", "indiretomat-tbody", "servicomat-tbody", "materialmat-tbody", "equipamentomat-tbody"];
+  // Estilo visual dos blocos (body[data-blk-estilo]): A = moldura, B = minimalista, C = zebra por item, D = painel azul
+  var E = function (e, r) { return r.split("|").map(function (x) { return "body[data-blk-estilo='" + e + "'] " + x; }).join(","); };
+  var css = document.createElement("style");
+  css.textContent =
+    // comum: linha SALDO e cores do saldo
+    "tr.blk-s>td{background:#f8fafc!important;font-size:11px;padding-top:3px!important;padding-bottom:3px!important}" +
+    ".blk-tag{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:1px 6px;border-radius:999px;margin-right:6px;vertical-align:middle;line-height:15px}" +
+    ".blk-tag.s{background:#e2e8f0;color:#334155}" +
+    // etiqueta REAL so no visual (::before nao entra no texto da celula: filtros e buscas nao mudam) e so nos itens abertos
+    "tr.blk-r>td:first-child::before{content:'REAL';display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:1px 6px;border-radius:999px;margin-right:6px;vertical-align:middle;line-height:15px;background:#dbeafe;color:#1e3a8a}" +
+    ".blk-s-pos{color:#15803d;font-weight:700}.blk-s-neg{color:#dc2626;font-weight:700}.blk-s-zero{color:#cbd5e1}" +
+    // A - moldura: so os itens abertos ganham uma moldura fina; os fechados ficam como sempre foram
+    E("A", "tr.blk-p>td") + "{border-top:2px solid #64748b!important}" +
+    E("A", "tr.blk-s>td") + "{border-bottom:2px solid #64748b!important}" +
+    E("A", "tr.blk-p>td:first-child|tr.blk-r>td:first-child|tr.blk-s>td:first-child") + "{box-shadow:inset 3px 0 0 #64748b}" +
+    // B - minimalista: nada de faixa; so um respiro acima do Previsto e o Saldo discreto
+    E("B", "tr.blk-p>td") + "{border-top:6px solid #fff!important}" +
+    E("B", "tr.blk-s>td") + "{border-bottom:6px solid #fff!important;background:#fff!important}" +
+    E("B", "tr.blk-r>td:first-child::before") + "{display:none}" +
+    // C - zebra por item: um item sim, outro nao, com um tom levemente mais escuro (as 3 linhas do item juntas)
+    E("C", "tr.blk-par1>td") + "{box-shadow:inset 0 0 0 9999px rgba(15,23,42,.045)}" +
+    E("C", "tr.blk-s>td") + "{border-bottom:1px solid #cbd5e1!important}" +
+    // D - painel azul: o item aberto vira um painel azul-claro com borda, destacado do resto
+    E("D", "tr.blk-r>td|tr.blk-s>td") + "{background:#eff6ff!important}" +
+    E("D", "tr.blk-p>td") + "{border-top:2px solid #3b82f6!important}" +
+    E("D", "tr.blk-s>td") + "{border-bottom:2px solid #3b82f6!important}" +
+    E("D", "tr.blk-p>td:first-child|tr.blk-r>td:first-child|tr.blk-s>td:first-child") + "{box-shadow:inset 4px 0 0 #3b82f6}";
+  function aplicarEstilo() { var e = "D"; /* escolhido: painel azul */ if (window.__BLK_ESTILO) e = window.__BLK_ESTILO; if (document.body) document.body.setAttribute("data-blk-estilo", e); }
+  aplicarEstilo(); document.addEventListener("DOMContentLoaded", aplicarEstilo);
+  document.head.appendChild(css);
+
+  function ehPrevisto(r) { return r && r.cells.length >= 5 && /PREVISTO/.test((r.cells[0].textContent || "")) && !r.hasAttribute("data-blk-s"); }
+  function ehItem(r) {
+    if (!r || r.cells.length < 5 || r.hasAttribute("data-blk-s")) return false;
+    var t = (r.cells[0].textContent || "");
+    return !/PREVISTO/.test(t) && !/^\s*TOTAL/.test(t);
+  }
+  function idxTotal(r) { // celula "Total" (fixa a direita)
+    for (var i = r.cells.length - 1; i >= 0; i--) { var c = r.cells[i]; if (c.style.position === "sticky" && c.style.right === "0px") return i; }
+    return -1;
+  }
+  function valor(c) {
+    if (!c) return 0;
+    var inp = c.querySelector("input");
+    var t = inp ? (inp.value || "") : (c.textContent || "");
+    var m = String(t).replace(/\s/g, "").match(/-?\d[\d.]*(,\d+)?/);
+    if (!m) return 0;
+    var n = typeof numBR === "function" ? numBR(m[0]) : parseFloat(m[0].replace(/\./g, "").replace(",", "."));
+    return isFinite(n) ? n : 0;
+  }
+  function celSaldo(c, v, ehDinheiro) {
+    var vv = Math.round(v * 100) / 100;
+    c.className = "mono tr " + (Math.abs(vv) < 0.005 ? "blk-s-zero" : vv > 0 ? "blk-s-pos" : "blk-s-neg");
+    c.style.textAlign = ehDinheiro ? "right" : "center";
+    c.innerHTML = Math.abs(vv) < 0.005 ? "-" : (ehDinheiro ? fmt(vv) : (vv < 0 ? "-" : "") + fmtQtdBR(Math.abs(vv)));
+    c.title = vv > 0 ? "Sobra do previsto (Previsto maior que o Real)" : vv < 0 ? "Acima do previsto (Real maior que o Previsto)" : "Real igual ao Previsto";
+  }
+  // Recalcula a linha SALDO de um bloco a partir das linhas PREVISTO e REAL
+  function calcSaldo(P, R, Sd) {
+    var tP = idxTotal(P), tR = idxTotal(R), tS = idxTotal(Sd);
+    if (tP < 0 || tR < 0 || tS < 0) return;
+    var nMes = (typeof mesesObra === "function" ? mesesObra().length : 0) * 2;
+    var temQtd = R.cells[tR - 1] && R.cells[tR - 1].getAttribute("data-r1") === "1";
+    var n = nMes + (temQtd ? 1 : 0) + 1; // meses (Qtd e Valor) + Qtd Total + Total
+    for (var k = 0; k < n; k++) {
+      var cS = Sd.cells[tS - k], cP = P.cells[tP - k], cR = R.cells[tR - k];
+      if (!cS) continue;
+      // da direita para a esquerda: Total, [Qtd Total], depois os meses em pares (Valor, Qtd)
+      var ehTot = k === 0, ehQtdTot = temQtd && k === 1;
+      var km = k - 1 - (temQtd ? 1 : 0); // 0 = Valor do ultimo mes, 1 = Qtd do ultimo mes...
+      var ehDinheiro = ehTot || (!ehQtdTot && km % 2 === 0);
+      celSaldo(cS, valor(cP) - valor(cR), ehDinheiro);
+    }
+  }
+  function limparCelula(c) {
+    c.innerHTML = ""; c.removeAttribute("id"); c.removeAttribute("title"); c.removeAttribute("onclick");
+  }
+  function montar(tbId) {
+    var tb = document.getElementById(tbId);
+    if (!tb) return;
+    // ja montado? (as linhas SALDO existem) -> nada a fazer
+    var linhas = Array.prototype.slice.call(tb.rows);
+    if (linhas.some(function (r) { return r.hasAttribute("data-blk-s"); })) return;
+    var bloco = 0;
+    linhas.forEach(function (R) {
+      if (!ehItem(R)) return;
+      var P = R.nextElementSibling && ehPrevisto(R.nextElementSibling) ? R.nextElementSibling : null;
+      var par = "blk-par" + (bloco % 2), id = tbId + "-b" + (bloco++);
+      R.setAttribute("data-blk", id);
+      R.classList.add(par);
+      if (!P) { R.classList.add("blk-so"); return; } // previsto oculto: a linha fica como sempre foi
+      // PREVISTO sobe para cima do REAL
+      tb.insertBefore(P, R);
+      P.setAttribute("data-blk", id); P.setAttribute("data-xf-antes", "1");
+      // SALDO: mesma estrutura de celulas da linha PREVISTO (respeita colunas ocultas), sem campos
+      var Sd = P.cloneNode(true);
+      Sd.removeAttribute("draggable"); Sd.removeAttribute("ondragstart"); Sd.removeAttribute("ondragover"); Sd.removeAttribute("ondragleave"); Sd.removeAttribute("ondrop");
+      Sd.removeAttribute("data-xf-antes"); Sd.removeAttribute("_xf");
+      Sd.setAttribute("data-blk", id); Sd.setAttribute("data-blk-s", "1"); Sd.setAttribute("data-xf-seg", "1");
+      Sd.style.cursor = "default";
+      Array.prototype.forEach.call(Sd.cells, limparCelula);
+      Sd.cells[0].innerHTML = "<span class='blk-tag s'>SALDO</span><span style='color:#475569;font-weight:600'>Previsto − Real</span>";
+      tb.insertBefore(Sd, R.nextSibling);
+      calcSaldo(P, R, Sd);
+      // marcacao do bloco (o visual vem do estilo escolhido)
+      P.classList.add("blk-p", par); R.classList.add("blk-r"); Sd.classList.add("blk-s", par);
+    });
+  }
+  function montarTodas() { TB.forEach(function (id) { try { montar(id); } catch (e) { console.error("Rev80 blocos:", e); } }); }
+  window.blocosPrevRealMontar = montarTodas;
+
+  // Depois de cada desenho das tabelas (inclusive depois de esconder as subcolunas Qtd/Valor)
+  ["renderIndiretoMatrix", "renderCustoModMatrix", "renderCustoMOMatrix"].forEach(function (n) {
+    var o = window[n]; if (typeof o !== "function") return;
+    window[n] = function () { var x = o.apply(this, arguments); montarTodas(); return x; };
+  });
+  // Valor alterado sem redesenhar a tabela: refaz o Saldo daquele bloco
+  document.addEventListener("change", function (e) {
+    var tr = e.target && e.target.closest && e.target.closest("tr[data-blk]");
+    if (!tr) return;
+    setTimeout(function () {
+      var id = tr.getAttribute("data-blk"), tb = tr.parentNode; if (!tb) return;
+      var rows = tb.querySelectorAll("tr[data-blk='" + id + "']");
+      var P = null, R = null, Sd = null;
+      Array.prototype.forEach.call(rows, function (x) { if (x.hasAttribute("data-blk-s")) Sd = x; else if (x.hasAttribute("data-xf-antes")) P = x; else R = x; });
+      if (P && R && Sd) calcSaldo(P, R, Sd);
+    }, 0);
+  });
+  montarTodas();
+})();
+</script>
 <script type="module" id="rev80-portal-kz">
 /* ===================== Rev80: login do Portal KZ (uma senha so) =====================
    Aberto pelo Portal KZ (mesmo site e mesmo Firebase), quem ja entrou no Portal e reconhecido aqui.
