@@ -17922,6 +17922,12 @@ function alApresCfg(pag){
   }
   function aviso(t, tipo) { try { janelaAviso(t, tipo || "erro"); } catch (e) { alert(t); } }
 
+  /* ---------------- configuracao (limite de desvio relevante e faixas do farol) ---------------- */
+  function exportarCfg() {
+    var c = { limPct: 5, limRs: 10000, verde: 2, amarelo: 5, margemMin: 5 };
+    try { var s = JSON.parse(localStorage.getItem("cc_exp_cfg") || "null"); if (s) Object.keys(c).forEach(function (k) { if (s[k] !== "" && s[k] !== null && isFinite(+s[k])) c[k] = +s[k]; }); } catch (e) { }
+    return c;
+  }
   /* ---------------- bibliotecas embutidas (compactadas) ---------------- */
   var carregando = {};
   function carregarLib(id, global) {
@@ -18062,6 +18068,53 @@ function alApresCfg(pag){
     try { medido = receitaMedidoAcumulado(); } catch (e) { }
     try { custoReal = calcTotalRealGeral(); } catch (e) { }
     var alertas = []; try { alertas = alertasCalcular(); } catch (e) { }
+    var contratoT = contrato, custoRealT = custoReal, margemT = contrato ? (contrato - custoReal) / contrato * 100 : null;
+    // ---- Rev80 (grupo A): data de corte, relevancia, farol, tendencia, cascata, previsao no termino, valor agregado, proximos 3 meses
+    var cfg = opc.cfg || exportarCfg();
+    var corte = mes || (S.razaoRealAte && todos.indexOf(S.razaoRealAte) >= 0 ? S.razaoRealAte : null);
+    if (!corte) { var ma = getMA(), ant0 = todos.filter(function (m) { return m < ma; }); corte = ant0.length ? ant0[ant0.length - 1] : todos[0]; }
+    var iC = todos.indexOf(corte), mAnt = iC > 0 ? todos[iC - 1] : null, ateCorte = todos.filter(function (m) { return m <= corte; });
+    function pctDe(p, r) { return p ? (r - p) / p * 100 : null; }
+    function totMeses(ms) { var t = { prev: 0, real: 0 }; ms.forEach(function (m) { Object.keys(nat[m]).forEach(function (k) { t.prev += nat[m][k].prev; t.real += nat[m][k].real; }); }); return t; }
+    itens.forEach(function (x) { var pc = pctDe(x.prev, x.real); x.relevante = Math.abs(x.desvio) >= cfg.limRs || (pc != null && Math.abs(x.desvio) >= 0.005 && Math.abs(pc) >= cfg.limPct) || (!!mes && Math.abs(x.desvioAc) >= cfg.limRs); });
+    // farol: custo, margem, efetivo, prazo fisico (com tendencia frente ao mes anterior)
+    function corPct(pc) { if (pc == null || !isFinite(pc)) return "cinza"; return pc <= cfg.verde ? "verde" : pc <= cfg.amarelo ? "amarelo" : "vermelho"; }
+    function tend(at, an, maiorPior) { if (at == null || an == null || !isFinite(at) || !isFinite(an)) return { t: "sem histórico", c: "" }; var d = at - an; if (Math.abs(d) < 0.5) return { t: "= estável", c: "" }; var pior = maiorPior ? d > 0 : d < 0; return { t: (d > 0 ? "▲ " : "▼ ") + (pior ? "piorou" : "melhorou"), c: pior ? "neg" : "pos" }; }
+    var cAt = mes ? totMeses([mes]) : totMeses(ateCorte), cAn = mAnt ? (mes ? totMeses([mAnt]) : totMeses(todos.filter(function (m) { return m <= mAnt; }))) : null;
+    var pcCusto = mes ? pctDe(totMeses([mes]).prev, totMeses([mes]).real) : pctDe(totMeses(todos).prev, totMeses(todos).real);
+    var mEf = mes || corte;
+    function efDe(m) { var r = 0, p = 0; (S.modData || []).forEach(function (fn) { r += (fn.qtdPorMes || {})[m] || 0; p += qPrevMO("mod", fn, m); }); (S.moiData || []).forEach(function (pp) { r += (pp.qtdPorMes || {})[m] || 0; p += qPrevMO("moi", pp, m); }); return { r: r, p: p }; }
+    var efAt = efDe(mEf), efAn = mAnt ? efDe(mAnt) : null, pcEf = pctDe(efAt.p, efAt.r), pcEfAn = efAn ? pctDe(efAn.p, efAn.r) : null;
+    // valor agregado (avanco fisico global do Dashboard x Previsto total)
+    var BAC = 0, VP = 0, CR = 0; todos.forEach(function (m) { var t = totMeses([m]); BAC += t.prev; if (m <= corte) { VP += t.prev; CR += t.real; } });
+    var fis = (S.avancoFisicoPct === null || S.avancoFisicoPct === undefined || S.avancoFisicoPct === "") ? null : +S.avancoFisicoPct;
+    var VA = fis != null && isFinite(fis) ? fis / 100 * BAC : null;
+    var evm = { BAC: BAC, VP: VP, CR: CR, VA: VA, fis: fis, corte: corte, CPI: VA != null && CR ? VA / CR : null, SPI: VA != null && VP ? VA / VP : null, TCPI: VA != null && (BAC - CR) ? (BAC - VA) / (BAC - CR) : null, avisos: [] };
+    if (fis == null || !(fis > 0)) evm.avisos.push("O avanço físico não está informado no Dashboard.");
+    else if (evm.CPI != null && (evm.CPI < 0.3 || evm.CPI > 3)) evm.avisos.push("O avanço físico informado (" + fis.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "%) não combina com o custo já realizado até " + mlbl(corte) + ". Atualize o avanço físico no Dashboard.");
+    if (BAC > 0 && custoRealT > 0 && BAC < 0.5 * custoRealT) evm.avisos.push("O Previsto cobre só " + Math.round(BAC / custoRealT * 100) + "% do custo da obra: muitos itens ainda estão sem Previsto.");
+    evm.confiavel = !evm.avisos.length;
+    var farol = [
+      { n: "Custo", v: pctTxt(pcCusto), sub: curto(mes ? totMeses([mes]).real : totMeses(todos).real) + " real × " + curto(mes ? totMeses([mes]).prev : totMeses(todos).prev) + " previsto", cor: corPct(pcCusto), tend: tend(pctDe(cAt.prev, cAt.real), cAn ? pctDe(cAn.prev, cAn.real) : null, true) },
+      { n: "Margem prevista", v: margemT == null ? "—" : margemT.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%", sub: "lucro de " + curto(contratoT - custoRealT) + " sobre o contrato", cor: margemT == null ? "cinza" : margemT < 0 ? "vermelho" : margemT < cfg.margemMin ? "amarelo" : "verde", tend: { t: "sem histórico", c: "" } },
+      { n: "Efetivo", v: pctTxt(pcEf), sub: Math.round(efAt.r) + " pessoas × " + Math.round(efAt.p) + " previstas (" + mlbl(mEf) + ")", cor: pcEf == null ? "cinza" : corPct(Math.abs(pcEf)), tend: tend(pcEf == null ? null : Math.abs(pcEf), pcEfAn == null ? null : Math.abs(pcEfAn), true) },
+      { n: "Prazo físico", v: evm.confiavel && evm.SPI != null ? "SPI " + evm.SPI.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) : "—", sub: evm.confiavel ? "físico " + fis.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "% × " + (BAC ? (VP / BAC * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : "—") + "% planejado" : "avanço físico desatualizado", cor: !(evm.confiavel && evm.SPI != null) ? "cinza" : evm.SPI >= 0.95 ? "verde" : evm.SPI >= 0.9 ? "amarelo" : "vermelho", tend: { t: "sem histórico", c: "" } }];
+    // cascata do Previsto ao Real (por natureza, no periodo)
+    var cascata = Object.keys(natP).map(function (k) { return { n: natP[k].n, d: natP[k].real - natP[k].prev }; }).filter(function (o) { return Math.abs(o.d) >= 0.005; }).sort(function (a, b) { return b.d - a.d; });
+    // previsao no termino (obra toda, data de corte) por item
+    var termino = itens.map(function (x) {
+      var orc = agP[x.i] || 0, eac = agR[x.i] || 0, realiz = soma(RM, x.i, ateCorte), comp = null;
+      (S.indiretoData || []).forEach(function (it) { if (it.itemEAP !== x.item || it.composicaoPai) return; var c = (it.contratos || []).reduce(function (t, k) { return t + (+k.valor || 0); }, 0); if (c) comp = (comp || 0) + c; });
+      return { item: x.item, descricao: x.descricao, orc: orc, comp: comp, realiz: realiz, aInc: eac - realiz, eac: eac, desvio: orc - eac };
+    }).filter(function (t) { return Math.abs(t.orc) + Math.abs(t.eac) >= 0.005; }).sort(function (a, b) { return Math.abs(b.desvio) - Math.abs(a.desvio); });
+    var termTot = { orc: 0, comp: 0, realiz: 0, aInc: 0, eac: 0 }; termino.forEach(function (t) { termTot.orc += t.orc; termTot.comp += t.comp || 0; termTot.realiz += t.realiz; termTot.aInc += t.aInc; termTot.eac += t.eac; }); termTot.desvio = termTot.orc - termTot.eac;
+    // proximos 3 meses depois da data de corte
+    var prox = todos.filter(function (m) { return m > corte; }).slice(0, 3).map(function (m) {
+      var t = totMeses([m]), ef = efDe(m), lin = [];
+      (S.indiretoData || []).forEach(function (it) { if (it.composicaoPai) return; var v = ((it.qtdPorMes || {})[m] || 0) * (it.valorUnit || 0); if (v > 0) lin.push({ nome: (it.descricao || "Item") + (it.fornecedor && it.fornecedor !== "-" ? " · " + it.fornecedor : ""), v: v, contratado: !!((it.contratos || []).length || it.contratoDistratado) }); });
+      lin.sort(function (a, b) { return b.v - a.v; });
+      return { mes: m, realizado: realizado(m), proj: t.real, prev: t.prev, ef: ef.r, efP: ef.p, maiores: lin.slice(0, 3), semContrato: lin.filter(function (l) { return !l.contratado; }).slice(0, 3) };
+    });
     var prevNome = "Previsto atual (ao vivo)";
     if (S.previstoVisualizandoId) { var sn = (S.previstosSalvos || []).find(function (s) { return s.id === S.previstoVisualizandoId; }); if (sn) prevNome = sn.nome; }
     return {
@@ -18072,7 +18125,8 @@ function alApresCfg(pag){
       nat: natP, natAc: natA, natTot: natT, tot: totNat(natP), totAc: totNat(natA), totObra: totNat(natT),
       curva: curva, efetivo: efetivo, contrato: contrato, medido: medido, custoReal: custoReal,
       lucro: contrato - custoReal, margem: contrato ? (contrato - custoReal) / contrato * 100 : null,
-      alertas: alertas, coment: opc.coment || { geral: "", itens: {} }
+      alertas: alertas, coment: opc.coment || { geral: "", itens: {} },
+      cfg: cfg, corte: corte, farol: farol, cascata: cascata, termino: termino, termTot: termTot, prox: prox, evm: evm
     };
   }
 
@@ -18124,74 +18178,149 @@ function alApresCfg(pag){
 
   /* ---------------- documento (modelo unico para PDF e Word) ---------------- */
   // blocos: {t:"h1"|"h2"|"p"|"kpis"|"tabela"|"nota"|"coment"|"grafico"|"quebra"}
+  /* ---------------- titulos de acao (a conclusao vira o titulo) ---------------- */
+  var T = {
+    resumo: function (A) {
+      var t = A.tot, rel = A.comDesvio.filter(function (x) { return x.desvio < 0; }).sort(function (a, b) { return a.desvio - b.desvio; }).slice(0, 2);
+      var quem = rel.map(function (x) { return x.descricao; }).join(" e ");
+      if (Math.abs(t.desvio) < 0.005) return "Custo " + (A.mes ? "de " + A.periodo : "da obra") + " igual ao previsto";
+      return "Custo " + (A.mes ? "de " + A.periodo : "da obra") + " ficou " + curto(Math.abs(t.desvio)) + (t.prev ? " (" + Math.abs((t.real - t.prev) / t.prev * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%)" : "") + (t.desvio < 0 ? " acima" : " abaixo") + " do previsto" + (t.desvio < 0 && quem ? ", puxado por " + quem : "");
+    },
+    numeros: function (A) { return A.margem == null ? "Resumo em números" : "Margem de " + A.margem.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "% sobre contrato de " + curto(A.contrato); },
+    cascata: function (A) {
+      var c = A.cascata, pos = c.filter(function (o) { return o.d > 0; }), neg = c.filter(function (o) { return o.d < 0; }), tp = pos.reduce(function (t, o) { return t + o.d; }, 0);
+      if (!c.length) return "Sem desvio por natureza no período";
+      var s = pos.length ? pos[0].n + " explica " + Math.round(pos[0].d / (tp || 1) * 100) + "% do estouro" : "Todas as naturezas ficaram abaixo do previsto";
+      if (neg.length && pos.length) s += "; " + neg[neg.length - 1].n + " compensou " + curto(-neg[neg.length - 1].d);
+      return s;
+    },
+    evm: function (A) { var e = A.evm; return e.confiavel && e.CPI != null ? "Para cada R$ 1,00 gasto, a obra produziu R$ " + e.CPI.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (e.CPI < 0.98 ? " — perda de eficiência" : e.CPI > 1.02 ? " — ganho de eficiência" : " — dentro do previsto") : "Curva S: custo acumulado de " + curto(e.CR) + " até " + mlbl(e.corte) + " contra " + curto(e.VP) + " previstos"; },
+    composicao: function (A) { var c = Object.keys(A.natTot).map(function (k) { return A.natTot[k]; }).sort(function (a, b) { return b.real - a.real; }), tot = c.reduce(function (t, o) { return t + o.real; }, 0); return c.length && tot ? c[0].n + " representa " + Math.round(c[0].real / tot * 100) + "% do custo da obra" : "Composição do custo"; },
+    grupos: function (A) { var g = A.grupos.slice().sort(function (a, b) { return a.desvio - b.desvio; })[0]; return g && g.desvio < 0 ? g.item + " " + g.descricao + " concentra o maior estouro: " + curto(-g.desvio) : "Previsto x Real por grupo da EAP"; },
+    maiores: function (A) { var ac = A.comDesvio.filter(function (x) { return x.desvio < 0; }), ab = A.comDesvio.filter(function (x) { return x.desvio > 0; }); var t3 = ac.slice().sort(function (a, b) { return a.desvio - b.desvio; }).slice(0, 3).reduce(function (t, x) { return t - x.desvio; }, 0); return ac.length + " itens acima e " + ab.length + " abaixo do previsto" + (t3 ? "; os 3 maiores estouros somam " + curto(t3) : ""); },
+    item: function (x) { var pr = principais(x.linhas || [], 1).top[0]; return x.item + " " + x.descricao + ": " + curto(Math.abs(x.desvio)) + (x.desvio < 0 ? " acima" : " abaixo") + " do previsto" + (pr && Math.abs(pr.desvio) >= 0.005 ? ", principalmente " + pr.nome.split(" · ")[0] : ""); },
+    termino: function (A) { var d = A.termTot.desvio; return Math.abs(d) < 0.005 ? "Previsão de término igual ao orçado" : "Obra deve fechar " + curto(Math.abs(d)) + (d < 0 ? " acima" : " abaixo") + " do orçado" + (A.termTot.orc ? " (" + Math.abs(d / A.termTot.orc * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%)" : ""); },
+    prox: function (A) { if (!A.prox.length) return "Sem meses seguintes no período da obra"; var tot = A.prox.reduce(function (t, p) { return t + p.proj; }, 0), pico = A.prox.slice().sort(function (a, b) { return b.proj - a.proj; })[0]; return "Próximos " + A.prox.length + " meses: " + curto(tot) + " de custo projetado, pico em " + mlbl(pico.mes); },
+    efetivo: function (A) { var e = efetivoPer(A), r = e.modR + e.moiR, p = e.modP + e.moiP; return "Efetivo de " + Math.round(r) + " pessoas contra " + Math.round(p) + " previstas" + (p ? " (" + pctTxt((r - p) / p * 100) + ")" : ""); },
+    alertas: function (A) { return A.alertas.length + " alerta" + (A.alertas.length === 1 ? "" : "s") + " ativo" + (A.alertas.length === 1 ? "" : "s") + " no controle"; }
+  };
+  var CORF = { verde: "16A34A", amarelo: "F59E0B", vermelho: "DC2626", cinza: "94A3B8" };
+  function linhasTexto(s) { return String(s || "").split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean); }
+  function oQueExplica(A) {
+    return A.comDesvio.filter(function (x) { return x.relevante !== false; }).sort(function (a, b) { return Math.abs(b.desvio) - Math.abs(a.desvio); }).slice(0, 3).map(function (x) {
+      var pr = principais(x.linhas || [], 1).top[0];
+      return "<b>" + esc(x.item + " " + x.descricao) + "</b>: <span class='" + (x.desvio < 0 ? "neg" : "pos") + "'>" + sinalC(x.desvio) + "</span>" + (pr && Math.abs(pr.desvio) >= 0.005 ? " — " + esc(pr.nome.split(" · ")[0]) : "") + (A.coment.itens && A.coment.itens[x.item] ? " (" + esc(A.coment.itens[x.item]) + ")" : "");
+    });
+  }
+  function efDeCorte(A) { var e = A.efetivo.find(function (x) { return x.mes === A.corte; }); return e ? e.modR + e.moiR : null; }
   function montarRelatorio(A) {
-    var B = [], cap = 0, ems = A.mes;
+    var B = [], cap = 0, ems = A.mes, c = A.coment || {};
     function h1(t) { cap++; B.push({ t: "h1", txt: cap + ". " + t }); }
-    var c = A.coment || {};
+    function corS(d) { return d < 0 ? "neg" : d > 0 ? "pos" : ""; }
     B.push({ t: "capa" });
     B.push({ t: "sumario" });
+    // 1. resumo executivo: conclusao, farol, o que explica, decisoes e proximos passos
     h1("Resumo executivo");
+    B.push({ t: "manchete", txt: T.resumo(A) });
+    B.push({ t: "farol", itens: A.farol });
     B.push({ t: "nota", html: textoResumo(A) });
     if (c.geral) B.push({ t: "coment", txt: c.geral, rot: "Comentário da gerência" });
-    textoDestaques(A).forEach(function (p) { B.push({ t: "p", html: p }); });
-    B.push({ t: "kpis", itens: [["Previsto " + (ems ? "do mês" : "da obra"), curto(A.tot.prev), ""], ["Real " + (ems ? "do mês" : "da obra"), curto(A.tot.real), ""], ["Desvio", sinalC(A.tot.desvio), A.tot.desvio < 0 ? "neg" : "pos"], ems ? ["Desvio acumulado", sinalC(A.totAc.desvio), A.totAc.desvio < 0 ? "neg" : "pos"] : ["Itens com desvio", String(A.comDesvio.length), ""]] });
+    var oq = oQueExplica(A);
+    if (oq.length) { B.push({ t: "h2", txt: "O que explica" }); B.push({ t: "lista", itens: oq }); }
+    var dec = linhasTexto(c.decisoes), pas = linhasTexto(c.passos);
+    if (dec.length) { B.push({ t: "h2", txt: "Decisões necessárias" }); B.push({ t: "lista", itens: dec.map(esc), destaque: true }); }
+    if (pas.length) { B.push({ t: "h2", txt: "Próximos passos" }); B.push({ t: "lista", itens: pas.map(esc) }); }
+    B.push({ t: "kpis", itens: [["Previsto " + (ems ? "do mês" : "da obra"), curto(A.tot.prev), ""], ["Real " + (ems ? "do mês" : "da obra"), curto(A.tot.real), ""], ["Desvio", sinalC(A.tot.desvio), corS(A.tot.desvio)], ems ? ["Desvio acumulado", sinalC(A.totAc.desvio), corS(A.totAc.desvio)] : ["Itens com desvio relevante", String(A.comDesvio.filter(function (x) { return x.relevante; }).length), ""]] });
+    // 2. premissas
     h1("Premissas");
     B.push({ t: "tabela", cab: ["Premissa", "Valor"], al: ["l", "l"], linhas: [
       ["Período analisado", A.mes ? A.periodo + " (mês) e acumulado até " + A.periodo : "Toda a obra (" + mlbl(A.meses[0]) + " a " + mlbl(A.meses[A.meses.length - 1]) + ")"],
-      ["Situação do mês", A.mes ? (A.ehRealizado ? "Realizado (custo incorrido)" : "Projeção (ainda não realizado)") : "Realizado até " + (A.realAte || "—") + "; demais meses são projeção"],
+      ["Data de corte", mlbl(A.corte) + " — realizado até aqui; depois, projeção"],
+      ["Situação do mês", A.mes ? (A.ehRealizado ? "Realizado (custo incorrido)" : "Projeção (ainda não realizado)") : "Realizado até " + (A.realAte || mlbl(A.corte)) + "; demais meses são projeção"],
       ["Conteúdo", A.opc.soDesvios ? "Somente itens com desvio" : "Todos os itens"],
+      ["Desvio relevante", "Acima de " + A.cfg.limPct.toLocaleString("pt-BR") + "% ou de " + R$(A.cfg.limRs)],
+      ["Farol de custo", "Verde até " + A.cfg.verde + "% · amarelo até " + A.cfg.amarelo + "% · vermelho acima"],
       ["Previsto de comparação", A.prevNome],
       ["Desvio", "Previsto − Real (negativo = acima do previsto)"],
       ["Gerado em", A.gerado]] });
+    // 3. visao geral
     if (!A.opc.soDesvios) {
       h1("Visão geral da obra");
+      B.push({ t: "manchete", txt: T.numeros(A) });
       B.push({ t: "kpis", itens: [["Valor do contrato", curto(A.contrato), ""], ["Custo total (real + projeção)", curto(A.custoReal), ""], ["Lucro", curto(A.lucro), A.lucro < 0 ? "neg" : "pos"], ["Margem", A.margem == null ? "—" : A.margem.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "%", A.margem < 0 ? "neg" : ""]] });
       B.push({ t: "p", html: "Receita medida acumulada: <b>" + curto(A.medido) + "</b>" + (A.contrato ? " (" + (A.medido / A.contrato * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "% do contrato)" : "") + "." });
-      B.push({ t: "grafico", tipo: "curva", tit: "Curva S — custo acumulado (real e previsto) e receita medida" });
     }
+    // 4. desempenho (valor agregado)
+    h1("Desempenho — valor agregado");
+    B.push({ t: "manchete", txt: T.evm(A) });
+    var e = A.evm, f2 = function (v) { return !e.confiavel || v == null || !isFinite(v) ? "—" : v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    if (e.avisos.length) B.push({ t: "nota", html: "<b>Atenção:</b> " + e.avisos.map(esc).join(" ") + " Os índices abaixo só valem depois de corrigir isso." });
+    B.push({ t: "kpis", itens: [["CPI (custo)", f2(e.CPI), e.CPI != null && e.confiavel ? (e.CPI < 0.95 ? "neg" : e.CPI >= 1 ? "pos" : "") : ""], ["SPI (prazo)", f2(e.SPI), e.SPI != null && e.confiavel ? (e.SPI < 0.95 ? "neg" : e.SPI >= 1 ? "pos" : "") : ""], ["TCPI (para fechar no orçado)", f2(e.TCPI), e.TCPI != null && e.confiavel ? (e.TCPI > 1.1 ? "neg" : "pos") : ""], ["Avanço físico", e.fis == null ? "—" : e.fis.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "%", ""]] });
+    B.push({ t: "p", html: "Valor agregado (VA) = avanço físico × Previsto total da obra (" + curto(e.BAC) + "). Até " + mlbl(e.corte) + ": planejado (VP) " + curto(e.VP) + ", agregado (VA) " + (e.VA == null ? "—" : curto(e.VA)) + ", custo real (CR) " + curto(e.CR) + ". <b>CPI</b> abaixo de 1 = gasta mais do que produz; <b>SPI</b> abaixo de 1 = atrasado; <b>TCPI</b> acima de 1,10 = recuperação difícil." });
+    B.push({ t: "grafico", tipo: "curva", tit: "Curva S — custo acumulado (real e previsto) e receita medida" });
+    // 5. desvios por item
     h1("Desvios por item da EAP" + (ems ? " — " + A.periodo + " (mês e acumulado)" : ""));
-    if (!A.itens.length) B.push({ t: "p", html: "Nenhum item com desvio no período." });
+    var rel = A.itens.filter(function (x) { return x.relevante; }), outros = A.itens.filter(function (x) { return !x.relevante && (Math.abs(x.desvio) >= 0.005 || (ems && Math.abs(x.desvioAc) >= 0.005) || !A.opc.soDesvios); });
+    B.push({ t: "manchete", txt: T.maiores(A) });
+    if (!rel.length) B.push({ t: "p", html: "Nenhum item com desvio relevante (acima de " + A.cfg.limPct + "% ou " + R$(A.cfg.limRs) + ")." });
     else {
       var cab = ems ? ["Item EAP", "Previsto mês", "Real mês", "Desvio mês", "Desvio acumulado"] : ["Item EAP", "Previsto", "Real", "Desvio", "%"];
       var linhas = [];
-      A.itens.forEach(function (x) {
-        linhas.push({ forte: true, cel: [x.item + " " + x.descricao, R$(x.prev), R$(x.real), { v: sinal(x.desvio), cor: x.desvio < 0 ? "neg" : x.desvio > 0 ? "pos" : "" }, ems ? { v: sinal(x.desvioAc), cor: x.desvioAc < 0 ? "neg" : x.desvioAc > 0 ? "pos" : "" } : pctTxt(x.pct)] });
+      rel.forEach(function (x) {
+        linhas.push({ forte: true, cel: [x.item + " " + x.descricao, R$(x.prev), R$(x.real), { v: sinal(x.desvio), cor: corS(x.desvio) }, ems ? { v: sinal(x.desvioAc), cor: corS(x.desvioAc) } : pctTxt(x.pct)] });
         var pr = principais(x.linhas || [], 3);
-        pr.top.concat(pr.demais ? [pr.demais] : []).forEach(function (l) {
-          if (Math.abs(l.prev) < 0.005 && Math.abs(l.real) < 0.005) return;
-          linhas.push({ sub: true, cel: ["↳ " + l.nome, R$(l.prev), R$(l.real), { v: sinal(l.desvio), cor: l.desvio < 0 ? "neg" : l.desvio > 0 ? "pos" : "" }, ems ? "" : ""] });
-        });
+        pr.top.concat(pr.demais ? [pr.demais] : []).forEach(function (l) { if (Math.abs(l.prev) < 0.005 && Math.abs(l.real) < 0.005) return; linhas.push({ sub: true, cel: ["↳ " + l.nome, R$(l.prev), R$(l.real), { v: sinal(l.desvio), cor: corS(l.desvio) }, ""] }); });
       });
-      B.push({ t: "tabela", cab: cab, al: ["l", "r", "r", "r", "r"], linhas: linhas, nota: "Abaixo de cada item: as linhas que mais pesaram no desvio (até 3) e as demais agrupadas." });
+      B.push({ t: "tabela", cab: cab, al: ["l", "r", "r", "r", "r"], linhas: linhas, nota: "Desvios relevantes (acima de " + A.cfg.limPct + "% ou " + R$(A.cfg.limRs) + "). Abaixo de cada item: as linhas que mais pesaram e as demais agrupadas." });
       B.push({ t: "h2", txt: "Explicação dos desvios" });
-      A.itens.filter(function (x) { return Math.abs(x.desvio) >= 0.005 || (ems && Math.abs(x.desvioAc) >= 0.005); }).slice(0, 25).forEach(function (x) {
-        B.push({ t: "p", html: textoItem(x, ems) });
-        if (c.itens && c.itens[x.item]) B.push({ t: "coment", txt: c.itens[x.item], rot: "Gerência" });
-      });
+      rel.slice(0, 25).forEach(function (x) { B.push({ t: "p", html: textoItem(x, ems) }); if (c.itens && c.itens[x.item]) B.push({ t: "coment", txt: c.itens[x.item], rot: "Gerência" }); });
     }
+    if (outros.length) {
+      B.push({ t: "h2", txt: "Demais diferenças (abaixo do limite)" });
+      B.push({ t: "tabela", pequena: true, cab: ["Item EAP", "Previsto", "Real", "Desvio"], al: ["l", "r", "r", "r"], linhas: outros.map(function (x) { return { cel: [x.item + " " + x.descricao, R$(x.prev), R$(x.real), { v: sinal(x.desvio), cor: corS(x.desvio) }] }; }) });
+    }
+    // 6. previsao no termino
+    h1("Previsão no término");
+    B.push({ t: "manchete", txt: T.termino(A) });
+    B.push({ t: "tabela", cab: ["Item EAP", "Orçado (Previsto)", "Comprometido", "Realizado", "A incorrer", "Previsão no término", "Desvio previsto"], al: ["l", "r", "r", "r", "r", "r", "r"], pequena: true,
+      linhas: A.termino.slice(0, A.opc.soDesvios ? 20 : 60).map(function (t) { return { cel: [t.item + " " + t.descricao, R$(t.orc), t.comp == null ? "—" : R$(t.comp), R$(t.realiz), R$(t.aInc), R$(t.eac), { v: sinal(t.desvio), cor: corS(t.desvio) }] }; }).concat([{ forte: true, cel: ["Total dos itens", R$(A.termTot.orc), R$(A.termTot.comp), R$(A.termTot.realiz), R$(A.termTot.aInc), R$(A.termTot.eac), { v: sinal(A.termTot.desvio), cor: corS(A.termTot.desvio) }] }]),
+      nota: "Comprometido = contratos e aditivos lançados nas linhas · Realizado = até " + mlbl(A.corte) + " · A incorrer = projeção dos meses seguintes · Previsão no término = realizado + a incorrer." });
+    // 7. natureza + cascata
     h1("Análise por natureza de custo");
-    var nl = Object.keys(A.nat).map(function (k) { return A.nat[k]; }).filter(function (o) { return !A.opc.soDesvios || Math.abs(o.desvio) >= 0.005; }).filter(function (o) { return Math.abs(o.prev) + Math.abs(o.real) >= 0.005; });
-    B.push({ t: "tabela", cab: ["Natureza", "Previsto", "Real", "Desvio", "%"], al: ["l", "r", "r", "r", "r"], linhas: nl.map(function (o) { return { cel: [o.n, R$(o.prev), R$(o.real), { v: sinal(o.desvio), cor: o.desvio < 0 ? "neg" : o.desvio > 0 ? "pos" : "" }, pctTxt(o.prev ? (o.real - o.prev) / o.prev * 100 : null)] }; }).concat([{ forte: true, cel: ["Total", R$(A.tot.prev), R$(A.tot.real), { v: sinal(A.tot.desvio), cor: A.tot.desvio < 0 ? "neg" : "pos" }, pctTxt(A.tot.prev ? (A.tot.real - A.tot.prev) / A.tot.prev * 100 : null)] }]) });
+    B.push({ t: "manchete", txt: T.cascata(A) });
+    B.push({ t: "grafico", tipo: "cascata", tit: "Cascata do Previsto ao Real por natureza" + (ems ? " — " + A.periodo : "") });
+    var nl = Object.keys(A.nat).map(function (k) { return A.nat[k]; }).filter(function (o) { return (!A.opc.soDesvios || Math.abs(o.desvio) >= 0.005) && Math.abs(o.prev) + Math.abs(o.real) >= 0.005; });
+    B.push({ t: "tabela", cab: ["Natureza", "Previsto", "Real", "Desvio", "%"], al: ["l", "r", "r", "r", "r"], linhas: nl.map(function (o) { return { cel: [o.n, R$(o.prev), R$(o.real), { v: sinal(o.desvio), cor: corS(o.desvio) }, pctTxt(o.prev ? (o.real - o.prev) / o.prev * 100 : null)] }; }).concat([{ forte: true, cel: ["Total", R$(A.tot.prev), R$(A.tot.real), { v: sinal(A.tot.desvio), cor: corS(A.tot.desvio) }, pctTxt(A.tot.prev ? (A.tot.real - A.tot.prev) / A.tot.prev * 100 : null)] }]) });
     B.push({ t: "p", html: textoNatureza(A) });
-    if (!A.opc.soDesvios) B.push({ t: "grafico", tipo: "natureza", tit: "Previsto x Real por natureza" });
+    // 8. mao de obra
     h1("Mão de obra e efetivo");
+    B.push({ t: "manchete", txt: T.efetivo(A) });
     B.push({ t: "p", html: textoEfetivo(A) });
-    var e = efetivoPer(A), rr = function (v) { return Math.round(v).toLocaleString("pt-BR"); };
+    var ef = efetivoPer(A), rr = function (v) { return Math.round(v).toLocaleString("pt-BR"); };
     B.push({ t: "tabela", cab: ["Efetivo" + (A.mes ? " — " + A.periodo : " — média mensal"), "Previsto", "Real", "Diferença"], al: ["l", "r", "r", "r"], linhas: [
-      { cel: ["M.O.D (pessoas)", rr(e.modP), rr(e.modR), rr(e.modR - e.modP)] }, { cel: ["M.O.I (pessoas)", rr(e.moiP), rr(e.moiR), rr(e.moiR - e.moiP)] }] });
+      { cel: ["M.O.D (pessoas)", rr(ef.modP), rr(ef.modR), rr(ef.modR - ef.modP)] }, { cel: ["M.O.I (pessoas)", rr(ef.moiP), rr(ef.moiR), rr(ef.moiR - ef.moiP)] }] });
+    // 9. proximos 3 meses
+    h1("Próximos meses");
+    B.push({ t: "manchete", txt: T.prox(A) });
+    if (A.prox.length) {
+      B.push({ t: "tabela", cab: ["Mês", "Situação", "Custo projetado", "Previsto", "Efetivo projetado", "Efetivo previsto"], al: ["l", "l", "r", "r", "r", "r"], linhas: A.prox.map(function (p) { return { cel: [mlbl(p.mes), p.realizado ? "Realizado" : "Projeção", R$(p.proj), R$(p.prev), Math.round(p.ef).toLocaleString("pt-BR"), Math.round(p.efP).toLocaleString("pt-BR")] }; }) });
+      A.prox.forEach(function (p) { if (p.maiores.length) B.push({ t: "p", html: "<b>" + mlbl(p.mes) + "</b> — maiores gastos: " + p.maiores.map(function (l) { return esc(l.nome) + " (" + curto(l.v) + (l.contratado ? "" : ", sem contrato") + ")"; }).join("; ") + "." }); });
+    }
+    // 10. alertas
     h1("Alertas e riscos");
     if (!A.alertas.length) B.push({ t: "p", html: "Nenhum alerta ativo no controle." });
-    else B.push({ t: "tabela", cab: ["Alerta", "Detalhe", "Valor"], al: ["l", "l", "r"], linhas: A.alertas.slice(0, 30).map(function (a) { return { cel: [a.titulo || "", semHtml(a.texto || ""), a.valor != null && a.valor !== "" ? (typeof a.valor === "number" ? R$(a.valor) : String(a.valor)) : ""] }; }), nota: A.alertas.length > 30 ? "Mostrando 30 de " + A.alertas.length + " alertas." : "" });
+    else { B.push({ t: "manchete", txt: T.alertas(A) }); B.push({ t: "tabela", cab: ["Alerta", "Detalhe", "Valor"], al: ["l", "l", "r"], linhas: A.alertas.slice(0, 30).map(function (a) { return { cel: [a.titulo || "", semHtml(a.texto || ""), a.valor != null && a.valor !== "" ? (typeof a.valor === "number" ? R$(a.valor) : String(a.valor)) : ""] }; }), nota: A.alertas.length > 30 ? "Mostrando 30 de " + A.alertas.length + " alertas." : "" }); }
+    // 11. conclusao
     h1("Conclusão");
-    var conc = textoDestaques(A)[0] || "";
-    B.push({ t: "p", html: (A.mes ? "No mês de " + A.periodo : "Na obra") + ", o resultado de custo está " + (A.tot.desvio < 0 ? "<span class='neg'>acima do previsto em " + curto(-A.tot.desvio) + "</span>" : A.tot.desvio > 0 ? "<span class='pos'>abaixo do previsto em " + curto(A.tot.desvio) + "</span>" : "igual ao previsto") + ". " + conc });
-    B.push({ t: "p", html: "Recomenda-se acompanhar os itens com maior desvio listados no capítulo de desvios e registrar as justificativas na próxima revisão do Previsto (Replan)." });
+    B.push({ t: "p", html: (A.mes ? "No mês de " + A.periodo : "Na obra") + ", o resultado de custo está " + (A.tot.desvio < 0 ? "<span class='neg'>acima do previsto em " + curto(-A.tot.desvio) + "</span>" : A.tot.desvio > 0 ? "<span class='pos'>abaixo do previsto em " + curto(A.tot.desvio) + "</span>" : "igual ao previsto") + ". " + (textoDestaques(A)[0] || "") });
+    B.push({ t: "p", html: T.termino(A) + "." });
+    if (dec.length) B.push({ t: "p", html: "Decisões pendentes: " + dec.map(esc).join("; ") + "." });
+    else B.push({ t: "p", html: "Recomenda-se acompanhar os itens com maior desvio e registrar as justificativas na próxima revisão do Previsto (Replan)." });
+    // anexo
     if (!A.opc.soDesvios) {
       h1("Anexo — Todas as linhas por item da EAP");
       var lin = [];
-      A.itensTodos.forEach(function (x) {
-        (x.linhas || []).forEach(function (l) { if (Math.abs(l.prev) + Math.abs(l.real) < 0.005) return; lin.push({ cel: [x.item, l.origem, l.nome, R$(l.prev), R$(l.real), { v: sinal(l.desvio), cor: l.desvio < 0 ? "neg" : l.desvio > 0 ? "pos" : "" }] }); });
-      });
+      A.itensTodos.forEach(function (x) { (x.linhas || []).forEach(function (l) { if (Math.abs(l.prev) + Math.abs(l.real) < 0.005) return; lin.push({ cel: [x.item, l.origem, l.nome, R$(l.prev), R$(l.real), { v: sinal(l.desvio), cor: corS(l.desvio) }] }); }); });
       B.push({ t: "tabela", pequena: true, cab: ["Item", "Origem", "Linha", "Previsto", "Real", "Desvio"], al: ["l", "l", "l", "r", "r", "r"], linhas: lin });
     }
     return B;
@@ -18226,6 +18355,17 @@ function alApresCfg(pag){
     return "<svg viewBox='0 0 " + W + " " + H + "' width='100%' role='img'>" + g + "</svg><div class='leg'><span><i style='background:#f59e0b'></i>Previsto</span><span><i style='background:#1e3a5f'></i>Real</span></div>";
   }
 
+  function svgCascata(A) {
+    var c = A.cascata; if (!c.length) return "";
+    var W = 680, H = 260, L = 10, Bm = 46, T0 = 22, cols = c.length + 2, cw = (W - L * 2) / cols, bw = cw * 0.64;
+    var ac = A.tot.prev, mx = A.tot.prev; c.forEach(function (o) { mx = Math.max(mx, ac, ac + o.d); ac += o.d; }); mx = Math.max(mx, A.tot.real); if (!mx) return "";
+    var y = function (v) { return T0 + (H - T0 - Bm) * (1 - v / mx); }, g = "", x0 = function (i) { return L + i * cw + (cw - bw) / 2; };
+    var bar = function (i, a, b, cor, rot, val) { var t1 = Math.min(y(a), y(b)), h = Math.max(1.5, Math.abs(y(a) - y(b))); g += "<rect x='" + x0(i) + "' y='" + t1 + "' width='" + bw + "' height='" + h + "' fill='" + cor + "' rx='2'/><text x='" + (x0(i) + bw / 2) + "' y='" + (t1 - 5) + "' font-size='10' text-anchor='middle' fill='#334155' font-weight='700'>" + val + "</text><text x='" + (x0(i) + bw / 2) + "' y='" + (H - 28) + "' font-size='9.5' text-anchor='middle' fill='#475569'>" + esc(rot) + "</text>"; };
+    bar(0, 0, A.tot.prev, "#f59e0b", "Previsto", curto(A.tot.prev)); ac = A.tot.prev;
+    c.forEach(function (o, i) { bar(i + 1, ac, ac + o.d, o.d > 0 ? "#dc2626" : "#16a34a", o.n, (o.d > 0 ? "+" : "−") + curto(Math.abs(o.d)).replace("-", "")); ac += o.d; });
+    bar(cols - 1, 0, A.tot.real, "#1e3a5f", "Real", curto(A.tot.real));
+    return "<svg viewBox='0 0 " + W + " " + H + "' width='100%' role='img'><line x1='0' x2='" + W + "' y1='" + y(0) + "' y2='" + y(0) + "' stroke='#cbd5e1'/>" + g + "</svg><div class='leg'><span><i style='background:#dc2626'></i>Aumento (acima do previsto)</span><span><i style='background:#16a34a'></i>Redução (abaixo do previsto)</span></div>";
+  }
   /* ---------------- relatorio em PDF (pagina para imprimir / salvar PDF) ---------------- */
   function relatorioHtml(A, B) {
     var caps = B.filter(function (b) { return b.t === "h1"; }).map(function (b) { return b.txt; });
@@ -18236,13 +18376,16 @@ function alApresCfg(pag){
       else if (b.t === "sumario") corpo += "<section class='sum'><h1>Sumário</h1><ol>" + caps.map(function (c, i) { return "<li><a href='#c" + (i + 1) + "'>" + esc(c.replace(/^\d+\.\s*/, "")) + "</a></li>"; }).join("") + "</ol></section>";
       else if (b.t === "h1") { nH++; corpo += "<h1 id='c" + nH + "'" + (nH > 1 ? " class='nova'" : "") + ">" + esc(b.txt) + "</h1>"; }
       else if (b.t === "h2") corpo += "<h2>" + esc(b.txt) + "</h2>";
+      else if (b.t === "manchete") corpo += "<div class='man'>" + esc(b.txt) + "</div>";
+      else if (b.t === "lista") corpo += "<ul class='" + (b.destaque ? "dec" : "") + "'>" + b.itens.map(function (i) { return "<li>" + i + "</li>"; }).join("") + "</ul>";
+      else if (b.t === "farol") corpo += "<div class='far'>" + b.itens.map(function (f) { var cor = "#" + CORF[f.cor]; return "<div class='fc' style='border-top-color:" + cor + "'><div class='fr'><span><i style='background:" + cor + "'></i>" + esc(f.n) + "</span><span class='" + f.tend.c + "'>" + esc(f.tend.t) + "</span></div><b style='color:" + (f.cor === "cinza" ? "#475569" : cor) + "'>" + esc(f.v) + "</b><small>" + esc(f.sub) + "</small></div>"; }).join("") + "</div>";
       else if (b.t === "p") corpo += "<p>" + b.html + "</p>";
       else if (b.t === "nota") corpo += "<div class='nota'>" + b.html + "</div>";
       else if (b.t === "coment") corpo += "<div class='com'><b>💬 " + esc(b.rot) + ":</b> " + esc(b.txt) + "</div>";
       else if (b.t === "kpis") corpo += "<div class='kpis'>" + b.itens.map(function (k) { return "<div class='kpi'><span>" + esc(k[0]) + "</span><b class='" + k[2] + "'>" + esc(k[1]) + "</b></div>"; }).join("") + "</div>";
       else if (b.t === "tabela") corpo += "<table class='" + (b.pequena ? "peq" : "") + "'><thead><tr>" + b.cab.map(function (h, i) { return "<th class='" + (b.al[i] === "r" ? "r" : "") + "'>" + esc(h) + "</th>"; }).join("") + "</tr></thead><tbody>" +
         b.linhas.map(function (l) { var cel = l.cel || l; return "<tr class='" + (l.sub ? "sub" : "") + (l.forte ? " forte" : "") + "'>" + cel.map(function (v, i) { var o = (v && typeof v === "object") ? v : { v: v }; return "<td class='" + (b.al[i] === "r" ? "r " : "") + (o.cor || "") + "'>" + esc(o.v) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table>" + (b.nota ? "<div class='tn'>" + esc(b.nota) + "</div>" : "");
-      else if (b.t === "grafico") corpo += "<figure><figcaption>" + esc(b.tit) + "</figcaption>" + (b.tipo === "curva" ? svgCurva(A) : svgBarras(Object.keys(A.nat).map(function (k) { return A.nat[k]; }).filter(function (o) { return Math.abs(o.prev) + Math.abs(o.real) >= 0.005; }))) + "</figure>";
+      else if (b.t === "grafico") corpo += "<figure><figcaption>" + esc(b.tit) + "</figcaption>" + (b.tipo === "curva" ? svgCurva(A) : b.tipo === "cascata" ? svgCascata(A) : svgBarras(Object.keys(A.nat).map(function (k) { return A.nat[k]; }).filter(function (o) { return Math.abs(o.prev) + Math.abs(o.real) >= 0.005; }))) + "</figure>";
     });
     var css = "@page{size:A4;margin:16mm 14mm 18mm}@page{@bottom-left{content:'Documento interno — uso restrito';font:9px Segoe UI;color:#94a3b8}@bottom-right{content:'Página ' counter(page);font:9px Segoe UI;color:#94a3b8}}" +
       "*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Calibri,Arial,sans-serif;color:#0f172a;background:#e2e8f0}.folha{max-width:820px;margin:0 auto;background:#fff;padding:36px 44px 60px;box-shadow:0 10px 30px rgba(0,0,0,.15)}" +
@@ -18257,6 +18400,8 @@ function alApresCfg(pag){
       "table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0;page-break-inside:auto}tr{page-break-inside:avoid}th{background:#1e3a5f;color:#fff;text-align:left;padding:6px 7px;font-weight:600}td{padding:5px 7px;border-bottom:1px solid #e2e8f0}.r{text-align:right;font-family:Consolas,monospace;white-space:nowrap}" +
       "tr.forte td{font-weight:700;background:#f8fafc}tr.sub td{font-size:10.5px;color:#334155}tr.sub td:first-child{padding-left:20px}table.peq{font-size:9.5px}table.peq td{padding:3px 5px}.tn{font-size:10.5px;color:#64748b;margin:-2px 0 10px}" +
       "figure{margin:14px 0;page-break-inside:avoid}figcaption{font-size:12px;font-weight:700;color:#334155;margin-bottom:6px}.leg{display:flex;gap:16px;font-size:10.5px;color:#475569;margin-top:4px}.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}" +
+      ".man{font-size:16px;font-weight:800;color:#1e3a5f;margin:4px 0 12px;line-height:1.35}ul{font-size:12.5px;line-height:1.6;margin:6px 0 10px;padding-left:20px}ul.dec{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px 8px 28px}" +
+      ".far{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.fc{border:1px solid #e2e8f0;border-top:5px solid;border-radius:10px;padding:8px 10px;background:#f8fafc}.fr{display:flex;justify-content:space-between;font-size:9.5px;color:#64748b;text-transform:uppercase}.fr i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}.fc b{display:block;font-size:18px;margin-top:3px}.fc small{font-size:10px;color:#475569}" +
       "@media print{body{background:#fff}.barra{display:none}.folha{box-shadow:none;max-width:none;padding:0}a{color:inherit}}";
     return "<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'><title>Relatório de Custos — " + esc(A.obra) + " — " + esc(A.periodo) + "</title><style>" + css + "</style></head><body>" +
       "<div class='barra'>Relatório pronto. <button onclick='window.print()'>🖨 Salvar PDF</button><span style='opacity:.8;font-size:12px'>Na janela de impressão, escolha <b>Salvar como PDF</b>.</span></div><div class='folha'>" + corpo + "</div></body></html>";
@@ -18310,7 +18455,10 @@ function alApresCfg(pag){
         caps.forEach(function (c) { filhos.push(new P({ spacing: { after: 80 }, children: [new TR({ text: c, size: 24 })] })); });
       } else if (b.t === "h1") {
         filhos.push(new P({ pageBreakBefore: true, heading: D.HeadingLevel.HEADING_1, children: [new TR({ text: b.txt, color: AZUL, bold: true })] })); primeiroH1 = false;
-      } else if (b.t === "h2") filhos.push(new P({ heading: D.HeadingLevel.HEADING_2, children: [new TR({ text: b.txt, color: AZUL, bold: true })] }));
+      } else if (b.t === "manchete") filhos.push(new P({ spacing: { after: 160 }, children: [new TR({ text: b.txt, bold: true, size: 28, color: AZUL })] }));
+      else if (b.t === "lista") b.itens.forEach(function (i) { filhos.push(new P({ bullet: { level: 0 }, shading: b.destaque ? { fill: "FEF2F2" } : undefined, children: runs(i) })); });
+      else if (b.t === "farol") filhos.push(new D.Table({ width: { size: 100, type: D.WidthType.PERCENTAGE }, rows: [new D.TableRow({ children: b.itens.map(function (f) { var cor = CORF[f.cor]; return new D.TableCell({ shading: { fill: "F8FAFC" }, borders: { top: { style: D.BorderStyle.SINGLE, size: 24, color: cor } }, margins: { top: 80, bottom: 80, left: 100, right: 100 }, children: [new P({ children: [new TR({ text: "● ", color: cor }), new TR({ text: f.n.toUpperCase(), size: 16, color: CINZA })] }), new P({ children: [new TR({ text: f.v, bold: true, size: 30, color: f.cor === "cinza" ? "475569" : cor })] }), new P({ children: [new TR({ text: f.sub, size: 15, color: "475569" })] }), new P({ children: [new TR({ text: f.tend.t, size: 15, color: f.tend.c === "neg" ? VERMELHO : f.tend.c === "pos" ? VERDE : CINZA })] })] }); }) })] }));
+      else if (b.t === "h2") filhos.push(new P({ heading: D.HeadingLevel.HEADING_2, children: [new TR({ text: b.txt, color: AZUL, bold: true })] }));
       else if (b.t === "p") filhos.push(new P({ spacing: { after: 120 }, children: runs(b.html) }));
       else if (b.t === "nota") filhos.push(new P({ spacing: { after: 160 }, shading: { fill: "F1F5F9" }, border: { left: { style: D.BorderStyle.SINGLE, size: 18, color: AZUL } }, children: runs(b.html) }));
       else if (b.t === "coment") filhos.push(new P({ spacing: { after: 160 }, shading: { fill: "F5F3FF" }, border: { left: { style: D.BorderStyle.SINGLE, size: 18, color: "7C3AED" } }, children: [new TR({ text: b.rot + ": ", bold: true, color: "6D28D9" }), new TR(b.txt)] }));
@@ -18361,15 +18509,16 @@ function alApresCfg(pag){
     p.defineSlideMaster({ title: "KZ", background: { color: "FFFFFF" }, objects: objMestre,
       slideNumber: { x: 12.5, y: 7.13, w: 0.6, h: 0.3, fontSize: 9, color: CINZA, fontFace: F } });
     function titulo(s, t, sub) {
-      s.addText(t, { x: 0.5, y: 0.3, w: 10.6, h: 0.6, fontSize: 26, bold: true, color: AZUL, fontFace: F });
-      if (sub) s.addText(sub, { x: 0.5, y: 0.88, w: 11, h: 0.4, fontSize: 13, color: CINZA, fontFace: F });
+      s.addText(t, { x: 0.5, y: 0.25, w: 10.4, h: 0.9, fontSize: t.length > 70 ? 20 : 24, bold: true, color: AZUL, fontFace: F, valign: "top", fit: "shrink" });
+      if (sub) s.addText(sub, { x: 0.5, y: 1.08, w: 11, h: 0.32, fontSize: 12, color: CINZA, fontFace: F });
     }
     function kpi(s, x, y, w, rot, val, cor) {
-      s.addShape(p.ShapeType.roundRect, { x: x, y: y, w: w, h: 1.25, fill: { color: "F8FAFC" }, line: { color: "E2E8F0", width: 1 }, rectRadius: 0.08 });
-      s.addText(rot.toUpperCase(), { x: x + 0.2, y: y + 0.12, w: w - 0.4, h: 0.3, fontSize: 10, color: CINZA, fontFace: F });
-      s.addText(val, { x: x + 0.2, y: y + 0.45, w: w - 0.4, h: 0.6, fontSize: 22, bold: true, color: cor || "0F172A", fontFace: F });
+      s.addShape(p.ShapeType.roundRect, { x: x, y: y, w: w, h: 1.2, fill: { color: "F8FAFC" }, line: { color: "E2E8F0", width: 1 }, rectRadius: 0.08 });
+      s.addText(rot.toUpperCase(), { x: x + 0.2, y: y + 0.1, w: w - 0.4, h: 0.3, fontSize: 10, color: CINZA, fontFace: F });
+      s.addText(val, { x: x + 0.2, y: y + 0.42, w: w - 0.4, h: 0.6, fontSize: 22, bold: true, color: cor || "0F172A", fontFace: F, fit: "shrink" });
     }
     function corD(d) { return d < 0 ? VERMELHO : d > 0 ? VERDE : CINZA; }
+    function cab(t, al) { return { text: t, options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: al || "left" } }; }
     function txt(s, html, x, y, w, h, tam) {
       // cada paragrafo (separado por \n) vira uma linha; dentro dele, trechos em negrito/cor seguem na mesma linha
       var parts = [];
@@ -18380,129 +18529,199 @@ function alApresCfg(pag){
         if (seg.length && pi < arr.length - 1) seg[seg.length - 1].options.breakLine = true;
         parts = parts.concat(seg);
       });
-      s.addText(parts, { x: x, y: y, w: w, h: h, fontSize: tam || 14, color: "334155", fontFace: F, valign: "top" });
+      if (parts.length) s.addText(parts, { x: x, y: y, w: w, h: h, fontSize: tam || 14, color: "334155", fontFace: F, valign: "top", fit: "shrink" });
     }
-    var M = A.mes, cab = M ? "Desvios de " + A.periodo + " (mês e acumulado)" : "Toda a obra";
+    function caixa(s, x, y, w, h, tit, itens, alerta) {
+      s.addShape(p.ShapeType.roundRect, { x: x, y: y, w: w, h: h, fill: { color: alerta ? "FEF2F2" : "FFFFFF" }, line: { color: alerta ? "FECACA" : "E2E8F0", width: 1 }, rectRadius: 0.08 });
+      s.addText(tit.toUpperCase(), { x: x + 0.2, y: y + 0.1, w: w - 0.4, h: 0.32, fontSize: 12, bold: true, color: alerta ? "B91C1C" : AZUL, fontFace: F });
+      txt(s, itens.map(function (i) { return "• " + i; }).join("\n"), x + 0.2, y + 0.45, w - 0.4, h - 0.55, 12);
+    }
+    var M = A.mes, sub0 = M ? A.periodo + " (" + (A.ehRealizado ? "mês realizado" : "mês de projeção") + ") · comparado ao " + A.prevNome : "Toda a obra · comparado ao " + A.prevNome;
+    var cm = A.coment || {}, dec = linhasTexto(cm.decisoes), pas = linhasTexto(cm.passos);
     // 1. capa
     var s = p.addSlide();
     s.background = { color: AZUL };
     if (logoData) { var lw = Math.min(3.2, 1.1 * logoAsp); s.addShape(p.ShapeType.roundRect, { x: 0.8, y: 0.8, w: lw + 0.4, h: lw / logoAsp + 0.4, fill: { color: "FFFFFF" }, rectRadius: 0.1 }); s.addImage({ data: logoData, x: 1.0, y: 1.0, w: lw, h: lw / logoAsp }); }
     s.addText("Apresentação de Custos", { x: 0.8, y: 2.9, w: 11.5, h: 0.9, fontSize: 40, bold: true, color: "FFFFFF", fontFace: F });
     s.addText(A.obra, { x: 0.8, y: 3.8, w: 11.5, h: 0.6, fontSize: 24, color: "DBEAFE", fontFace: F });
-    s.addText(cab + (A.opc.soDesvios ? " · somente desvios" : ""), { x: 0.8, y: 4.6, w: 11.5, h: 0.5, fontSize: 18, bold: true, color: "FCD34D", fontFace: F });
+    s.addText((M ? "Desvios de " + A.periodo + " (mês e acumulado)" : "Toda a obra") + (A.opc.soDesvios ? " · somente desvios" : ""), { x: 0.8, y: 4.6, w: 11.5, h: 0.5, fontSize: 18, bold: true, color: "FCD34D", fontFace: F });
     s.addText("Gerado em " + A.gerado + "  ·  Documento interno — uso restrito", { x: 0.8, y: 6.5, w: 11.5, h: 0.4, fontSize: 12, color: "BFDBFE", fontFace: F });
-    // 2. resumo em numeros
-    s = p.addSlide({ masterName: "KZ" }); titulo(s, "Resumo em números", cab + (M ? " · " + (A.ehRealizado ? "mês realizado" : "mês de projeção") : ""));
+    // 2. resumo executivo: farol + o que explica + decisoes + proximos passos
+    s = p.addSlide({ masterName: "KZ" }); titulo(s, T.resumo(A), "Resumo executivo · " + sub0);
+    A.farol.forEach(function (fa, i) {
+      var x = 0.5 + i * 3.1, cor = CORF[fa.cor];
+      s.addShape(p.ShapeType.roundRect, { x: x, y: 1.5, w: 2.95, h: 1.35, fill: { color: "F8FAFC" }, line: { color: "E2E8F0", width: 1 }, rectRadius: 0.08 });
+      s.addShape(p.ShapeType.rect, { x: x, y: 1.5, w: 2.95, h: 0.08, fill: { color: cor }, line: { color: cor } });
+      s.addShape(p.ShapeType.ellipse, { x: x + 0.18, y: 1.72, w: 0.16, h: 0.16, fill: { color: cor }, line: { color: cor } });
+      s.addText(fa.n.toUpperCase(), { x: x + 0.4, y: 1.64, w: 1.5, h: 0.3, fontSize: 10, color: CINZA, fontFace: F });
+      s.addText(fa.tend.t.toUpperCase(), { x: x + 1.6, y: 1.64, w: 1.25, h: 0.3, fontSize: 9, color: fa.tend.c === "neg" ? VERMELHO : fa.tend.c === "pos" ? VERDE : CINZA, align: "right", fontFace: F });
+      s.addText(fa.v, { x: x + 0.18, y: 1.98, w: 2.6, h: 0.5, fontSize: 24, bold: true, color: fa.cor === "cinza" ? "475569" : cor, fontFace: F, fit: "shrink" });
+      s.addText(fa.sub, { x: x + 0.18, y: 2.45, w: 2.65, h: 0.35, fontSize: 10, color: "475569", fontFace: F, fit: "shrink" });
+    });
+    var oq = oQueExplica(A);
+    caixa(s, 0.5, 3.05, dec.length ? 6.05 : 12.35, 1.95, "O que explica", oq.length ? oq : ["Nenhum desvio relevante no período."]);
+    if (dec.length) caixa(s, 6.8, 3.05, 6.05, 1.95, "Decisões necessárias", dec.map(esc), true);
+    if (pas.length) caixa(s, 0.5, 5.15, 12.35, 1.75, "Próximos passos", pas.map(esc));
+    else txt(s, textoResumo(A), 0.5, 5.2, 12.35, 1.7, 13);
+    // 3. resumo em numeros
+    s = p.addSlide({ masterName: "KZ" }); titulo(s, T.numeros(A), "Resumo em números · " + sub0);
     kpi(s, 0.5, 1.5, 2.9, "Previsto " + (M ? "do mês" : "da obra"), curto(A.tot.prev));
     kpi(s, 3.6, 1.5, 2.9, "Real " + (M ? "do mês" : "da obra"), curto(A.tot.real));
     kpi(s, 6.7, 1.5, 2.9, "Desvio " + (M ? "do mês" : ""), sinalC(A.tot.desvio), corD(A.tot.desvio));
-    kpi(s, 9.8, 1.5, 3.0, M ? "Desvio acumulado" : "Itens com desvio", M ? sinalC(A.totAc.desvio) : String(A.comDesvio.length), M ? corD(A.totAc.desvio) : undefined);
+    kpi(s, 9.8, 1.5, 3.0, M ? "Desvio acumulado" : "Desvios relevantes", M ? sinalC(A.totAc.desvio) : String(A.comDesvio.filter(function (x) { return x.relevante; }).length), M ? corD(A.totAc.desvio) : undefined);
     if (!A.opc.soDesvios) {
-      kpi(s, 0.5, 3.0, 2.9, "Valor do contrato", curto(A.contrato));
-      kpi(s, 3.6, 3.0, 2.9, "Custo total da obra", curto(A.custoReal));
-      kpi(s, 6.7, 3.0, 2.9, "Lucro", curto(A.lucro), corD(A.lucro));
-      kpi(s, 9.8, 3.0, 3.0, "Margem", A.margem == null ? "—" : A.margem.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "%", A.margem < 0 ? VERMELHO : undefined);
+      kpi(s, 0.5, 2.95, 2.9, "Valor do contrato", curto(A.contrato));
+      kpi(s, 3.6, 2.95, 2.9, "Custo total da obra", curto(A.custoReal));
+      kpi(s, 6.7, 2.95, 2.9, "Lucro", curto(A.lucro), corD(A.lucro));
+      kpi(s, 9.8, 2.95, 3.0, "Margem", A.margem == null ? "—" : A.margem.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "%", A.margem < 0 ? VERMELHO : undefined);
     }
-    txt(s, textoResumo(A) + "\n" + textoDestaques(A).join("\n"), 0.5, A.opc.soDesvios ? 3.0 : 4.5, 12.3, 2.4, 14);
-    // 3. curva S e 4. composicao (so no "tudo")
-    if (!A.opc.soDesvios && A.curva.length) {
-      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Curva S", "Custo acumulado real e previsto x receita medida");
+    txt(s, textoResumo(A) + "\n" + textoDestaques(A).join("\n"), 0.5, A.opc.soDesvios ? 2.95 : 4.4, 12.3, 2.5, 14);
+    // 4. cascata do Previsto ao Real (barras empilhadas: base invisivel + aumento + reducao)
+    if (A.cascata.length) {
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.cascata(A), "Cascata do Previsto ao Real por natureza · " + (M ? A.periodo : "toda a obra"));
+      var lab = ["Previsto"], base = [0], up = [0], down = [0], tP = [A.tot.prev], tR = [0], acum = A.tot.prev;
+      A.cascata.forEach(function (o) { lab.push(o.n); if (o.d >= 0) { base.push(acum); up.push(o.d); down.push(0); acum += o.d; } else { acum += o.d; base.push(acum); up.push(0); down.push(-o.d); } tP.push(0); tR.push(0); });
+      lab.push("Real"); base.push(0); up.push(0); down.push(0); tP.push(0); tR.push(A.tot.real);
+      var r0 = function (a) { return a.map(function (v) { return Math.round(v); }); };
+      s.addChart(p.ChartType.bar, [{ name: " ", labels: lab, values: r0(base) }, { name: "Previsto", labels: lab, values: r0(tP) }, { name: "Real", labels: lab, values: r0(tR) }, { name: "Aumento (acima do previsto)", labels: lab, values: r0(up) }, { name: "Redução (abaixo do previsto)", labels: lab, values: r0(down) }],
+        { x: 0.5, y: 1.5, w: 12.3, h: 5.05, barDir: "col", barGrouping: "stacked", chartColors: ["FFFFFF", AMARELO, AZUL, VERMELHO, VERDE], showLegend: true, legendPos: "t", legendFontSize: 11, catAxisLabelFontSize: 11, valAxisLabelFontSize: 9, valAxisLabelFormatCode: "#,##0,,\" mi\"", barGapWidthPct: 40 });
+      txt(s, A.cascata.slice(0, 4).map(function (o) { return "<b>" + esc(o.n) + "</b>: <span class='" + (o.d > 0 ? "neg" : "pos") + "'>" + (o.d > 0 ? "+" : "−") + curto(Math.abs(o.d)).replace("-", "") + "</span>"; }).join("   ·   "), 0.5, 6.62, 12.3, 0.4, 11);
+    }
+    // 5. desempenho: CPI/SPI/TCPI + curva S (planejado, real+projecao, receita)
+    if (A.curva.length) {
+      var e = A.evm, f2 = function (v) { return !e.confiavel || v == null || !isFinite(v) ? "—" : v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.evm(A), "Valor agregado = avanço físico × Previsto total · data de corte " + mlbl(e.corte));
+      var corI = function (v, lim) { return !e.confiavel || v == null ? CINZA : v >= lim ? VERDE : v >= lim - 0.05 ? AMARELO : VERMELHO; };
+      kpi(s, 0.5, 1.5, 2.9, "CPI (custo)", f2(e.CPI), corI(e.CPI, 1));
+      kpi(s, 0.5, 2.85, 2.9, "SPI (prazo)", f2(e.SPI), corI(e.SPI, 1));
+      kpi(s, 0.5, 4.2, 2.9, "TCPI (fechar no orçado)", f2(e.TCPI), !e.confiavel || e.TCPI == null ? CINZA : e.TCPI <= 1.1 ? VERDE : VERMELHO);
+      if (e.avisos.length) { s.addShape(p.ShapeType.roundRect, { x: 0.5, y: 5.55, w: 2.9, h: 1.4, fill: { color: "FFFBEB" }, line: { color: "FDE68A" }, rectRadius: 0.06 }); s.addText("⚠ " + e.avisos.join(" "), { x: 0.6, y: 5.6, w: 2.7, h: 1.3, fontSize: 9, color: "92400E", fontFace: F, valign: "top", fit: "shrink" }); }
+      else s.addText("CPI < 1: gasta mais do que produz · SPI < 1: atrasado · TCPI > 1,10: recuperação difícil", { x: 0.5, y: 5.55, w: 2.9, h: 1.2, fontSize: 10, color: CINZA, fontFace: F, valign: "top" });
+      var lb = A.curva.map(function (c) { return mlbl(c.mes); });
       s.addChart(p.ChartType.line, [
-        { name: "Custo real acumulado", labels: A.curva.map(function (c) { return mlbl(c.mes); }), values: A.curva.map(function (c) { return Math.round(c.real); }) },
-        { name: "Custo previsto acumulado", labels: A.curva.map(function (c) { return mlbl(c.mes); }), values: A.curva.map(function (c) { return Math.round(c.prev); }) },
-        { name: "Receita medida acumulada", labels: A.curva.map(function (c) { return mlbl(c.mes); }), values: A.curva.map(function (c) { return Math.round(c.rec); }) }],
-        { x: 0.5, y: 1.4, w: 12.3, h: 5.5, chartColors: [AZUL, AMARELO, "0D9488"], lineSize: 2, lineDataSymbol: "none", showLegend: true, legendPos: "b", legendFontSize: 11, catAxisLabelFontSize: 10, valAxisLabelFontSize: 10, valAxisLabelFormatCode: "#,##0,,\" mi\"" });
+        { name: "Planejado (VP)", labels: lb, values: A.curva.map(function (c) { return Math.round(c.prev); }) },
+        { name: "Custo real + projeção", labels: lb, values: A.curva.map(function (c) { return Math.round(c.real); }) },
+        { name: "Receita medida", labels: lb, values: A.curva.map(function (c) { return Math.round(c.rec); }) }],
+        { x: 3.6, y: 1.45, w: 9.3, h: 5.5, chartColors: [AMARELO, AZUL, "0D9488"], lineSize: 2, lineDataSymbol: "none", showLegend: true, legendPos: "b", legendFontSize: 11, catAxisLabelFontSize: 9, valAxisLabelFontSize: 9, valAxisLabelFormatCode: "#,##0,,\" mi\"" });
+    }
+    // 6. composicao (so no "tudo")
+    if (!A.opc.soDesvios) {
       var comp = Object.keys(A.natTot).map(function (k) { return A.natTot[k]; }).filter(function (o) { return o.real > 0.005; }).sort(function (a, b) { return b.real - a.real; });
       if (comp.length) {
-        s = p.addSlide({ masterName: "KZ" }); titulo(s, "Composição do custo", "Custo real da obra por natureza");
+        s = p.addSlide({ masterName: "KZ" }); titulo(s, T.composicao(A), "Composição do custo real da obra por natureza");
         s.addChart(p.ChartType.doughnut, [{ name: "Custo", labels: comp.map(function (o) { return o.n; }), values: comp.map(function (o) { return Math.round(o.real); }) }],
-          { x: 0.5, y: 1.4, w: 6.2, h: 5.5, holeSize: 60, chartColors: comp.map(function (o) { return o.cor; }), showLegend: false, dataLabelColor: "FFFFFF", showPercent: true, showValue: false });
+          { x: 0.5, y: 1.5, w: 6.2, h: 5.4, holeSize: 60, chartColors: comp.map(function (o) { return o.cor; }), showLegend: false, dataLabelColor: "FFFFFF", showPercent: true, showValue: false });
         var totC = comp.reduce(function (t, o) { return t + o.real; }, 0);
-        s.addTable([[{ text: "Natureza", options: { bold: true, color: "FFFFFF", fill: { color: AZUL } } }, { text: "Real", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }, { text: "%", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }]].concat(
-          comp.map(function (o) { return [{ text: "■ " + o.n, options: { color: o.cor } }, { text: curto(o.real), options: { align: "right" } }, { text: (o.real / totC * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%", options: { align: "right" } }]; })),
-          { x: 7.1, y: 1.8, w: 5.7, colW: [3.0, 1.7, 1.0], fontSize: 12, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
+        s.addTable([[cab("Natureza"), cab("Real", "right"), cab("%", "right")]].concat(comp.map(function (o) { return [{ text: "■ " + o.n, options: { color: o.cor } }, { text: curto(o.real), options: { align: "right" } }, { text: (o.real / totC * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%", options: { align: "right" } }]; })),
+          { x: 7.1, y: 1.9, w: 5.7, colW: [3.0, 1.7, 1.0], fontSize: 12, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
       }
     }
-    // 5. previsto x real por grupo
+    // 7. previsto x real por grupo
     var grp = A.grupos.filter(function (g) { return !A.opc.soDesvios || Math.abs(g.desvio) >= 0.005; });
     if (grp.length) {
-      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Previsto x Real por grupo da EAP", cab);
-      var lab = grp.map(function (g) { return (g.item + " " + g.descricao).slice(0, 34); });
-      s.addChart(p.ChartType.bar, [{ name: "Previsto", labels: lab, values: grp.map(function (g) { return Math.round(g.prev); }) }, { name: "Real", labels: lab, values: grp.map(function (g) { return Math.round(g.real); }) }],
-        { x: 0.5, y: 1.4, w: 12.3, h: 5.5, barDir: "bar", barGrouping: "clustered", chartColors: [AMARELO, AZUL], showLegend: true, legendPos: "b", catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valAxisLabelFormatCode: "#,##0,,\" mi\"", catAxisOrientation: "maxMin" });
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.grupos(A), "Previsto x Real por grupo da EAP · " + (M ? A.periodo : "toda a obra"));
+      var lg = grp.map(function (g) { return (g.item + " " + g.descricao).slice(0, 34); });
+      s.addChart(p.ChartType.bar, [{ name: "Previsto", labels: lg, values: grp.map(function (g) { return Math.round(g.prev); }) }, { name: "Real", labels: lg, values: grp.map(function (g) { return Math.round(g.real); }) }],
+        { x: 0.5, y: 1.5, w: 12.3, h: 5.4, barDir: "bar", barGrouping: "clustered", chartColors: [AMARELO, AZUL], showLegend: true, legendPos: "b", catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valAxisLabelFormatCode: "#,##0,,\" mi\"", catAxisOrientation: "maxMin" });
     }
-    // 6. top estouros e sobras
+    // 8. maiores desvios
     var acima = A.comDesvio.filter(function (x) { return x.desvio < 0; }).sort(function (a, b) { return a.desvio - b.desvio; }).slice(0, 10);
     var abaixo = A.comDesvio.filter(function (x) { return x.desvio > 0; }).sort(function (a, b) { return b.desvio - a.desvio; }).slice(0, 10);
     if (acima.length || abaixo.length) {
-      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Maiores desvios", cab + " · Desvio = Previsto − Real");
-      function tab(lista, x, tit, cor) {
-        s.addText(tit, { x: x, y: 1.4, w: 6, h: 0.4, fontSize: 15, bold: true, color: cor, fontFace: F });
-        var rows = [[{ text: "Item", options: { bold: true, color: "FFFFFF", fill: { color: AZUL } } }, { text: "Desvio", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }]];
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.maiores(A), (M ? A.periodo : "Toda a obra") + " · Desvio = Previsto − Real");
+      var tab = function (lista, x, tit, cor) {
+        s.addText(tit, { x: x, y: 1.5, w: 6, h: 0.4, fontSize: 15, bold: true, color: cor, fontFace: F });
+        var rows = [[cab("Item"), cab("Desvio", "right")]];
         lista.forEach(function (x2) { rows.push([{ text: (x2.item + " " + x2.descricao).slice(0, 46) }, { text: sinal(x2.desvio), options: { align: "right", color: corD(x2.desvio), bold: true } }]); });
-        if (lista.length) s.addTable(rows, { x: x, y: 1.85, w: 6, colW: [4.2, 1.8], fontSize: 11, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
-        else s.addText("Nenhum.", { x: x, y: 1.9, w: 6, h: 0.4, fontSize: 12, color: CINZA, fontFace: F });
-      }
+        if (lista.length) s.addTable(rows, { x: x, y: 1.95, w: 6, colW: [4.2, 1.8], fontSize: 11, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
+        else s.addText("Nenhum.", { x: x, y: 2.0, w: 6, h: 0.4, fontSize: 12, color: CINZA, fontFace: F });
+      };
       tab(acima, 0.5, "▲ Acima do previsto (estouros)", VERMELHO);
       tab(abaixo, 6.85, "▼ Abaixo do previsto (sobras)", VERDE);
     }
-    // 7. um slide por item com desvio (os 12 maiores; os demais em tabela)
-    var itensD = A.itens.filter(function (x) { return Math.abs(x.desvio) >= 0.005 || (M && Math.abs(x.desvioAc) >= 0.005); });
-    itensD.slice(0, 12).forEach(function (x) {
-      s = p.addSlide({ masterName: "KZ" }); titulo(s, (x.item + " " + x.descricao).slice(0, 60), cab);
-      kpi(s, 0.5, 1.45, 2.9, "Previsto" + (M ? " do mês" : ""), curto(x.prev));
-      kpi(s, 3.6, 1.45, 2.9, "Real" + (M ? " do mês" : ""), curto(x.real));
-      kpi(s, 6.7, 1.45, 2.9, "Desvio" + (x.pct != null ? " (" + pctTxt(x.pct) + ")" : ""), sinalC(x.desvio), corD(x.desvio));
-      kpi(s, 9.8, 1.45, 3.0, M ? "Desvio acumulado" : "Grupo", M ? sinalC(x.desvioAc) : ((x.grupo && x.grupo.item) || "—"), M ? corD(x.desvioAc) : undefined);
-      var pr = principais(x.linhas || [], 6), rows = [[{ text: "Linhas que mais pesaram", options: { bold: true, color: "FFFFFF", fill: { color: AZUL } } }, { text: "Origem", options: { bold: true, color: "FFFFFF", fill: { color: AZUL } } }, { text: "Previsto", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }, { text: "Real", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }, { text: "Desvio", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }]];
+    // 9. um slide por desvio relevante (os 12 maiores); os demais em tabela
+    var rel = A.itens.filter(function (x) { return x.relevante; }), resto = A.itens.filter(function (x) { return !x.relevante && Math.abs(x.desvio) >= 0.005; }).concat(rel.slice(12));
+    rel.slice(0, 12).forEach(function (x) {
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.item(x), (M ? A.periodo + " (mês e acumulado)" : "Toda a obra") + (x.grupo ? " · grupo " + x.grupo.item + " " + x.grupo.descricao : ""));
+      kpi(s, 0.5, 1.5, 2.9, "Previsto" + (M ? " do mês" : ""), curto(x.prev));
+      kpi(s, 3.6, 1.5, 2.9, "Real" + (M ? " do mês" : ""), curto(x.real));
+      kpi(s, 6.7, 1.5, 2.9, "Desvio" + (x.pct != null ? " (" + pctTxt(x.pct) + ")" : ""), sinalC(x.desvio), corD(x.desvio));
+      kpi(s, 9.8, 1.5, 3.0, M ? "Desvio acumulado" : "% do desvio total", M ? sinalC(x.desvioAc) : (A.tot.desvio ? Math.round(x.desvio / A.tot.desvio * 100) + "%" : "—"), M ? corD(x.desvioAc) : undefined);
+      var pr = principais(x.linhas || [], 6), rows = [[cab("Linhas que mais pesaram"), cab("Origem"), cab("Previsto", "right"), cab("Real", "right"), cab("Desvio", "right")]];
       pr.top.concat(pr.demais ? [pr.demais] : []).forEach(function (l) { rows.push([{ text: l.nome.slice(0, 60) }, { text: l.origem || "" }, { text: curto(l.prev), options: { align: "right" } }, { text: curto(l.real), options: { align: "right" } }, { text: sinal(l.desvio), options: { align: "right", color: corD(l.desvio), bold: true } }]); });
-      if (rows.length > 1) s.addTable(rows, { x: 0.5, y: 2.95, w: 12.3, colW: [6.1, 1.6, 1.5, 1.5, 1.6], fontSize: 11, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
-      var cm = A.coment.itens && A.coment.itens[x.item];
-      txt(s, textoItem(x, M) + (cm ? "\nGerência: " + esc(cm) : ""), 0.5, rows.length > 1 ? 3.1 + 0.32 * rows.length : 3.0, 12.3, 1.4, 12);
+      if (rows.length > 1) s.addTable(rows, { x: 0.5, y: 2.9, w: 12.3, colW: [6.1, 1.6, 1.5, 1.5, 1.6], fontSize: 11, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
+      var cmI = cm.itens && cm.itens[x.item];
+      txt(s, textoItem(x, M) + (cmI ? "\n<b>Gerência:</b> " + esc(cmI) : ""), 0.5, rows.length > 1 ? 3.05 + 0.32 * rows.length : 3.0, 12.3, 1.5, 12);
     });
-    if (itensD.length > 12) {
-      var resto = itensD.slice(12);
-      for (var k = 0; k < resto.length; k += 14) {
-        s = p.addSlide({ masterName: "KZ" }); titulo(s, "Demais itens com desvio", cab);
-        var r2 = [[{ text: "Item", options: { bold: true, color: "FFFFFF", fill: { color: AZUL } } }, { text: "Previsto", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }, { text: "Real", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }, { text: "Desvio", options: { bold: true, color: "FFFFFF", fill: { color: AZUL }, align: "right" } }]];
-        resto.slice(k, k + 14).forEach(function (x3) { r2.push([{ text: (x3.item + " " + x3.descricao).slice(0, 60) }, { text: curto(x3.prev), options: { align: "right" } }, { text: curto(x3.real), options: { align: "right" } }, { text: sinal(x3.desvio), options: { align: "right", color: corD(x3.desvio), bold: true } }]); });
-        s.addTable(r2, { x: 0.5, y: 1.45, w: 12.3, colW: [7.3, 1.6, 1.6, 1.8], fontSize: 11, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
-      }
+    for (var k = 0; k < resto.length; k += 14) {
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Demais diferenças: " + resto.length + " ite" + (resto.length === 1 ? "m" : "ns") + (k ? " (continuação)" : ""), "Itens abaixo do limite de desvio relevante (" + A.cfg.limPct + "% ou " + R$(A.cfg.limRs) + ") ou além dos 12 maiores");
+      var r2 = [[cab("Item"), cab("Previsto", "right"), cab("Real", "right"), cab("Desvio", "right")]];
+      resto.slice(k, k + 14).forEach(function (x3) { r2.push([{ text: (x3.item + " " + x3.descricao).slice(0, 60) }, { text: curto(x3.prev), options: { align: "right" } }, { text: curto(x3.real), options: { align: "right" } }, { text: sinal(x3.desvio), options: { align: "right", color: corD(x3.desvio), bold: true } }]); });
+      s.addTable(r2, { x: 0.5, y: 1.5, w: 12.3, colW: [7.3, 1.6, 1.6, 1.8], fontSize: 11, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
     }
-    // 8. efetivo
-    var ef = A.efetivo.filter(function (e) { return e.modR + e.modP + e.moiR + e.moiP > 0; });
-    var efP = efetivoPer(A), efDif = Math.abs(efP.modR - efP.modP) + Math.abs(efP.moiR - efP.moiP) > 0.5;
+    // 10. previsao no termino
+    if (A.termino.length) {
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.termino(A), "Orçado × comprometido × realizado × a incorrer × previsão no término · corte " + mlbl(A.corte));
+      var rt = [[cab("Item EAP"), cab("Orçado", "right"), cab("Comprometido", "right"), cab("Realizado", "right"), cab("A incorrer", "right"), cab("Término", "right"), cab("Desvio", "right")]];
+      A.termino.slice(0, 11).forEach(function (t) { rt.push([{ text: (t.item + " " + t.descricao).slice(0, 44) }, { text: curto(t.orc), options: { align: "right" } }, { text: t.comp == null ? "—" : curto(t.comp), options: { align: "right" } }, { text: curto(t.realiz), options: { align: "right" } }, { text: curto(t.aInc), options: { align: "right" } }, { text: curto(t.eac), options: { align: "right", bold: true } }, { text: sinalC(t.desvio), options: { align: "right", color: corD(t.desvio), bold: true } }]); });
+      var tt = A.termTot;
+      rt.push([{ text: "Total dos itens", options: { bold: true, fill: { color: "F1F5F9" } } }, { text: curto(tt.orc), options: { align: "right", bold: true, fill: { color: "F1F5F9" } } }, { text: curto(tt.comp), options: { align: "right", bold: true, fill: { color: "F1F5F9" } } }, { text: curto(tt.realiz), options: { align: "right", bold: true, fill: { color: "F1F5F9" } } }, { text: curto(tt.aInc), options: { align: "right", bold: true, fill: { color: "F1F5F9" } } }, { text: curto(tt.eac), options: { align: "right", bold: true, fill: { color: "F1F5F9" } } }, { text: sinalC(tt.desvio), options: { align: "right", bold: true, color: corD(tt.desvio), fill: { color: "F1F5F9" } } }]);
+      s.addTable(rt, { x: 0.5, y: 1.5, w: 12.3, colW: [4.3, 1.3, 1.35, 1.3, 1.3, 1.35, 1.4], fontSize: 10.5, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
+      s.addText("Comprometido = contratos e aditivos lançados nas linhas · A incorrer = projeção dos meses seguintes · Término = realizado + a incorrer", { x: 0.5, y: 6.7, w: 12.3, h: 0.3, fontSize: 9.5, color: CINZA, fontFace: F });
+    }
+    // 11. efetivo
+    var ef = A.efetivo.filter(function (e2) { return e2.modR + e2.modP + e2.moiR + e2.moiP > 0; }), efP = efetivoPer(A), efDif = Math.abs(efP.modR - efP.modP) + Math.abs(efP.moiR - efP.moiP) > 0.5;
     if (ef.length && (!A.opc.soDesvios || efDif)) {
-      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Mão de obra — efetivo previsto x real", "Pessoas por mês (M.O.D + M.O.I)");
-      var lb = ef.map(function (e) { return mlbl(e.mes); });
-      s.addChart(p.ChartType.bar, [{ name: "Previsto", labels: lb, values: ef.map(function (e) { return Math.round(e.modP + e.moiP); }) }, { name: "Real", labels: lb, values: ef.map(function (e) { return Math.round(e.modR + e.moiR); }) }],
-        { x: 0.5, y: 1.4, w: 8.3, h: 5.5, barDir: "col", barGrouping: "clustered", chartColors: [AMARELO, AZUL], showLegend: true, legendPos: "b", catAxisLabelFontSize: 9, valAxisLabelFontSize: 9 });
-      txt(s, textoEfetivo(A), 9.1, 1.6, 3.8, 3, 13);
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.efetivo(A), "Mão de obra — pessoas por mês (M.O.D + M.O.I)");
+      var lbE = ef.map(function (e2) { return mlbl(e2.mes); });
+      s.addChart(p.ChartType.bar, [{ name: "Previsto", labels: lbE, values: ef.map(function (e2) { return Math.round(e2.modP + e2.moiP); }) }, { name: "Real / projeção", labels: lbE, values: ef.map(function (e2) { return Math.round(e2.modR + e2.moiR); }) }],
+        { x: 0.5, y: 1.5, w: 8.3, h: 5.4, barDir: "col", barGrouping: "clustered", chartColors: [AMARELO, AZUL], showLegend: true, legendPos: "b", catAxisLabelFontSize: 9, valAxisLabelFontSize: 9 });
+      txt(s, textoEfetivo(A), 9.1, 1.7, 3.8, 3, 13);
     }
-    // 9. resultado (so no "tudo")
+    // 12. proximos 3 meses
+    if (A.prox.length) {
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.prox(A), "O que vem pela frente · depois de " + mlbl(A.corte));
+      var pico = A.prox.slice().sort(function (a, b) { return b.proj - a.proj; })[0];
+      A.prox.forEach(function (pm, i) {
+        var x = 0.5 + i * 4.15, ehPico = pm === pico && A.prox.length > 1;
+        s.addShape(p.ShapeType.roundRect, { x: x, y: 1.5, w: 4.0, h: 3.6, fill: { color: ehPico ? "FFFBEB" : "FFFFFF" }, line: { color: ehPico ? AMARELO : "E2E8F0", width: ehPico ? 2 : 1 }, rectRadius: 0.08 });
+        s.addText(mlbl(pm.mes) + (ehPico ? "  ▲ pico" : ""), { x: x + 0.2, y: 1.6, w: 3.6, h: 0.45, fontSize: 18, bold: true, color: AZUL, fontFace: F });
+        s.addText(pm.realizado ? "REALIZADO" : "PROJEÇÃO", { x: x + 0.2, y: 2.02, w: 3.6, h: 0.3, fontSize: 9, color: CINZA, fontFace: F });
+        s.addTable([[{ text: "Custo projetado" }, { text: curto(pm.proj), options: { align: "right", bold: true } }], [{ text: "Previsto" }, { text: curto(pm.prev), options: { align: "right", bold: true } }], [{ text: "Efetivo projetado" }, { text: String(Math.round(pm.ef)), options: { align: "right", bold: true } }], [{ text: "Efetivo previsto" }, { text: String(Math.round(pm.efP)), options: { align: "right", bold: true } }]],
+          { x: x + 0.15, y: 2.4, w: 3.7, colW: [2.2, 1.5], fontSize: 11, fontFace: F, border: { type: "none" } });
+        txt(s, "<b>Maiores gastos:</b> " + (pm.maiores.length ? pm.maiores.map(function (l) { return esc(l.nome.split(" · ")[0]) + " (" + curto(l.v) + (l.contratado ? "" : ", sem contrato") + ")"; }).join("; ") : "—"), x + 0.2, 4.0, 3.6, 1.05, 10);
+      });
+      var at = [];
+      if (pico && A.prox.length > 1) { var tP = A.prox.reduce(function (t, q) { return t + q.proj; }, 0); if (tP) at.push(mlbl(pico.mes) + " concentra " + Math.round(pico.proj / tP * 100) + "% do custo projetado dos próximos meses."); }
+      var semC = []; A.prox.forEach(function (q) { q.semContrato.forEach(function (l) { semC.push(l); }); });
+      if (semC.length) at.push(semC.length + " dos maiores gastos ainda estão sem contrato lançado (ex.: " + esc(semC[0].nome.split(" · ")[0]) + ").");
+      var efC = efDeCorte(A); if (efC != null && A.prox.length) { var dEf = Math.round(A.prox[A.prox.length - 1].ef - efC); if (Math.abs(dEf) >= 1) at.push("Efetivo " + (dEf > 0 ? "sobe " : "cai ") + Math.abs(dEf) + " pessoas até " + mlbl(A.prox[A.prox.length - 1].mes) + "."); }
+      if (at.length) caixa(s, 0.5, 5.3, 12.35, 1.6, "Atenção", at);
+    }
+    // 13. resultado (so no "tudo")
     if (!A.opc.soDesvios) {
-      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Resultado da obra", "Contrato, custo e margem");
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.numeros(A), "Resultado da obra · contrato, custo e margem");
       kpi(s, 0.5, 1.5, 4.0, "Valor do contrato", curto(A.contrato));
       kpi(s, 4.7, 1.5, 4.0, "Receita medida acumulada", curto(A.medido));
       kpi(s, 8.9, 1.5, 3.9, "Custo total (real + projeção)", curto(A.custoReal));
-      kpi(s, 0.5, 3.0, 4.0, "Lucro", curto(A.lucro), corD(A.lucro));
-      kpi(s, 4.7, 3.0, 4.0, "Margem", A.margem == null ? "—" : A.margem.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "%", A.margem < 0 ? VERMELHO : undefined);
-      kpi(s, 8.9, 3.0, 3.9, "Medido / contrato", A.contrato ? (A.medido / A.contrato * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%" : "—");
+      kpi(s, 0.5, 2.95, 4.0, "Lucro", curto(A.lucro), corD(A.lucro));
+      kpi(s, 4.7, 2.95, 4.0, "Margem", A.margem == null ? "—" : A.margem.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "%", A.margem < 0 ? VERMELHO : undefined);
+      kpi(s, 8.9, 2.95, 3.9, "Medido / contrato", A.contrato ? (A.medido / A.contrato * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%" : "—");
     }
-    // 10. alertas
+    // 14. alertas
     if (A.alertas.length) {
-      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Alertas", A.alertas.length + " alerta(s) ativo(s) no controle");
-      var ra = [[{ text: "Alerta", options: { bold: true, color: "FFFFFF", fill: { color: AZUL } } }, { text: "Detalhe", options: { bold: true, color: "FFFFFF", fill: { color: AZUL } } }]];
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, T.alertas(A), "Alertas do controle (Menu › Controlador › Alertas)");
+      var ra = [[cab("Alerta"), cab("Detalhe")]];
       A.alertas.slice(0, 12).forEach(function (a) { ra.push([{ text: a.titulo || "", options: { bold: true } }, { text: semHtml(a.texto || "").slice(0, 120) }]); });
-      s.addTable(ra, { x: 0.5, y: 1.45, w: 12.3, colW: [4.2, 8.1], fontSize: 11, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
+      s.addTable(ra, { x: 0.5, y: 1.5, w: 12.3, colW: [4.2, 8.1], fontSize: 11, fontFace: F, border: { type: "solid", pt: 0.5, color: "E2E8F0" } });
     }
-    // 11. comentarios da gerencia
-    var cm2 = A.coment || {}, temItens = cm2.itens && Object.keys(cm2.itens).some(function (k) { return cm2.itens[k]; });
-    if (cm2.geral || temItens) {
-      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Comentários da gerência", cab);
-      var linhasC = []; if (cm2.geral) linhasC.push({ text: cm2.geral + "\n", options: { fontSize: 15 } });
-      Object.keys(cm2.itens || {}).forEach(function (k) { if (cm2.itens[k]) { linhasC.push({ text: k + ": ", options: { bold: true, color: "6D28D9" } }); linhasC.push({ text: cm2.itens[k] + "\n" }); } });
-      s.addText(linhasC, { x: 0.5, y: 1.45, w: 12.3, h: 5.4, fontSize: 13, color: "334155", fontFace: F, valign: "top", paraSpaceAfter: 6 });
+    // 15. comentarios da gerencia por item (o geral, as decisoes e os passos ja estao no resumo)
+    var temItens = cm.itens && Object.keys(cm.itens).some(function (k2) { return cm.itens[k2]; });
+    if (cm.geral || temItens) {
+      s = p.addSlide({ masterName: "KZ" }); titulo(s, "Comentários da gerência", sub0);
+      var linhasC = []; if (cm.geral) linhasC.push({ text: cm.geral, options: { fontSize: 15, breakLine: true } });
+      Object.keys(cm.itens || {}).forEach(function (k2) { if (cm.itens[k2]) { linhasC.push({ text: k2 + ": ", options: { bold: true, color: "6D28D9" } }); linhasC.push({ text: cm.itens[k2], options: { breakLine: true } }); } });
+      s.addText(linhasC, { x: 0.5, y: 1.5, w: 12.3, h: 5.4, fontSize: 13, color: "334155", fontFace: F, valign: "top" });
     }
     var blobP = await p.write({ outputType: "blob" });
     baixar(blobP, nomeArquivo("Apresentacao_Custos", A.opc) + ".pptx");
@@ -18555,27 +18774,36 @@ function alApresCfg(pag){
     var corpo =
       "<div class='ex-g'><div>Conteúdo</div><div class='ex-seg'><label><input type='radio' name='ex-cont' value='desv'>Só desvios<small>Itens em que o Real ficou diferente do Previsto</small></label><label><input type='radio' name='ex-cont' value='tudo' checked>Tudo<small>Todos os itens, gráficos e visão geral</small></label></div></div>" +
       "<div class='ex-g'><div>Período</div><div class='ex-seg'><label><input type='radio' name='ex-per' value='obra' checked>Toda a obra<small>Realizado + projeção</small></label><label><input type='radio' name='ex-per' value='mes'>Um mês<small>O mês escolhido e o acumulado até ele</small></label></div><div id='ex-mes-w' style='margin-top:8px;display:none'>" + sel + "</div></div>" +
+      (function () { var c = exportarCfg(), n = function (id, v, w) { return "<input type='text' inputmode='decimal' id='" + id + "' value='" + String(v).replace(".", ",") + "' style='width:" + (w || 64) + "px;border:1.5px solid #cbd5e1;border-radius:8px;padding:5px 8px;text-align:right;font-weight:700'>"; };
+        return "<div class='ex-g'><div>Desvio relevante (ganha slide e explicação próprios)</div><div style='font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap'>acima de " + n("ex-lp", c.limPct) + " % &nbsp;ou de R$ " + n("ex-lr", c.limRs, 100) + "</div></div>" +
+          "<div class='ex-g'><div>Farol de custo</div><div style='font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap'><span style='color:#16a34a'>●</span> verde até " + n("ex-fv", c.verde) + " % &nbsp;<span style='color:#f59e0b'>●</span> amarelo até " + n("ex-fa", c.amarelo) + " % &nbsp;<span style='color:#dc2626'>●</span> vermelho acima</div></div>"; })() +
       (tipo === "rel" ? "<div class='ex-g'><div>Formato</div><div class='ex-seg'><label><input type='radio' name='ex-fmt' value='pdf'>PDF</label><label><input type='radio' name='ex-fmt' value='docx'>Word</label><label><input type='radio' name='ex-fmt' value='ambos' checked>PDF e Word</label></div></div>" : "");
     var bg = janela(tipo === "rel" ? "📄 Relatório de custos" : "🖥️ Apresentação de custos", corpo, "<button class='ex-b' id='ex-volta'>Voltar</button><button class='ex-b p' id='ex-seg'>Continuar</button>");
     bg.querySelectorAll("input[name='ex-per']").forEach(function (r) { r.onchange = function () { bg.querySelector("#ex-mes-w").style.display = bg.querySelector("input[name='ex-per']:checked").value === "mes" ? "" : "none"; }; });
     bg.querySelector("#ex-volta").onclick = window.exportarAbrir;
     bg.querySelector("#ex-seg").onclick = function () {
-      var o = { tipo: tipo, soDesvios: bg.querySelector("input[name='ex-cont']:checked").value === "desv", mes: bg.querySelector("input[name='ex-per']:checked").value === "mes" ? bg.querySelector("#ex-mes").value : null, fmt: tipo === "rel" ? bg.querySelector("input[name='ex-fmt']:checked").value : "pptx" };
+      var num = function (id, d) { var v = numBR(bg.querySelector("#" + id).value); return isFinite(v) && v >= 0 ? v : d; }, c0 = exportarCfg();
+      var cfg = { limPct: num("ex-lp", c0.limPct), limRs: num("ex-lr", c0.limRs), verde: num("ex-fv", c0.verde), amarelo: num("ex-fa", c0.amarelo), margemMin: c0.margemMin };
+      if (cfg.amarelo < cfg.verde) cfg.amarelo = cfg.verde;
+      try { localStorage.setItem("cc_exp_cfg", JSON.stringify(cfg)); } catch (e) { }
+      var o = { cfg: cfg, tipo: tipo, soDesvios: bg.querySelector("input[name='ex-cont']:checked").value === "desv", mes: bg.querySelector("input[name='ex-per']:checked").value === "mes" ? bg.querySelector("#ex-mes").value : null, fmt: tipo === "rel" ? bg.querySelector("input[name='ex-fmt']:checked").value : "pptx" };
       comentarios(o);
     };
   }
   function comentarios(o) {
     var A;
     try { A = analisar(o); } catch (e) { console.error(e); aviso("Não foi possível analisar os custos: " + e.message); return; }
-    var lista = A.comDesvio.slice().sort(function (a, b) { return Math.abs(b.desvio) - Math.abs(a.desvio); }).slice(0, 15);
+    var lista = A.comDesvio.filter(function (x) { return x.relevante; }).sort(function (a, b) { return Math.abs(b.desvio) - Math.abs(a.desvio); }).slice(0, 15);
     var corpo = "<p style='margin:0 0 10px;font-size:13px;color:#475569'>Os textos automáticos já entram " + (o.tipo === "rel" ? "no relatório" : "na apresentação") + ". Se quiser, acrescente comentários da gerência; campos vazios são ignorados.</p>" +
       "<div class='ex-g'><div>Comentário geral" + (o.mes ? " do mês" : "") + "</div><textarea id='ex-cg' placeholder='Ex.: contexto do período, chuvas, aditivos em negociação…'></textarea></div>" +
+      "<div class='ex-g'><div>Decisões necessárias (uma por linha)</div><textarea id='ex-dec' placeholder='Ex.: Aprovar aditivo do aterro (R$ 1,0 mi) — Diretoria, até 30/11'></textarea></div>" +
+      "<div class='ex-g'><div>Próximos passos (um por linha)</div><textarea id='ex-pas' placeholder='Ex.: Renegociar preço do m³ do aterro'></textarea></div>" +
       (lista.length ? "<div class='ex-g'><div>Comentários por item com desvio (" + A.comDesvio.length + (A.comDesvio.length > 15 ? ", mostrando os 15 maiores" : "") + ")</div>" +
         lista.map(function (x) { return "<div class='ex-it'><div><b>" + esc(x.item + " " + x.descricao) + "</b><div class='d " + (x.desvio < 0 ? "neg" : "pos") + "' style='color:" + (x.desvio < 0 ? "#dc2626" : "#15803d") + "'>" + sinal(x.desvio) + "</div></div><textarea data-it='" + esc(x.item) + "'></textarea></div>"; }).join("") + "</div>" : "<p style='font-size:13px;color:#15803d'>Nenhum item com desvio no período.</p>");
     var bg = janela("📝 Comentários da gerência (opcional)", corpo, "<button class='ex-b' id='ex-volta'>Voltar</button><button class='ex-b p' id='ex-gerar'>" + (o.tipo === "rel" ? "Gerar relatório" : "Gerar apresentação") + "</button>");
     bg.querySelector("#ex-volta").onclick = function () { opcoes(o.tipo); };
     bg.querySelector("#ex-gerar").onclick = async function () {
-      var cm = { geral: bg.querySelector("#ex-cg").value.trim(), itens: {} };
+      var cm = { geral: bg.querySelector("#ex-cg").value.trim(), decisoes: bg.querySelector("#ex-dec").value, passos: bg.querySelector("#ex-pas").value, itens: {} };
       bg.querySelectorAll("textarea[data-it]").forEach(function (t) { if (t.value.trim()) cm.itens[t.getAttribute("data-it")] = t.value.trim(); });
       A.coment = cm; o.coment = cm;
       // relatorio em PDF: abre a janela ja no clique (o navegador nao bloqueia)
