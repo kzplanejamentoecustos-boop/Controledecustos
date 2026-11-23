@@ -1964,6 +1964,8 @@ td.col-inc{box-shadow:inset 0 0 0 9999px rgba(var(--pal-inc-rgb,47,111,94),.07)}
       <div class="razao-toolbar">
         <button class="btn b-green b-sm" onclick="document.getElementById('inp-razao').click()">&#10133; Importar arquivo</button>
         <button class="btn b-sm" style="background:#475569;color:#fff;border:none" onclick="menuRazaoLimpar(this)" title="Limpar filtros ou dados do Raz&atilde;o">&#129529; Limpar &#9662;</button><!-- Rev80 -->
+        <button class="btn b-sm" style="background:#7c3aed;color:#fff;border:none" onclick="razaoClassificarAutomatico()" title="Classifica as notas pendentes que est&atilde;o na tela com base nas j&aacute; classificadas e abre a lista para voc&ecirc; aprovar">&#128161; Classificar automaticamente</button>
+        <button class="btn b-sm" id="rz-desfazer-lote" style="display:none;background:#b45309;color:#fff;border:none" onclick="razaoDesfazerLote()" title="Volta para pendente as notas da &uacute;ltima classifica&ccedil;&atilde;o autom&aacute;tica aprovada">&#8630; Desfazer classifica&ccedil;&atilde;o autom&aacute;tica</button>
         <button class="btn b-sm" style="background:#0369a1;color:#fff;border:none" onclick="razaoSelecionarColunas(event)" title="Escolha quais colunas aparecem na tabela">&#9776; Selecionar colunas</button><!-- Rev79 -->
         <span id="razao-arquivo" class="razao-meta"></span>
       </div>
@@ -13230,7 +13232,7 @@ function dados(){if(!window.S)window.S={};if(!Array.isArray(S.razaoDados))S.raza
 function passa(r,ign){if(ign!=='__classif'&&filtros.__classif&&filtros.__classif.size&&!filtros.__classif.has(rzVal(r,'__classif')))return false;return COLS.every(function(c){return c.k===ign||!filtros[c.k]||!filtros[c.k].size||filtros[c.k].has(String(r[c.k]||''));});}
 window.renderRazao=function(){
  var h=document.getElementById('razao-head'),b=document.getElementById('razao-body');if(!h||!b)return;
- var all=dados(),vis=all.filter(function(r){return passa(r);});
+ if(typeof razaoSugestaoLimpar==='function')razaoSugestaoLimpar();var all=dados(),vis=all.filter(function(r){return passa(r);});
  h.innerHTML=COLS.map(function(c){var at=filtros[c.k]&&filtros[c.k].size?' active':'';return '<th data-rcol="'+c.k+'"><div class="razao-th"><span>'+c.l+'</span><span><button class="razao-filter-btn'+at+'" title="Filtrar" onclick="razaoAbrirFiltro(event,\''+c.k+'\')">&#9660;</button></span></div></th>';}).join('')+'<th data-rcol="classificacaoRazao"><div class="razao-th"><span>Classificação</span><span><button class="razao-filter-btn'+(filtros.__classif&&filtros.__classif.size?' active':'')+'" title="Filtrar por classificação" onclick="razaoAbrirFiltro(event,\'__classif\')">&#9660;</button></span></div></th>';
  var itens=(typeof razaoItensClassificacao==='function')?razaoItensClassificacao():[];
  b.innerHTML=vis.length?vis.map(function(r){var opts=(typeof razaoOpcoesClassificacao==='function')?razaoOpcoesClassificacao(itens,r.classificacaoRazaoId):'<option value="">-- Selecione --</option>';var realIndex=all.indexOf(r);var cls=(r.classificacaoRazaoId?'rz-ok':'')+(realIndex===rzAtiva?' rz-ativa':'');return '<tr data-i="'+realIndex+'"'+(cls?' class="'+cls.trim()+'"':'')+'>'+COLS.map(function(c){return '<td data-rcol="'+c.k+'">'+esc(r[c.k])+'</td>';}).join('')+'<td data-rcol="classificacaoRazao"><select class="rzc-select" onchange="classificarLinhaRazao('+realIndex+',this)">'+opts+'</select></td></tr>';}).join(''):'<tr><td colspan="9" class="razao-empty">'+(all.length?'Nenhum registro corresponde aos filtros.':'Importe o relatório Excel para carregar o Razão.')+'</td></tr>';
@@ -13305,6 +13307,145 @@ window.renderClassificarRazao=function(){var tb=document.getElementById('rzc-bod
 window.classificarLinhaRazao=function(i,sel){var r=(S.razaoDados||[])[i];if(!r)return;r.classificacaoRazaoId=sel.value||'';r.classificacaoRazaoTexto=sel.value?sel.options[sel.selectedIndex].text:'';var tr=sel.closest&&sel.closest('#razao-body tr');if(tr)tr.classList.toggle('rz-ok',!!sel.value);if(typeof razaoAtualizarContador==='function')razaoAtualizarContador();renderClassificarRazao();if(typeof razaoRealAtualizar==='function')razaoRealAtualizar();};
 })();
 </script>
+<script id="razao-sugestao-js">
+/* Rev80: sugestao de classificacao do Razao com base nas notas ja classificadas.
+   Compara cada nota pendente com as classificadas: mesmo codigo de material no historico, mesmo fornecedor,
+   palavras parecidas no historico e mesmo grupo de codigo. A sugestao so aparece; quem classifica e o usuario. */
+(function(){
+var IGNORAR={COMPRAS:1,MAO:1,OBRA:1,PARA:1,COM:1,DOS:1,DAS:1,UND:1,UNID:1,TIPO:1,REF:1,MOD:1,MARCA:1};
+function nrm(v){return String(v==null?'':v).normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function partes(r){
+  var ps=nrm(r.historico).split('|').map(function(s){return s.trim();}),cod='',tk={};
+  ps.forEach(function(p){if(!cod&&/^\d{6,}$/.test(p))cod=p;});
+  ps.join(' ').split(/[^A-Z0-9]+/).forEach(function(w){if(w.length>=3&&!/^\d+$/.test(w)&&!IGNORAR[w])tk[w]=1;});
+  return {cod:cod,pre:cod?cod.slice(0,4):'',ger:nrm(r.gerador).trim(),tk:Object.keys(tk)};
+}
+function jac(a,b){if(!a.length||!b.length)return 0;var s={},n=0;a.forEach(function(w){s[w]=1;});b.forEach(function(w){if(s[w])n++;});return n/(a.length+b.length-n);}
+var cache=null;
+function base(){
+  if(cache)return cache;
+  var validos={};(typeof razaoItensClassificacao==='function'?razaoItensClassificacao():[]).forEach(function(it){validos[it.id]=it.txt;});
+  var lista=[];(S.razaoDados||[]).forEach(function(r,i){if(r.classificacaoRazaoId&&validos[r.classificacaoRazaoId]!==undefined)lista.push({i:i,id:String(r.classificacaoRazaoId),txt:validos[r.classificacaoRazaoId],r:r,p:partes(r)});});
+  cache={lista:lista,sug:{}};return cache;
+}
+window.razaoSugestaoLimpar=function(){cache=null;};
+/* Devolve {id,txt,conf:'alta'|'media'|'baixa',motivo,exemplo} ou null. ignorarPropria=true serve para testar a regra nas notas ja classificadas. */
+window.razaoSugerirLinha=function(i,ignorarPropria){
+  var b=base(),r=(S.razaoDados||[])[i];if(!r)return null;
+  if(!ignorarPropria&&b.sug[i]!==undefined)return b.sug[i];
+  var p=partes(r),por={};
+  b.lista.forEach(function(c){
+    if(c.i===i)return;
+    var s=0,mot=[],j=jac(p.tk,c.p.tk);
+    if(p.cod&&c.p.cod===p.cod){s+=100;mot.push('mesmo código de material');}
+    else if(p.pre&&c.p.pre===p.pre){s+=10;}
+    if(p.ger&&c.p.ger===p.ger){s+=30;mot.push('mesmo fornecedor');}
+    if(j>0){s+=50*j;if(j>=0.5)mot.push('histórico parecido');}
+    if(s<=0)return;
+    var x=por[c.id]||(por[c.id]={id:c.id,txt:c.txt,s:0,n:0,mot:[],ex:null});
+    if(s>=30)x.n++;
+    if(s>x.s){x.s=s;x.mot=mot;x.ex=c.r;}
+  });
+  var cands=Object.keys(por).map(function(k){var x=por[k];x.t=x.s+2*Math.min(x.n,5);return x;}).sort(function(a,b){return b.t-a.t;});
+  var top=cands[0],seg=cands[1],res=null;
+  if(top&&top.t>=25){
+    var folga=top.t-(seg?seg.t:0),empate=seg&&seg.s>=top.s,conf=!empate&&(top.s>=100||(top.t>=60&&folga>=15))?'alta':(top.t>=40&&folga>=5?'media':'baixa');/* empate = nota tao parecida quanto a melhor, mas com outra classificacao: nao e alta */
+    var ex=top.ex?[top.ex.competencia,top.ex.documento,top.ex.historico].filter(function(v){return v;}).join(' · '):'';
+    res={id:top.id,txt:top.txt,conf:conf,motivo:(top.mot.length?top.mot.join(', '):'palavras em comum no histórico'),exemplo:ex,alternativa:seg?seg.txt:''};
+  }
+  if(!ignorarPropria)b.sug[i]=res;
+  return res;
+};
+var COR={alta:['#dcfce7','#166534','alta'],media:['#fef3c7','#92400e','média'],baixa:['#f1f5f9','#475569','baixa']};
+window.razaoSugestaoHtml=function(){return '';}; /* sem dica por linha: a classificacao automatica vai para a lista de revisao */
+/* ===== Classificar automaticamente: monta a lista do que seria classificado e so grava o que for aprovado ===== */
+var LOTE=null; // {itens:[{i,id,conf,motivo,exemplo,alternativa}], anterior:[{i,id,txt}]}
+function linhasAlvo(){ // notas pendentes que estao na tela (respeita os filtros da aba)
+  return Array.from(document.querySelectorAll('#razao-body tr[data-i]')).map(function(tr){return +tr.getAttribute('data-i');})
+    .filter(function(i){var r=S.razaoDados[i];return r&&!r.classificacaoRazaoId;});
+}
+function fecharRevisao(){var m=document.getElementById('rzr-modal');if(m)m.remove();}
+window.razaoClassificarAutomatico=function(){
+  cache=null;
+  var alvo=linhasAlvo();
+  if(!alvo.length){alert('Não há notas pendentes na tela. Limpe os filtros ou importe o Razão.');return;}
+  var itens=[],sem=0;
+  alvo.forEach(function(i){var sg=razaoSugerirLinha(i);if(!sg){sem++;return;}itens.push({i:i,id:sg.id,conf:sg.conf,motivo:sg.motivo,exemplo:sg.exemplo,alternativa:sg.alternativa,ok:sg.conf!=='baixa'});});
+  var ord={alta:0,media:1,baixa:2};itens.sort(function(a,b){return ord[a.conf]-ord[b.conf]||a.i-b.i;});
+  LOTE={itens:itens,sem:sem,total:alvo.length,filtro:''};
+  abrirRevisao();
+};
+function abrirRevisao(){
+  fecharRevisao();
+  var opItens=typeof razaoItensClassificacao==='function'?razaoItensClassificacao():[];
+  var n={alta:0,media:0,baixa:0};LOTE.itens.forEach(function(x){n[x.conf]++;});
+  var m=document.createElement('div');m.id='rzr-modal';
+  m.style.cssText='position:fixed;inset:0;z-index:10040;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  var chip=function(k,lbl){var c=COR[k];return '<button type="button" data-f="'+k+'" onclick="razaoRevisaoFiltro(\''+k+'\')" style="border:1px solid '+c[1]+';background:'+c[0]+';color:'+c[1]+';border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700;cursor:pointer">'+lbl+' ('+n[k]+')</button>';};
+  m.innerHTML='<div style="background:#fff;border-radius:12px;width:min(1500px,100%);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.35)">'+
+   '<div style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'+
+    '<div><div style="font-size:16px;font-weight:800;color:#1e3a5f">&#128161; Classificação automática — revise antes de aprovar</div>'+
+    '<div style="font-size:12px;color:#64748b;margin-top:3px">'+LOTE.total+' nota(s) pendente(s) na tela · <b>'+LOTE.itens.length+'</b> classificada(s) automaticamente · '+LOTE.sem+' sem nota parecida (ficam pendentes). Nada é gravado até você aprovar.</div></div>'+
+    '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="font-size:12px;color:#475569">Confiança:</span>'+
+     '<button type="button" data-f="" onclick="razaoRevisaoFiltro(\'\')" style="border:1px solid #1e3a5f;background:#1e3a5f;color:#fff;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700;cursor:pointer">Todas ('+LOTE.itens.length+')</button>'+chip('alta','Alta')+chip('media','Média')+chip('baixa','Baixa')+'</div></div>'+
+   '<div style="padding:8px 18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;border-bottom:1px solid #f1f5f9">'+
+    '<button type="button" class="btn b-sm" onclick="razaoRevisaoMarcar(true)">Marcar visíveis</button><button type="button" class="btn b-sm" onclick="razaoRevisaoMarcar(false)">Desmarcar visíveis</button>'+
+    '<span style="color:#64748b">Já vêm marcadas as de confiança alta e média. Troque a classificação na lista se discordar; passe o mouse no motivo para ver a nota usada como base.</span></div>'+
+   '<div style="overflow:auto;flex:1"><table id="rzr-tab" style="width:100%;min-width:1100px;table-layout:fixed;border-collapse:collapse;font-size:12px"><colgroup><col style="width:34px"><col style="width:82px"><col style="width:17%"><col style="width:25%"><col style="width:96px"><col style="width:24%"><col style="width:76px"><col style="width:14%"></colgroup><thead><tr style="position:sticky;top:0;background:#1e3a5f;color:#fff;z-index:1">'+
+    '<th style="padding:7px;width:34px"><input type="checkbox" id="rzr-todos" onchange="razaoRevisaoMarcar(this.checked)"></th><th style="padding:7px;text-align:left">Competência</th><th style="padding:7px;text-align:left">Fornecedor</th><th style="padding:7px;text-align:left">Histórico</th><th style="padding:7px;text-align:right">Valor</th><th style="padding:7px;text-align:left;min-width:300px">Classificação proposta</th><th style="padding:7px">Confiança</th><th style="padding:7px;text-align:left">Motivo</th></tr></thead><tbody id="rzr-body">'+
+    LOTE.itens.map(function(x,k){var r=S.razaoDados[x.i],c=COR[x.conf],tip='Nota parecida já classificada: '+(x.exemplo||'-')+(x.alternativa?'\nOutra opção possível: '+x.alternativa:'');
+      return '<tr data-k="'+k+'" data-conf="'+x.conf+'" style="border-bottom:1px solid #e2e8f0;background:'+(x.ok?'#fff':'#f8fafc')+'">'+
+       '<td style="padding:5px 7px;text-align:center"><input type="checkbox" class="rzr-ok" '+(x.ok?'checked':'')+' onchange="razaoRevisaoOk('+k+',this.checked)"></td>'+
+       '<td style="padding:5px 7px;white-space:nowrap">'+esc(r.competencia)+'</td><td style="padding:5px 7px;max-width:200px">'+esc(r.gerador)+'</td><td style="padding:5px 7px;max-width:300px;word-break:break-word">'+esc(r.historico)+'</td>'+
+       '<td style="padding:5px 7px;text-align:right;white-space:nowrap">'+esc(r.valor)+'</td>'+
+       '<td style="padding:5px 7px"><select class="rzc-select" style="width:100%" onchange="razaoRevisaoTroca('+k+',this.value)">'+razaoOpcoesClassificacao(opItens,x.id)+'</select></td>'+
+       '<td style="padding:5px 7px;text-align:center"><span style="background:'+c[0]+';color:'+c[1]+';border-radius:9px;padding:1px 8px;font-weight:700">'+c[2]+'</span></td>'+
+       '<td style="padding:5px 7px;color:#475569;max-width:170px" title="'+esc(tip)+'">'+esc(x.motivo)+' &#9432;</td></tr>';}).join('')+
+   '</tbody></table></div>'+
+   '<div style="padding:12px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'+
+    '<button type="button" class="btn b-sm" onclick="razaoRevisaoExportar()">&#128190; Exportar lista (Excel)</button>'+
+    '<div style="display:flex;gap:8px"><button type="button" class="btn" onclick="razaoRevisaoFechar()">Cancelar</button>'+
+    '<button type="button" class="btn b-pri" id="rzr-aprovar" onclick="razaoRevisaoAprovar()"></button></div></div></div>';
+  document.body.appendChild(m);m.querySelectorAll('#rzr-tab td,#rzr-tab th').forEach(function(c){c.style.whiteSpace='normal';c.style.wordBreak='break-word';c.style.verticalAlign='top';c.style.overflow='hidden';});
+  razaoRevisaoFiltro(LOTE.filtro||'');
+}
+function atualizarBotao(){var b=document.getElementById('rzr-aprovar');if(!b)return;var q=LOTE.itens.filter(function(x){return x.ok&&x.id;}).length;b.textContent='✔ Aprovar marcadas ('+q+')';b.disabled=!q;}
+window.razaoRevisaoFiltro=function(f){LOTE.filtro=f;document.querySelectorAll('#rzr-body tr').forEach(function(tr){tr.style.display=!f||tr.getAttribute('data-conf')===f?'':'none';});
+  document.querySelectorAll('#rzr-modal [data-f]').forEach(function(b){b.style.outline=b.getAttribute('data-f')===f?'2px solid #2563eb':'none';});atualizarBotao();};
+window.razaoRevisaoOk=function(k,on){LOTE.itens[k].ok=on;var tr=document.querySelector('#rzr-body tr[data-k="'+k+'"]');if(tr)tr.style.background=on?'#fff':'#f8fafc';atualizarBotao();};
+window.razaoRevisaoTroca=function(k,v){LOTE.itens[k].id=v;if(v&&!LOTE.itens[k].ok){var cb=document.querySelector('#rzr-body tr[data-k="'+k+'"] .rzr-ok');if(cb)cb.checked=true;razaoRevisaoOk(k,true);}atualizarBotao();};
+window.razaoRevisaoMarcar=function(on){document.querySelectorAll('#rzr-body tr').forEach(function(tr){if(tr.style.display==='none')return;var k=+tr.getAttribute('data-k');tr.querySelector('.rzr-ok').checked=on;LOTE.itens[k].ok=on;tr.style.background=on?'#fff':'#f8fafc';});atualizarBotao();};
+window.razaoRevisaoFechar=function(){fecharRevisao();LOTE=null;};
+window.razaoRevisaoAprovar=async function(){
+  var txt={};(razaoItensClassificacao()||[]).forEach(function(it){txt[it.id]=it.txt;});
+  var sel=LOTE.itens.filter(function(x){return x.ok&&x.id&&txt[x.id]!==undefined;});if(!sel.length)return;
+  var ok=typeof confirmarApp==='function'?await confirmarApp('Gravar a classificação de '+sel.length+' nota(s)? As desmarcadas continuam pendentes.'):confirm('Gravar '+sel.length+' classificações?');
+  if(!ok)return;
+  var ant=[];sel.forEach(function(x){var r=S.razaoDados[x.i];ant.push({i:x.i,id:r.classificacaoRazaoId||'',txt:r.classificacaoRazaoTexto||''});r.classificacaoRazaoId=x.id;r.classificacaoRazaoTexto=txt[x.id];});
+  window._rzUltimoLote=ant;fecharRevisao();LOTE=null;cache=null;
+  renderRazao();if(typeof renderClassificarRazao==='function')renderClassificarRazao();if(typeof razaoRealAtualizar==='function')razaoRealAtualizar();
+  var b=document.getElementById('rz-desfazer-lote');if(b)b.style.display='';
+  alert(sel.length+' nota(s) classificada(s). Se precisar, use “↶ Desfazer classificação automática” na barra do Razão.');
+};
+window.razaoDesfazerLote=async function(){
+  var ant=window._rzUltimoLote;if(!ant||!ant.length)return;
+  var ok=typeof confirmarApp==='function'?await confirmarApp('Voltar '+ant.length+' nota(s) da última classificação automática para pendente?'):confirm('Desfazer?');if(!ok)return;
+  ant.forEach(function(a){var r=S.razaoDados[a.i];if(!r)return;r.classificacaoRazaoId=a.id;r.classificacaoRazaoTexto=a.txt;});
+  window._rzUltimoLote=null;cache=null;var b=document.getElementById('rz-desfazer-lote');if(b)b.style.display='none';
+  renderRazao();if(typeof renderClassificarRazao==='function')renderClassificarRazao();if(typeof razaoRealAtualizar==='function')razaoRealAtualizar();
+};
+window.razaoRevisaoExportar=function(){
+  if(typeof XLSX==='undefined'){alert('Exportação indisponível.');return;}
+  var txt={};(razaoItensClassificacao()||[]).forEach(function(it){txt[it.id]=it.txt;});
+  var rows=[['Aprovar','Competência','Documento','Fornecedor','Histórico','Valor','Classificação proposta','Confiança','Motivo','Nota usada como base']];
+  LOTE.itens.forEach(function(x){var r=S.razaoDados[x.i];rows.push([x.ok?'Sim':'Não',r.competencia,r.documento,r.gerador,r.historico,r.valor,txt[x.id]||'',COR[x.conf][2],x.motivo,x.exemplo||'']);});
+  var wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:8},{wch:11},{wch:14},{wch:38},{wch:60},{wch:14},{wch:45},{wch:10},{wch:34},{wch:60}];
+  XLSX.utils.book_append_sheet(wb,ws,'Classificação automática');XLSX.writeFile(wb,'Razao_classificacao_automatica_'+new Date().toISOString().slice(0,10)+'.xlsx');
+};
+})();
+</script>
+
 <script id="rev80-js">
 // ===================== Rev80: avisos do app no lugar do alert() do navegador =====================
 // Mensagem curta = aviso discreto no canto (some sozinho). Mensagem longa ou com varias linhas = janela no padrao do app com botao OK.
