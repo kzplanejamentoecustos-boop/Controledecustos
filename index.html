@@ -1342,7 +1342,6 @@ td.col-inc{box-shadow:inset 0 0 0 9999px rgba(var(--pal-inc-rgb,47,111,94),.07)}
         <span>&#128209; Cont&aacute;bil</span><span>&#9656;</span>
         <div class="ctl-sub">
           <div class="ctl-item" data-idx="24" onclick="setTabAndClose(24)">Raz&atilde;o</div>
-          <div class="ctl-item" data-idx="25" onclick="setTabAndClose(25)">Classificar Raz&atilde;o</div>
           <div class="ctl-item" data-idx="17" onclick="setTabAndClose(17)">Classifica&ccedil;&atilde;o</div>
         </div>
       </div>
@@ -1977,17 +1976,6 @@ td.col-inc{box-shadow:inset 0 0 0 9999px rgba(var(--pal-inc-rgb,47,111,94),.07)}
   </div>
 </div>
 
-<!-- ===== SEC 25: CLASSIFICAR RAZAO ===== -->
-<div class="sec wrap" id="sec25">
-  <div class="ibox"><b>Classificar Raz&atilde;o</b> &mdash; vincule cada linha importada a um item disponível na aba Classificação. As escolhas ficam gravadas nas linhas do Razão.</div>
-  <div class="box">
-    <div class="bh" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-      <h3>Classificação das linhas do Razão <span id="rzc-cnt" class="rzc-status"></span></h3>
-      <div class="rzc-toolbar"><input id="rzc-busca" type="text" placeholder="Pesquisar nas linhas..." oninput="renderClassificarRazao()" style="width:260px;border:1px solid #cbd5e1;border-radius:6px;padding:5px 8px"><select id="rzc-status" onchange="renderClassificarRazao()" style="border:1px solid #cbd5e1;border-radius:6px;padding:5px 8px"><option value="">Todos</option><option value="pendente">Somente não classificados</option><option value="classificado">Somente classificados</option></select><!-- Rev80: Atualizar lista retirado (atualiza ao abrir a aba e ao filtrar) --></div>
-    </div>
-    <div class="tw" style="max-height:70vh"><table style="min-width:1450px"><thead class="th-dk"><tr><th>Competência</th><th>Natureza</th><th>Documento (Nº NF)</th><th>Gerador (Fornecedor)</th><th>Valor</th><th>Histórico</th><th>Centro de Custo</th><th style="min-width:340px">Classificação</th></tr></thead><tbody id="rzc-body"></tbody></table></div>
-  </div>
-</div>
 <div id="razao-filter-pop" class="razao-filter-pop" style="display:none"></div>
 
 <!-- ===== SEC 18: CONTINGENCIA ===== -->
@@ -4306,15 +4294,13 @@ Object.assign(AJUDA,{
   renderClassifLinhasCusto:P("Atualizar","Recarrega a lista de linhas e pend&ecirc;ncias de Item EAP.","Aba Classifica&ccedil;&atilde;o."),
   "inp:inp-classificacao":P("Importar Relat&oacute;rio","Importa o relat&oacute;rio de classifica&ccedil;&atilde;o.","Aba Classifica&ccedil;&atilde;o."),
   classificarLinha:P("Classifica&ccedil;&atilde;o da linha","Define a classifica&ccedil;&atilde;o da linha do relat&oacute;rio.","Aba Classifica&ccedil;&atilde;o."),
-  "inp:inp-razao":P("Importar Raz&atilde;o","Importa o arquivo Documentos.xlsx (aba Documentos) da contabilidade.","Lista de NFs da aba Raz&atilde;o e do Classificar Raz&atilde;o.",["Colunas: Documento, Compet&ecirc;ncia, Natureza, Gerador, Valor, Hist&oacute;rico e Centro de custo.","Reimportar mant&eacute;m as classifica&ccedil;&otilde;es j&aacute; realizadas."]),
+  "inp:inp-razao":P("Importar Raz&atilde;o","Importa o arquivo Documentos.xlsx (aba Documentos) da contabilidade.","Lista de NFs da aba Raz&atilde;o.",["Colunas: Documento, Compet&ecirc;ncia, Natureza, Gerador, Valor, Hist&oacute;rico e Centro de custo.","Reimportar mant&eacute;m as classifica&ccedil;&otilde;es j&aacute; realizadas."]),
   razaoLimparFiltros:P("Limpar filtros","Remove todos os filtros das colunas.","Somente na tabela do Raz&atilde;o."),
   razaoMostrarColunas:P("Mostrar todas as colunas","Reexibe as colunas ocultadas.","Somente na tabela do Raz&atilde;o."),
   razaoSelecionarColunas:P("Selecionar colunas","Lista todas as colunas do Raz&atilde;o para que sejam marcadas as que devem aparecer.","Somente na tabela do Raz&atilde;o; nenhum dado &eacute; alterado.",["<b>Marcar todas</b> volta a exibir todas as colunas.","Pelo menos uma coluna permanece vis&iacute;vel."]),
   razaoAbrirFiltro:P("Filtro da coluna","Abre a lista de valores da coluna para filtrar, com pesquisa e Selecionar tudo.","Somente na tabela do Raz&atilde;o.",["Na coluna <b>Classifica&ccedil;&atilde;o</b>, a lista traz cada classifica&ccedil;&atilde;o utilizada e a op&ccedil;&atilde;o <b>(N&atilde;o classificados)</b>.","As linhas classificadas ficam em verde claro.","<b>Limpar filtros</b> remove todos os filtros."]),
   razaoLimparDados:P("Limpar dados","Apaga o Raz&atilde;o importado.","Real das abas de custo nos meses vigentes e Custo Incorrido das Curvas ABC.",null,"O sistema solicita confirma&ccedil;&atilde;o; a opera&ccedil;&atilde;o n&atilde;o pode ser desfeita.",EXC),
   razaoOcultarColuna:P("Ocultar coluna","Oculta a coluna da tabela.","Somente na tabela do Raz&atilde;o."),
-  "sel:renderClassificarRazao":P("Status","Filtra as NFs: todas, n&atilde;o classificadas ou classificadas.","Somente na lista do Classificar Raz&atilde;o."),
-  renderClassificarRazao:P("Atualizar lista","Recarrega a lista de NFs.","Aba Classificar Raz&atilde;o."),
   classificarLinhaRazao:P("Classifica&ccedil;&atilde;o da NF","Vincula a NF a uma linha de Custo Indireto, Servi&ccedil;o, Material ou Equipamento.","Real das abas de custo at&eacute; a vig&ecirc;ncia, Coletor Total e Custo Incorrido das Curvas ABC.",["Como no Excel: o 1&ordm; clique seleciona a linha, o duplo clique seleciona o texto da classifica&ccedil;&atilde;o e um novo clique abre a lista.","Para repetir uma classifica&ccedil;&atilde;o: duplo clique na classifica&ccedil;&atilde;o e <b>Ctrl+C</b>; clique na linha sem classifica&ccedil;&atilde;o e <b>Ctrl+V</b>.","<b>Enter</b> passa para a classifica&ccedil;&atilde;o da linha de baixo; <b>Shift+Enter</b>, para a de cima.","As linhas classificadas ficam em verde claro."]),
   // ---------- Curva ABC MOD, Contingencia ----------
   exportarCurvaAbcModExcel:P("Exportar Excel (Curva ABC)","Gera a planilha da curva exibida.","Arquivo Excel; o controle n&atilde;o &eacute; alterado."),
@@ -4684,7 +4670,7 @@ document.getElementById("logo-wrap").onclick=function(){document.getElementById(
 document.getElementById("inp-logo").onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){S.logoB64=ev.target.result;renderHeader();};r.readAsDataURL(f);};
 document.getElementById("proj-name").onclick=function(){document.getElementById("inp-nome").value=S.projNome;document.getElementById("inp-sub").value=S.projSub;document.getElementById("modal-nome").classList.add("on");};
 function salvarNome(){S.projNome=document.getElementById("inp-nome").value||"Controle de Custos";S.projSub=document.getElementById("inp-sub").value||"";renderHeader();document.getElementById("modal-nome").classList.remove("on");}
-var CTL_LABELS={25:"Classificar Razão",24:"Razao",23:"Curva ABC de MOD",22:"Curva ABC",21:"Take In / Take Out",20:"DRE",19:"Seguros",0:"Resumo M.O.",1:"Custo M.O.I",2:"Planejamento",3:"DRE / Curva",4:"Dashboard",5:"Sistema de Compras",6:"Fluxo Materiais",7:"Importar",8:"Coletor Total",9:"Dados da Obra",10:"Custo M.O.D",11:"Custo Indireto",12:"Servico",13:"Material",14:"Equipamento",15:"Receita",16:"Prev x Real",17:"Classificacao",18:"Contingencia"};
+var CTL_LABELS={24:"Razao",23:"Curva ABC de MOD",22:"Curva ABC",21:"Take In / Take Out",20:"DRE",19:"Seguros",0:"Resumo M.O.",1:"Custo M.O.I",2:"Planejamento",3:"DRE / Curva",4:"Dashboard",5:"Sistema de Compras",6:"Fluxo Materiais",7:"Importar",8:"Coletor Total",9:"Dados da Obra",10:"Custo M.O.D",11:"Custo Indireto",12:"Servico",13:"Material",14:"Equipamento",15:"Receita",16:"Prev x Real",17:"Classificacao",18:"Contingencia"};
 function toggleControlesMenu(){document.getElementById("ctl-dropdown").classList.toggle("on");}
 function fecharControlesMenu(){document.getElementById("ctl-dropdown").classList.remove("on");}
 function setTabAndClose(i){setTab(i);fecharControlesMenu();}
@@ -4692,7 +4678,7 @@ document.addEventListener("click",function(e){
   var wrap=document.getElementById("ctl-wrap");
   if(wrap&&!wrap.contains(e.target))fecharControlesMenu();
 });
-function setTab(i){sincronizarAlojamentoIndireto();document.querySelectorAll(".ctl-item[data-idx]").forEach(function(t){t.classList.toggle("active",t.getAttribute("data-idx")===String(i));});var lbl=document.getElementById("ctl-atual");if(lbl)lbl.textContent=(CTL_LABELS[i]||"");for(var j=0;j<26;j++){var s=document.getElementById("sec"+j);if(s)s.className="sec wrap"+(i===j?" on":"");}if(i===5)renderPedCompraMatrix();if(i===6)renderFluxoMateriais();if(i===7)renderImportStatus();if(i===8)aplicarNivelColetor(4);/* Rev72: Coletor abre sempre no nivel 4 */if(i===9)popularDadosObra();if(i===10)renderCustoModTab();if(i===3)renderDRE();if(i===11)renderIndiretoTab("Indireto");if(i===12)renderIndiretoTab("Servico");if(i===13)renderIndiretoTab("Material");if(i===14)renderIndiretoTab("Equipamento");if(i===19)renderIndiretoTab("Seguro");if(i===20)renderDreGer();if(i===21)renderTakeInOut();if(i===15)receitaRenderTudo();if(i===16){aplicarNivelColetor(4);renderPrevReal();}if(i===17)renderClassificacao();if(i===18)renderContingencia();if(i===22)renderCurvaAbc();if(i===23)renderCurvaAbcMod();if(i===24)renderRazao();if(i===25)renderClassificarRazao();if(i===4)renderDash();if(i===1)renderCustoMO();if(i===0)renderEfetivo();}
+function setTab(i){if(i===25)i=24;/* Classificar Razao retirada: vai para a aba Razao */sincronizarAlojamentoIndireto();document.querySelectorAll(".ctl-item[data-idx]").forEach(function(t){t.classList.toggle("active",t.getAttribute("data-idx")===String(i));});var lbl=document.getElementById("ctl-atual");if(lbl)lbl.textContent=(CTL_LABELS[i]||"");for(var j=0;j<26;j++){var s=document.getElementById("sec"+j);if(s)s.className="sec wrap"+(i===j?" on":"");}if(i===5)renderPedCompraMatrix();if(i===6)renderFluxoMateriais();if(i===7)renderImportStatus();if(i===8)aplicarNivelColetor(4);/* Rev72: Coletor abre sempre no nivel 4 */if(i===9)popularDadosObra();if(i===10)renderCustoModTab();if(i===3)renderDRE();if(i===11)renderIndiretoTab("Indireto");if(i===12)renderIndiretoTab("Servico");if(i===13)renderIndiretoTab("Material");if(i===14)renderIndiretoTab("Equipamento");if(i===19)renderIndiretoTab("Seguro");if(i===20)renderDreGer();if(i===21)renderTakeInOut();if(i===15)receitaRenderTudo();if(i===16){aplicarNivelColetor(4);renderPrevReal();}if(i===17)renderClassificacao();if(i===18)renderContingencia();if(i===22)renderCurvaAbc();if(i===23)renderCurvaAbcMod();if(i===24)renderRazao();if(i===4)renderDash();if(i===1)renderCustoMO();if(i===0)renderEfetivo();}
 function popularDadosObra(){
   document.getElementById("obra2-nome").value=S.projNome||"";
   document.getElementById("obra2-local").value=S.projLocal||"";
@@ -13248,7 +13234,7 @@ window.renderRazao=function(){
  h.innerHTML=COLS.map(function(c){var at=filtros[c.k]&&filtros[c.k].size?' active':'';return '<th data-rcol="'+c.k+'"><div class="razao-th"><span>'+c.l+'</span><span><button class="razao-filter-btn'+at+'" title="Filtrar" onclick="razaoAbrirFiltro(event,\''+c.k+'\')">&#9660;</button></span></div></th>';}).join('')+'<th data-rcol="classificacaoRazao"><div class="razao-th"><span>Classificação</span><span><button class="razao-filter-btn'+(filtros.__classif&&filtros.__classif.size?' active':'')+'" title="Filtrar por classificação" onclick="razaoAbrirFiltro(event,\'__classif\')">&#9660;</button></span></div></th>';
  var itens=(typeof razaoItensClassificacao==='function')?razaoItensClassificacao():[];
  b.innerHTML=vis.length?vis.map(function(r){var opts=(typeof razaoOpcoesClassificacao==='function')?razaoOpcoesClassificacao(itens,r.classificacaoRazaoId):'<option value="">-- Selecione --</option>';var realIndex=all.indexOf(r);var cls=(r.classificacaoRazaoId?'rz-ok':'')+(realIndex===rzAtiva?' rz-ativa':'');return '<tr data-i="'+realIndex+'"'+(cls?' class="'+cls.trim()+'"':'')+'>'+COLS.map(function(c){return '<td data-rcol="'+c.k+'">'+esc(r[c.k])+'</td>';}).join('')+'<td data-rcol="classificacaoRazao"><select class="rzc-select" onchange="classificarLinhaRazao('+realIndex+',this)">'+opts+'</select></td></tr>';}).join(''):'<tr><td colspan="9" class="razao-empty">'+(all.length?'Nenhum registro corresponde aos filtros.':'Importe o relatório Excel para carregar o Razão.')+'</td></tr>';
- document.getElementById('razao-cnt').textContent='('+vis.length+' de '+all.length+' registro(s))';document.getElementById('razao-arquivo').textContent=S.razaoArquivoNome?('Arquivo: '+S.razaoArquivoNome):'';razaoAplicarColunasOcultas();
+ razaoAtualizarContador(vis.length);document.getElementById('razao-arquivo').textContent=S.razaoArquivoNome?('Arquivo: '+S.razaoArquivoNome):'';razaoAplicarColunasOcultas();
 };
 window.razaoOcultarColuna=function(ev,k){ev.stopPropagation();if(!window.S)window.S={};if(!Array.isArray(S.razaoColunasOcultas))S.razaoColunasOcultas=[];if(S.razaoColunasOcultas.indexOf(k)<0)S.razaoColunasOcultas.push(k);document.querySelectorAll('[data-rcol="'+k+'"]').forEach(function(el){el.classList.add('razao-col-hidden');});};
 window.razaoMostrarColunas=function(){if(!window.S)window.S={};S.razaoColunasOcultas=[];document.querySelectorAll('[data-rcol]').forEach(function(el){el.classList.remove('razao-col-hidden');});};
@@ -13297,7 +13283,7 @@ document.addEventListener('keydown',function(e){
 function razaoAplicarColunasOcultas(){document.querySelectorAll('[data-rcol]').forEach(function(el){el.classList.remove('razao-col-hidden');});var a=(window.S&&Array.isArray(S.razaoColunasOcultas))?S.razaoColunasOcultas:[];a.forEach(function(k){document.querySelectorAll('[data-rcol="'+k+'"]').forEach(function(el){el.classList.add('razao-col-hidden');});});}
 window.razaoAbrirFiltro=function(ev,k){ev.stopPropagation();var p=document.getElementById('razao-filter-pop'),c=COLS.find(function(x){return x.k===k;})||{k:'__classif',l:'Classificação'},vals=Array.from(new Set(dados().filter(function(r){return passa(r,k);}).map(function(r){return rzVal(r,k);}))).sort(function(a,b){return a.localeCompare(b,'pt-BR',{numeric:true});}),sel=filtros[k]?new Set(filtros[k]):new Set(vals);p.dataset.col=k;p._vals=vals;p._sel=sel;p.innerHTML='<b>Filtrar: '+c.l+'</b><input type="text" placeholder="Pesquisar..." oninput="razaoPesquisarOpcoes(this.value)"><label style="font-size:12px"><input id="razao-todos" type="checkbox" '+(sel.size===vals.length?'checked':'')+' onchange="razaoMarcarTodos(this.checked)"> Selecionar tudo</label><div id="razao-filter-list" class="razao-filter-list"></div><div class="razao-filter-actions"><button class="btn b-sm" onclick="razaoLimparColuna()">Limpar</button><button class="btn b-pri b-sm" onclick="razaoAplicarFiltro()">Aplicar</button></div>';var r=ev.currentTarget.getBoundingClientRect();p.style.display='block';p.style.left=Math.min(r.left,innerWidth-295)+'px';p.style.top=Math.min(r.bottom+4,innerHeight-435)+'px';razaoPesquisarOpcoes('');};
 window.razaoPesquisarOpcoes=function(q){var p=document.getElementById('razao-filter-pop'),l=document.getElementById('razao-filter-list');q=norm(q);l.innerHTML=p._vals.filter(function(v){return !q||norm(v).includes(q);}).map(function(v){return '<label><input type="checkbox" '+(p._sel.has(v)?'checked':'')+' data-v="'+esc(v)+'" onchange="razaoToggleValor(this)"><span>'+(v?esc(v):(p.dataset.col==='__classif'?'<b style="color:#b45309">(Não classificados)</b>':'(Vazios)'))+'</span></label>';}).join('');};
-window.razaoToggleValor=function(e){var p=document.getElementById('razao-filter-pop'),v=e.getAttribute('data-v');e.checked?p._sel.add(v):p._sel.delete(v);};window.razaoMarcarTodos=function(on){var p=document.getElementById('razao-filter-pop');p._sel=on?new Set(p._vals):new Set();razaoPesquisarOpcoes('');};window.razaoAplicarFiltro=function(){var p=document.getElementById('razao-filter-pop'),k=p.dataset.col;p._sel.size===p._vals.length?delete filtros[k]:filtros[k]=new Set(p._sel);p.style.display='none';renderRazao();};window.razaoLimparColuna=function(){var p=document.getElementById('razao-filter-pop');delete filtros[p.dataset.col];p.style.display='none';renderRazao();};window.razaoLimparFiltros=function(){filtros={};document.getElementById('razao-filter-pop').style.display='none';renderRazao();};window.razaoLimparDados=async function(){if(await confirmarApp('Deseja excluir todos os dados importados do Razão?')){S.razaoDados=[];S.razaoArquivoNome='';filtros={};renderRazao();}};
+window.razaoToggleValor=function(e){var p=document.getElementById('razao-filter-pop'),v=e.getAttribute('data-v');e.checked?p._sel.add(v):p._sel.delete(v);};window.razaoMarcarTodos=function(on){var p=document.getElementById('razao-filter-pop');p._sel=on?new Set(p._vals):new Set();razaoPesquisarOpcoes('');};window.razaoAplicarFiltro=function(){var p=document.getElementById('razao-filter-pop'),k=p.dataset.col;p._sel.size===p._vals.length?delete filtros[k]:filtros[k]=new Set(p._sel);p.style.display='none';renderRazao();};window.razaoLimparColuna=function(){var p=document.getElementById('razao-filter-pop');delete filtros[p.dataset.col];p.style.display='none';renderRazao();};window.razaoLimparFiltros=function(){filtros={};document.getElementById('razao-filter-pop').style.display='none';renderRazao();};window.razaoAtualizarContador=function(nVis){var el=document.getElementById('razao-cnt');if(!el)return;var all=dados();if(nVis==null)nVis=document.querySelectorAll('#razao-body tr[data-i]').length;var nCl=all.filter(function(r){return !!r.classificacaoRazaoId;}).length;el.textContent='('+nVis+' de '+all.length+' registro(s) · '+nCl+' classificadas, '+(all.length-nCl)+' pendentes)';};window.razaoFiltrarPendentes=function(){filtros={__classif:new Set([''])};var p=document.getElementById('razao-filter-pop');if(p)p.style.display='none';renderRazao();};window.razaoLimparDados=async function(){if(await confirmarApp('Deseja excluir todos os dados importados do Razão?')){S.razaoDados=[];S.razaoArquivoNome='';filtros={};renderRazao();}};
 document.addEventListener('click',function(e){var p=document.getElementById('razao-filter-pop');if(p&&p.style.display!=='none'&&!p.contains(e.target))p.style.display='none';});
 var inp=document.getElementById('inp-razao');if(inp)inp.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(ev){try{var wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});var ws=wb.Sheets['Documentos']||wb.Sheets[wb.SheetNames[0]],m=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});var hi=-1;for(var z=0;z<Math.min(m.length,30);z++){var ns=m[z].map(norm);if(ns.indexOf('competencia')>=0&&ns.indexOf('natureza')>=0&&ns.indexOf('gerador')>=0&&ns.indexOf('historico')>=0){hi=z;break;}}if(hi<0)throw new Error('Não encontrei o cabeçalho do relatório.');var cab=m[hi],idx={documento:cabIdx(cab,'Documento'),competencia:cabIdx(cab,'Competência'),natureza:cabIdx(cab,'Natureza'),gerador:cabIdx(cab,'Gerador'),valor:cabIdx(cab,'Valor'),historico:cabIdx(cab,'Histórico'),centroCusto:cabIdx(cab,'Centro de custo')};var falt=Object.keys(idx).filter(function(k){return idx[k]<0;});if(falt.length)throw new Error('Colunas não encontradas: '+falt.join(', '));var iConta=cabIdx(cab,'Conta'),iEntrada=cabIdx(cab,'Data de entrada');
 /* Rev68: ignora a linha "Soma:" do rodape (so tem valor, sem competencia/natureza/gerador) e guarda Conta e Data de entrada */
@@ -13316,7 +13302,7 @@ function n(v){return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u03
 window.razaoItensClassificacao=function(){var out=[];(S.indiretoData||[]).forEach(function(it,idx){if(typeof normIndireto==='function')normIndireto(it);if(['Indireto','Servico','Material','Equipamento'].indexOf(it.categoria)<0||it.composicaoPai)return;var cat=(window.CAT_CFG&&CAT_CFG[it.categoria])?CAT_CFG[it.categoria].label:it.categoria;if(cat==='Indireto')cat='Custo Indireto';out.push({id:String(it.id!=null?it.id:idx),grupo:cat,txt:(it.descricao||'-')+(it.itemEAP?' | '+it.itemEAP:'')});});var ord={'Custo Indireto':1,'Servico':2,'Serviço':2,'Material':3,'Equipamento':4};return out.sort(function(a,b){return (ord[a.grupo]||99)-(ord[b.grupo]||99)||a.txt.localeCompare(b.txt,'pt-BR',{numeric:true});});};
 window.razaoOpcoesClassificacao=function(itens,selecionado){var html='<option value="">-- Selecione uma classificação --</option>',grupo='';itens.forEach(function(it){if(it.grupo!==grupo){if(grupo)html+='</optgroup>';grupo=it.grupo;html+='<optgroup label="'+e(grupo)+'">';}html+='<option value="'+e(it.id)+'" '+(String(selecionado||'')===String(it.id)?'selected':'')+'>'+e(it.txt)+'</option>';});if(grupo)html+='</optgroup>';return html;}
 window.renderClassificarRazao=function(){var tb=document.getElementById('rzc-body');if(!tb)return;var linhas=(S.razaoDados||[]),itens=razaoItensClassificacao(),bus=n((document.getElementById('rzc-busca')||{}).value||''),st=(document.getElementById('rzc-status')||{}).value||'',vis=[];linhas.forEach(function(r,i){if(!r._rid)r._rid='rz-'+i;var cls=!!r.classificacaoRazaoId;if(st==='pendente'&&cls)return;if(st==='classificado'&&!cls)return;var texto=[r.competencia,r.natureza,r.documento,r.gerador,r.valor,r.historico,r.centroCusto,r.classificacaoRazaoTexto].join(' ');if(bus&&n(texto).indexOf(bus)<0)return;vis.push({r:r,i:i});});tb.innerHTML=vis.length?vis.map(function(x){var r=x.r,opts=razaoOpcoesClassificacao(itens,r.classificacaoRazaoId);return '<tr class="'+(r.classificacaoRazaoId?'rzc-classificado':'rzc-pendente')+'"><td>'+e(r.competencia)+'</td><td>'+e(r.natureza)+'</td><td>'+e(r.documento)+'</td><td>'+e(r.gerador)+'</td><td>'+e(r.valor)+'</td><td>'+e(r.historico)+'</td><td>'+e(r.centroCusto)+'</td><td><select class="rzc-select" onchange="classificarLinhaRazao('+x.i+',this)">'+opts+'</select></td></tr>';}).join(''):'<tr><td colspan="8" style="padding:28px;text-align:center;color:#64748b">'+(linhas.length?'Nenhuma linha corresponde aos filtros.':'Importe primeiro o relatório na aba Razão.')+'</td></tr>';var cl=linhas.filter(function(r){return !!r.classificacaoRazaoId;}).length;document.getElementById('rzc-cnt').textContent='('+cl+' classificadas de '+linhas.length+')';};
-window.classificarLinhaRazao=function(i,sel){var r=(S.razaoDados||[])[i];if(!r)return;r.classificacaoRazaoId=sel.value||'';r.classificacaoRazaoTexto=sel.value?sel.options[sel.selectedIndex].text:'';var tr=sel.closest&&sel.closest('#razao-body tr');if(tr)tr.classList.toggle('rz-ok',!!sel.value);renderClassificarRazao();if(typeof razaoRealAtualizar==='function')razaoRealAtualizar();};
+window.classificarLinhaRazao=function(i,sel){var r=(S.razaoDados||[])[i];if(!r)return;r.classificacaoRazaoId=sel.value||'';r.classificacaoRazaoTexto=sel.value?sel.options[sel.selectedIndex].text:'';var tr=sel.closest&&sel.closest('#razao-body tr');if(tr)tr.classList.toggle('rz-ok',!!sel.value);if(typeof razaoAtualizarContador==='function')razaoAtualizarContador();renderClassificarRazao();if(typeof razaoRealAtualizar==='function')razaoRealAtualizar();};
 })();
 </script>
 <script id="rev80-js">
@@ -13435,8 +13421,8 @@ var ASSIST_TAREFAS=[
   passos:["Na <b>tela inicial</b>, clique em <b>Administrador</b> e informe a senha mestre.","Na lista de acessos, clique no <b>👁 olho</b> da coluna Senha.","A senha aparece só na tela; ela não fica legível no JSON."]},
  {t:"Importar o Razão (notas fiscais)",p:"importar razao notas fiscais nf contabil relatorio documentos",aba:24,
   passos:["Abra <b>☰ Menu → Contábil → Razão</b>.","Clique em <b>➕ Importar arquivo</b> e escolha a planilha do Razão.","Use o <b>▼</b> de cada coluna para filtrar e <b>☰ Selecionar colunas</b> para escolher o que aparece."]},
- {t:"Classificar as linhas do Razão",p:"classificar razao classificacao notas vincular item copiar colar",aba:25,
-  passos:["Abra <b>☰ Menu → Contábil → Classificar Razão</b>.","Em cada linha, escolha a classificação (item das abas de custo).","Na aba <b>Razão</b> (☰ Menu → Contábil → Razão) há atalhos: <b>Ctrl+C</b> copia a classificação, <b>Ctrl+V</b> cola em outra linha e <b>Enter</b> vai para a linha de baixo.","Linhas classificadas ficam verde-claro; use o filtro “(Não classificados)” para ver o que falta."]},
+ {t:"Classificar as linhas do Razão",p:"classificar razao classificacao notas vincular item copiar colar",aba:24,
+  passos:["Abra <b>☰ Menu → Contábil → Razão</b>.","Em cada linha, escolha a classificação na coluna Classificação (item das abas de custo).","Há atalhos: <b>Ctrl+C</b> copia a classificação, <b>Ctrl+V</b> cola em outra linha e <b>Enter</b> vai para a linha de baixo.","Linhas classificadas ficam verde-claro; use o filtro “(Não classificados)” para ver o que falta."]},
  {t:"Aplicar o Real do Razão até um mês",p:"aplicar real razao incorrido mes vigencia dashboard realizado",aba:4,aj:"razaoVigenciaDashboard",
   passos:["Abra <b>☰ Menu → Visão Gerencial → Dashboard</b>.","Escolha o mês no seletor do topo.","Clique em <b>Real do Razão</b> e confirme.","Até esse mês, Custo Indireto, Serviço, Material e Equipamento passam a usar as notas classificadas; nas tabelas, os meses ficam em verde."]},
  {t:"Lançar uma medição (BM) da Receita",p:"lancar medicao bm boletim medir receita faturamento",aba:15,
@@ -13596,11 +13582,11 @@ ASSIST_TAREFAS.push(
   passos:["<b>Dados da Obra:</b> nome, local e período do contrato. O período define os meses de todas as tabelas.","<b>Custos:</b> você lança a mão de obra (<b>M.O.I</b> = equipe indireta, <b>M.O.D</b> = equipe direta) e as despesas (<b>Custo Indireto</b>, <b>Serviço</b>, <b>Material</b>, <b>Equipamento</b>, <b>Seguros</b>, <b>Contingência</b>), com quantidade e valor de cada mês.","<b>Receita:</b> a EAP de venda do contrato, as <b>medições (BM)</b> e os <b>Take In / Take Out</b>.","<b>Real (incorrido):</b> o <b>Razão</b> importa as notas fiscais; você classifica cada nota em um item e aplica o Real até o mês do Dashboard. Esses meses ficam em verde.","<b>Previsto x Real:</b> o Previsto salvo (Replan) é comparado com o Real no <b>Prev x Real</b> e no <b>Coletor Total</b> (por item da EAP).","<b>Visão Gerencial:</b> <b>Dashboard</b> (lucro, margem, Curva S, avanço), <b>DRE</b> e <b>Curvas ABC</b> resumem tudo.","<b>Salvar:</b> pelo ☰ Menu → Configurações → Ferramentas, na nuvem ou em arquivo JSON."]},
  {t:"Para que serve cada aba",p:"para que serve cada aba abas telas menu lista explicar funcao de cada onde fica",
   texto:"Resumo das abas do <b>☰ Menu</b>:",
-  passos:["<b>📌 Dados:</b> Dados da Obra (período, nome) e Importar (planilhas Excel).","<b>📈 Visão Gerencial:</b> Dashboard (indicadores), Coletor Total (Orçado x RAO x Real por EAP), Prev x Real, DRE e Curvas ABC.","<b>💰 Receita:</b> EAP de venda, medições (BM) e Take In / Take Out.","<b>🚧 Custos:</b> Resumo M.O., Custo M.O.I, Custo M.O.D, Custo Indireto, Serviço, Material, Equipamento e Contingência.","<b>📑 Contábil:</b> Razão (notas fiscais), Classificar Razão e Classificação.","<b>📅 Planejamento</b> e <b>🛒 Sistema de Compras:</b> cronograma e pedidos de compra.","<b>⚙️ Configurações avançadas:</b> alojamento, horas extras, coeficientes, encargos, ferramentas (salvar) e atalhos."]},
+  passos:["<b>📌 Dados:</b> Dados da Obra (período, nome) e Importar (planilhas Excel).","<b>📈 Visão Gerencial:</b> Dashboard (indicadores), Coletor Total (Orçado x RAO x Real por EAP), Prev x Real, DRE e Curvas ABC.","<b>💰 Receita:</b> EAP de venda, medições (BM) e Take In / Take Out.","<b>🚧 Custos:</b> Resumo M.O., Custo M.O.I, Custo M.O.D, Custo Indireto, Serviço, Material, Equipamento e Contingência.","<b>📑 Contábil:</b> Razão (notas fiscais e a classificação delas) e Classificação.","<b>📅 Planejamento</b> e <b>🛒 Sistema de Compras:</b> cronograma e pedidos de compra.","<b>⚙️ Configurações avançadas:</b> alojamento, horas extras, coeficientes, encargos, ferramentas (salvar) e atalhos."]},
  {t:"O que é o Previsto",p:"o que e previsto significa planejado orcado linha previsto amarela",texto:"<b>Previsto</b> é o valor planejado de cada item, mês a mês (as linhas amarelas PREVISTO). Ele serve de referência para comparar com o <b>Real</b>. Pode ser editado, fixado (🔒) ou igualado ao Real (🔁)."},
  {t:"O que é o Real (incorrido) e a projeção",p:"o que e real incorrido projecao realizado gasto verdadeiro meses verdes",texto:"<b>Real</b> é o que de fato aconteceu. Nos meses <b>incorridos</b> (até o mês em que o Real do Razão foi aplicado, em <b>verde</b>), os valores vêm das notas fiscais classificadas. Os meses seguintes são <b>projeção</b> (estimativa do que ainda vai acontecer)."},
  {t:"O que é Replan (Previsto salvo)",p:"o que e replan previsto salvo replanejamento versao do previsto",texto:"<b>Replan</b> é uma foto do Previsto guardada com nome e data. Serve para comparar a obra com um planejamento anterior no <b>Prev x Real → 👁 Ver Previsto Salvo</b>. Para criar: ☰ Menu → Configurações → ⚡ Atalhos → Salvar Previsto a partir do Real."},
- {t:"O que é o Razão",p:"o que e razao notas fiscais contabil relatorio nf",texto:"<b>Razão</b> é o relatório contábil com as <b>notas fiscais</b> da obra. Você importa a planilha na aba Razão, classifica cada nota em um item (Classificar Razão) e aplica o Real no Dashboard; a partir daí os custos dos meses incorridos passam a ser os das notas."},
+ {t:"O que é o Razão",p:"o que e razao notas fiscais contabil relatorio nf",texto:"<b>Razão</b> é o relatório contábil com as <b>notas fiscais</b> da obra. Você importa a planilha na aba Razão, classifica cada nota em um item (coluna Classificação da aba Razão) e aplica o Real no Dashboard; a partir daí os custos dos meses incorridos passam a ser os das notas."},
  {t:"O que é a EAP",p:"o que e eap estrutura analitica projeto item codigo nivel",texto:"<b>EAP</b> (Estrutura Analítica do Projeto) é a lista de itens da obra organizada em níveis (ex.: 1.1.1.4). Os custos são ligados a um <b>Item EAP</b> para somar no Coletor Total, no Prev x Real e na DRE. A Receita tem uma EAP própria (de venda)."},
  {t:"O que é o Coletor Total",p:"o que e coletor total orcado rao real saldo eap",aba:8,texto:"<b>Coletor Total</b> mostra, para cada item da EAP, o <b>Orçado</b>, o <b>RAO</b>, o <b>Real</b> e o <b>Saldo</b> (Orçado − Real). O Real é somado automaticamente das abas de custo pelo Item EAP."},
  {t:"O que é o Prev x Real",p:"o que e prev x real previsto versus real desvio comparacao",aba:16,texto:"<b>Prev x Real</b> compara, em cada item de nível 4 da EAP, o <b>Previsto</b> (atual ou um Replan) com o <b>Real</b>, mostrando o <b>desvio</b>. Use 👁 Ocultar/Reexibir para ver só os itens com desvio."},
@@ -13921,7 +13907,7 @@ var TOURS_A=(function(){
     {aba:7,sel:"#sec7 button[onclick*=\"'inp-ped-compra'\"]",tit:"Pedidos de Compra (Lumina)",txt:"Relat&oacute;rio exportado do sistema de compras (ordens, CCO, valores, saldos). Alimenta o Sistema de Compras."},
     {aba:7,sel:"#sec7 button[onclick*=\"'inp-medicoes'\"]",tit:"Medi&ccedil;&otilde;es / Faturamento",txt:"Relat&oacute;rio de medi&ccedil;&otilde;es, ligado aos pedidos por <b>CCO + N&uacute;mero do Pedido</b>."},
     {aba:7,sel:"#sec7 button[onclick*=\"'inp-coletor'\"]",tit:"&#128196; Importar EAP",txt:"Planilha da EAP: <b>coluna B = Item</b>, <b>coluna D = Descri&ccedil;&atilde;o</b>, <b>coluna H = Valor or&ccedil;ado</b>. Alimenta o Coletor Total. Reimportar mant&eacute;m RAO, Real e anota&ccedil;&otilde;es."},
-    {aba:7,sel:"#sec7 button[onclick*=\"'inp-razao'\"]",tit:"&#128196; Importar Raz&atilde;o",txt:"Importa o relat&oacute;rio cont&aacute;bil (notas fiscais), o mesmo da aba Raz&atilde;o. Depois as notas s&atilde;o classificadas em Classificar Raz&atilde;o."}
+    {aba:7,sel:"#sec7 button[onclick*=\"'inp-razao'\"]",tit:"&#128196; Importar Raz&atilde;o",txt:"Importa o relat&oacute;rio cont&aacute;bil (notas fiscais), o mesmo da aba Raz&atilde;o. Depois as notas s&atilde;o classificadas na pr&oacute;pria aba Raz&atilde;o."}
   ],fim:MENU_OFF},
 
   // =========================================================================================
@@ -14879,7 +14865,7 @@ var TOURS_C={
   {aba:11,antes:"fecharControlesMenu()",sel:"#sec11 button[onclick^='novoItemIndireto']",tit:"Clique em ➕ Novo Item",
    txt:"Abre a janela <b>Novo Item - Custo Indireto</b>. Cada item é uma linha da tabela: um pedido, um contrato ou uma despesa que se repete nos meses."},
   {antes:"novoItemIndireto('Indireto')",sel:"#em3-descricao",tit:"Descrição do Custo",
-   txt:"É o nome da linha na tabela, na aba Classificação e na lista do Classificar Razão.",
+   txt:"É o nome da linha na tabela, na aba Classificação e na lista de classificação da aba Razão.",
    info:"Escreva o que é o custo, do jeito que você vai reconhecê-lo depois. Se ficar em branco, o controle grava “Item de custo indireto”.",ex:"Locação de container escritório"},
   {sel:"#em3-pedido",tit:"Nº do Pedido",txt:"Aparece na primeira coluna da tabela (Nº Pedido). Ajuda a conferir a linha com o pedido de compra e com as notas do Razão.",
    info:"Número do pedido de compra ou do contrato. Se ainda não existir, deixe em branco (a tabela mostra “-”).",ex:"123456-01"},
@@ -15004,7 +14990,7 @@ var TOURS_C={
  ],fim:"document.getElementById('modal-obs-indireto').classList.remove('on')"},
 
  c_razaoImportar:{t:"Importar a planilha do Razão",passos:[
-  {antes:"document.getElementById('ctl-dropdown').classList.add('on')",sel:"#ctl-dropdown > div:nth-child(5)",tit:"Abra ☰ Menu → 📑 Contábil → Razão",txt:"O grupo Contábil tem <b>Razão</b>, <b>Classificar Razão</b> e <b>Classificação</b>."},
+  {antes:"document.getElementById('ctl-dropdown').classList.add('on')",sel:"#ctl-dropdown > div:nth-child(5)",tit:"Abra ☰ Menu → 📑 Contábil → Razão",txt:"O grupo Contábil tem <b>Razão</b> e <b>Classificação</b>."},
   {aba:24,antes:"fecharControlesMenu()",sel:"#sec24 button[onclick*='inp-razao']",tit:"Clique em ➕ Importar arquivo",
    txt:"Escolha o relatório da contabilidade (.xlsx, .xls ou .csv), normalmente o <b>Documentos.xlsx</b>. O controle lê a aba <b>Documentos</b> (ou a primeira aba).",
    info:"A planilha precisa ter as colunas Documento, Competência, Natureza, Gerador, Valor, Histórico e Centro de custo. Conta e Data de entrada são opcionais.",ex:"Documentos.xlsx"},
@@ -15016,18 +15002,18 @@ var TOURS_C={
  ],fim:"fecharControlesMenu()"},
 
  c_classificarRazao:{t:"Classificar as notas do Razão",passos:[
-  {aba:25,sel:"#rzc-cnt",tit:"Quantas já foram classificadas",txt:"Mostra “(X classificadas de Y)”. A meta é classificar todas as notas que são custo da obra."},
-  {sel:"#rzc-busca",tit:"Pesquisar nas linhas",txt:"Procura em competência, natureza, documento, fornecedor, valor, histórico, centro de custo e classificação.",info:"Parte do nome do fornecedor, número da NF ou palavra do histórico.",ex:"Locadora"},
-  {sel:"#rzc-status",tit:"Status",txt:"<b>Somente não classificados</b> mostra o que falta fazer. Também há Todos e Somente classificados."},
-  {sel:"#rzc-body select.rzc-select",tit:"Escolha a classificação",
+  {aba:24,sel:"#razao-cnt",tit:"Quantas já foram classificadas",txt:"Mostra as notas visíveis, o total importado e quantas estão classificadas e pendentes. A meta é classificar todas as notas que são custo da obra."},
+  {sel:"#razao-head th[data-rcol='classificacaoRazao'] .razao-filter-btn",tit:"▼ Filtro da Classificação",txt:"Marque só <b>(Não classificados)</b> e clique em <b>Aplicar</b> para ver o que falta fazer. Os filtros das outras colunas ajudam a achar fornecedor, NF ou histórico."},
+  
+  {sel:"#razao-body select.rzc-select",tit:"Escolha a classificação",
    txt:"A lista traz as linhas do Custo Indireto, Serviço, Material e Equipamento (sem os itens de dentro de composição), no formato <b>Descrição | Item EAP</b>. A escolha fica gravada na nota.",
    info:"Escolha a linha de custo que corresponde à nota.",ex:"Locação de container escritório | 1.1.1.4"},
-  {aba:24,sel:"#razao-body select.rzc-select",tit:"Atalhos de teclado (aba Razão)",
+  {sel:"#razao-body select.rzc-select",tit:"Atalhos de teclado",
    txt:"Na aba <b>Razão</b>: clique na linha classificada, dê duplo clique na classificação e <b>Ctrl+C</b>; clique na linha sem classificação e <b>Ctrl+V</b>. <b>Enter</b> desce e <b>Shift+Enter</b> sobe."}
  ]},
 
  c_realRazao:{t:"Aplicar o Real do Razão até um mês",passos:[
-  {aba:25,sel:"#rzc-cnt",tit:"1. Confira a classificação",txt:"Antes de aplicar, classifique as notas do período. Nota sem classificação não entra no real de nenhuma linha."},
+  {aba:24,sel:"#razao-cnt",tit:"1. Confira a classificação",txt:"Antes de aplicar, classifique as notas do período. Nota sem classificação não entra no real de nenhuma linha."},
   {aba:11,sel:"#sec11 button[onclick^='saldoColAbrirNova']",tit:"2. Registre o contrato (recomendado)",txt:"Crie uma <b>Nova Coluna de Saldo</b> e clique em <b>Colar saldo</b> em cada aba de custo. Assim você vê depois quanto falta distribuir."},
   {aba:4,sel:"#mes3",tit:"3. Escolha o mês no Dashboard",txt:"Ao escolher um mês posterior ao já aplicado, o controle pergunta se deve aplicar o Real do Razão até ele.",info:"Último mês fechado pela contabilidade.",ex:"Set/26"},
   {sel:"#razao-real-status",tit:"Botão Real do Razão",txt:"Mostra até que mês o real já foi aplicado e aplica até o mês do seletor ao lado (pede confirmação). A vigência só avança."},
@@ -15202,11 +15188,11 @@ var ASSIST_C=[
   texto:"Clique em <b>☰ Selecionar colunas</b>, marque as que devem aparecer e clique em <b>Aplicar</b>. <b>Marcar todas</b> volta a mostrar tudo. Pelo menos uma coluna precisa ficar marcada."},
  {t:"Como apago o Razão importado?",p:"apagar limpar excluir razao dados importados zerar",aba:24,aj:"menuRazaoLimpar",tour:"c_razaoImportar",
   texto:"Na aba Razão, <b>🧹 Limpar ▾ → Limpar dados do Razão</b> e confirme. Todas as notas importadas (e suas classificações) são apagadas desta base; não há desfazer. Salve um JSON antes, se tiver dúvida."},
- {t:"Como classifico as notas do Razão?",p:"classificar razao classificacao notas vincular item linha custo",aba:25,aj:"classificarLinhaRazao",tour:"c_classificarRazao",
-  texto:"Abra <b>☰ Menu → 📑 Contábil → Classificar Razão</b> (ou a coluna Classificação da aba Razão) e, em cada nota, escolha na lista a linha de custo correspondente. Use o Status <b>Somente não classificados</b> para ver o que falta. As notas classificadas ficam verde-claras."},
+ {t:"Como classifico as notas do Razão?",p:"classificar razao classificacao notas vincular item linha custo",aba:24,aj:"classificarLinhaRazao",tour:"c_classificarRazao",
+  texto:"Abra <b>☰ Menu → 📑 Contábil → Razão</b> e, na coluna Classificação de cada nota, escolha a linha de custo correspondente. No filtro ▼ da coluna Classificação, marque <b>(Não classificados)</b> para ver o que falta. As notas classificadas ficam verde-claras."},
  {t:"Como copio e colo a classificação para várias notas?",p:"copiar colar classificacao ctrl c ctrl v atalho teclado repetir enter",aba:24,aj:"classificarLinhaRazao",tour:"c_classificarRazao",
   texto:"Funciona na aba <b>Razão</b>: clique na nota já classificada, dê duplo clique na classificação e tecle <b>Ctrl+C</b>; clique na nota sem classificação e tecle <b>Ctrl+V</b>. <b>Enter</b> passa para a nota de baixo e <b>Shift+Enter</b> para a de cima. Só cola em nota ainda sem classificação."},
- {t:"A linha de custo não aparece na lista de classificação do Razão",p:"item nao aparece lista classificacao razao linha sumiu seguro composicao filha",aba:25,
+ {t:"A linha de custo não aparece na lista de classificação do Razão",p:"item nao aparece lista classificacao razao linha sumiu seguro composicao filha",aba:24,
   texto:"A lista mostra só as linhas do <b>Custo Indireto</b>, <b>Serviço</b>, <b>Material</b> e <b>Equipamento</b>. Linhas de <b>Seguros</b> e itens <b>de dentro de uma composição</b> não aparecem: classifique na linha-mãe (🔗). Se a linha é nova, cadastre-a primeiro na aba de custo."},
  {t:"Apareceu “A classificação copiada não existe mais na lista”",p:"classificacao copiada nao existe mais colar erro ctrl v",aba:24,
   texto:"A linha de custo que você copiou foi excluída, entrou em uma composição ou mudou de aba. Escolha a classificação na lista e copie de novo."},
@@ -15217,12 +15203,12 @@ var ASSIST_C=[
  {t:"Como é calculado o Real do Razão de cada linha?",p:"como calculado real razao formula soma notas valor unitario quantidade nf",aba:11,aj:"razaoVigenciaDashboard",tour:"c_realRazao",
   texto:"Para cada mês até a vigência: soma-se o valor das NFs classificadas na linha naquela competência (o custo é o valor com sinal invertido: débito negativo vira custo, crédito estorna) e a <b>Qtd do mês = soma das NFs ÷ Valor Unitário</b>. Assim, Valor do mês = soma das NFs. Mês sem NF classificada fica <b>zerado</b>."},
  {t:"Apliquei o Real do Razão mas a linha ficou zerada",p:"real nao aplicou razao zerado linha zero nao apareceu valor unitario nota nao entrou",aba:11,tour:"c_realRazao",
-  texto:"Confira: 1) as notas estão <b>classificadas</b> nessa linha (Classificar Razão); 2) a <b>Competência</b> da nota está dentro da vigência; 3) a linha tem <b>Valor Unitário</b> maior que zero (o controle avisa as linhas com NF e sem Valor Unitário); 4) se a linha está dentro de uma composição, a nota deve ser classificada na linha-mãe. Seguros e a linha Contingência não recebem o Real do Razão."},
+  texto:"Confira: 1) as notas estão <b>classificadas</b> nessa linha (aba Razão); 2) a <b>Competência</b> da nota está dentro da vigência; 3) a linha tem <b>Valor Unitário</b> maior que zero (o controle avisa as linhas com NF e sem Valor Unitário); 4) se a linha está dentro de uma composição, a nota deve ser classificada na linha-mãe. Seguros e a linha Contingência não recebem o Real do Razão."},
  {t:"O botão Real do Razão diz “Importe o relatório na aba Razão”",p:"real razao importe relatorio antes aplicar aviso nao aplica",aba:4,
   texto:"Não há notas importadas nesta base. Importe a planilha em <b>☰ Menu → 📑 Contábil → Razão → ➕ Importar arquivo</b> e tente de novo."},
  {t:"Posso voltar o Real do Razão para um mês anterior?",p:"voltar real razao mes anterior desfazer vigencia recuar",aba:4,aj:"sel:razaoVigenciaDashboard",
   texto:"Não. A vigência só avança: voltar o mês no Dashboard muda a visão, mas os meses já aplicados continuam com o real. O previsto digitado antes fica guardado e aparece ao passar o mouse sobre o mês verde."},
- {t:"Se eu classificar mais notas depois de aplicar o Real, preciso aplicar de novo?",p:"classificar depois aplicar real atualiza automatico reclassificar mudar classificacao",aba:25,
+ {t:"Se eu classificar mais notas depois de aplicar o Real, preciso aplicar de novo?",p:"classificar depois aplicar real atualiza automatico reclassificar mudar classificacao",aba:24,
   texto:"Não. Ao classificar, mudar a classificação ou reimportar o Razão, os meses já aplicados são recalculados sozinhos."},
  // ---------- Classificacao (aba 17) ----------
  {t:"Para que serve a aba Classificação?",p:"aba classificacao para que serve lista linhas item eap conferir pendencia",aba:17,aj:"sel:renderClassifLinhasCusto",tour:"c_classificacao",
@@ -15231,7 +15217,7 @@ var ASSIST_C=[
   texto:"A aba Classificação é só de consulta. Abra a aba da linha (ex.: Material), clique no ⋮ da linha → <b>✎ Editar item</b> e escolha um código válido no campo <b>Item EAP</b>. Sem Item EAP válido, a linha não soma no Real do Coletor Total."},
  // ---------- Seguros ----------
  {t:"Como funciona a aba Seguros?",p:"seguros seguro aba classificacao eap apolice item",aba:19,aj:"abrirClassifEapAba",tour:"c_seguros",
-  texto:"Cadastro igual ao das outras abas (➕ Novo Item), mas com um Item EAP único para a aba inteira, escolhido no botão <b>🏷 Classificação EAP</b> (vermelho = sem classificação). Seguros não tem filtros, Coluna de Saldo nem Real do Razão, e não aparece na lista do Classificar Razão."},
+  texto:"Cadastro igual ao das outras abas (➕ Novo Item), mas com um Item EAP único para a aba inteira, escolhido no botão <b>🏷 Classificação EAP</b> (vermelho = sem classificação). Seguros não tem filtros, Coluna de Saldo nem Real do Razão, e não aparece na lista de classificação do Razão."},
  // ---------- Sistema de Compras ----------
  {t:"Como importo os pedidos de compra (Lumina)?",p:"importar pedidos compra lumina relatorio sistema compras ordem cco",aba:5,aj:"inp:inp-ped-compra",tour:"c_comprasImportar",
   texto:"No <b>🛒 Sistema de Compras</b>, clique em <b>📄 Importar Relatório de Pedidos (.xlsx)</b> (ou em <b>☰ Menu → Dados → Importar → Pedidos de Compra (Lumina) → Importar</b>). O relatório é lido da primeira aba, a partir da linha 3."},
@@ -15371,8 +15357,6 @@ var AJUDA_C={
  classificarLinhaRazao:{tour:"c_classificarRazao",telas:[
   {h:"Quais linhas aparecem na lista",passos:["Linhas do Custo Indireto, Serviço, Material e Equipamento, agrupadas por aba, no formato <b>Descrição | Item EAP</b>.","Itens de dentro de composição não aparecem: classifique na linha-mãe.","Seguros não aparece."]}
  ]},
- "sel:renderClassificarRazao":{tour:"c_classificarRazao"},
- renderClassificarRazao:{tour:"c_classificarRazao"},
  razaoVigenciaDashboard:{tour:"c_realRazao",telas:[
   {h:"Quando a linha não recebe o real",passos:["Nota não classificada nessa linha ou com competência depois da vigência.","Linha sem Valor Unitário (o controle lista essas linhas num aviso).","Item de dentro de composição (o real vai para a linha-mãe).","Seguros e a linha Contingência não recebem o Real do Razão."]}
  ]},
@@ -15469,7 +15453,7 @@ var TOURS_D=(function(){
   dash_mes_razao:{t:"Escolher o mês de análise e aplicar o Real do Razão",fim:"",passos:[
     {aba:4,sel:"#mes3",tit:"Escolha o mês de análise",txt:"Este mês vale para todo o controle: Dashboard, Resumo M.O. e o <b>Custo Incorrido</b> das Curvas ABC. Se o Razão já foi importado e o mês escolhido for posterior ao último aplicado, o controle pergunta se deve aplicar o Real do Razão até ele.",info:"Escolha na lista o mês que você está fechando.",ex:"Out/26"},
     {aba:4,sel:"#razao-real-status",tit:"Botão Real do Razão",txt:"Mostra <b>✅ Real do Razão até mês</b> ou <b>☐ Real do Razão: não aplicado</b>. Um clique aplica o real até o mês do seletor ao lado: em Custo Indireto, Serviço, Material e Equipamento esses meses passam a usar só as NFs classificadas (mês sem NF fica zerado)."},
-    {aba:4,sel:"#razao-real-status",tit:"Antes de aplicar",txt:"1) Importe o Razão (Contábil → Razão). 2) Classifique as NFs (Contábil → Classificar Razão). 3) Nas abas de custo, registre o contrato com <b>🔒 Nova Coluna de Saldo → Colar saldo</b>. A aplicação <b>só avança</b>: voltar o mês não desfaz o real já aplicado."},
+    {aba:4,sel:"#razao-real-status",tit:"Antes de aplicar",txt:"1) Importe o Razão (Contábil → Razão). 2) Classifique as NFs (coluna Classificação da aba Razão). 3) Nas abas de custo, registre o contrato com <b>🔒 Nova Coluna de Saldo → Colar saldo</b>. A aplicação <b>só avança</b>: voltar o mês não desfaz o real já aplicado."},
     {aba:4,sel:"#dash-cards",tit:"Confira o resultado",txt:"Depois de aplicar, o Total de Custos, o Lucro e a Margem são recalculados. Nas abas de custo, os meses com real aparecem em verde."},
     {aba:4,sel:"#dg-curva-wrap",tit:"Linha do mês de análise",txt:"Nos gráficos, a linha tracejada laranja marca o mês de análise: à esquerda, realizado; à direita, projetado."}
   ]},
@@ -16203,7 +16187,7 @@ function tourCatDaPergunta(s){var n=String(s||"").normalize("NFD").replace(/[̀-
 // "O que faz o botao X?" / "Para que serve X?" / "O que acontece se eu clicar em X?": responde o que o botao faz,
 // onde ele fica, o que isso impacta nos outros controles e os cuidados, a partir das apresentacoes do Modo Ajuda.
 var ASSIST_NOMES_ABA={0:"Resumo M.O.",1:"Custo M.O.I",2:"Planejamento",4:"Dashboard",5:"Sistema de Compras",7:"Importar",8:"Coletor Total",9:"Dados da Obra",10:"Custo M.O.D",
-  11:"Custo Indireto",12:"Serviço",13:"Material",14:"Equipamento",15:"Receita",16:"Prev x Real",17:"Classificação",18:"Contingência",19:"Seguros",20:"DRE",21:"Take In / Take Out",22:"Curva ABC",23:"Curva ABC de M.O.D",24:"Razão",25:"Classificar Razão"};
+  11:"Custo Indireto",12:"Serviço",13:"Material",14:"Equipamento",15:"Receita",16:"Prev x Real",17:"Classificação",18:"Contingência",19:"Seguros",20:"DRE",21:"Take In / Take Out",22:"Curva ABC",23:"Curva ABC de M.O.D",24:"Razão"};
 // o que cada controle sofre quando o botao mexe nele
 var ASSIST_CADEIA=[
   [/coletor/i,"<b>Coletor Total:</b> o Real do item da EAP ligado à linha é recalculado, e com ele o Saldo do item."],
@@ -16221,7 +16205,7 @@ var ASSIST_IMPACTO={
  saldoColAtualizar:"Recalcula só a coluna A distribuir com os valores atuais das linhas. Nenhum outro controle muda.",
  saldoColExcluir:"Apaga só a coluna de saldo e o que foi registrado nela. Os valores da aba e dos outros controles não mudam.",
  razaoVigenciaDashboard:"Até o mês escolhido, o Custo Indireto, o Serviço, o Material e o Equipamento passam a usar o <b>real</b> das notas classificadas (quantidade = soma das NFs ÷ Valor Unitário; mês sem NF fica zerado). Com isso mudam: <b>Coletor Total</b> (Real de cada item da EAP), <b>Prev x Real</b> (desvios), <b>DRE</b> (custos e lucro), <b>Dashboard</b> (Total de Custos, Lucro, Margem e Curva S) e o <b>Custo Incorrido</b> das Curvas ABC. A vigência só avança.",
- novoItemIndireto:"A nova linha entra no total da aba. Com <b>Item EAP</b>, ela soma no Real do item no <b>Coletor Total</b> e no <b>Prev x Real</b>; entra também nas linhas da <b>DRE</b> ligadas à aba, no <b>Total de Custos do Dashboard</b> e nas <b>Curvas ABC</b>. Com <b>Classificação</b>, ela aparece no Classificar Razão para receber notas fiscais.",
+ novoItemIndireto:"A nova linha entra no total da aba. Com <b>Item EAP</b>, ela soma no Real do item no <b>Coletor Total</b> e no <b>Prev x Real</b>; entra também nas linhas da <b>DRE</b> ligadas à aba, no <b>Total de Custos do Dashboard</b> e nas <b>Curvas ABC</b>. Com <b>Classificação</b>, ela aparece na lista de classificação da aba Razão para receber notas fiscais.",
  salvarEditIndireto:"Grava a linha: o novo valor muda o total da aba, o Real do item da EAP no <b>Coletor Total</b> e no <b>Prev x Real</b>, as linhas da <b>DRE</b> ligadas à aba, o <b>Dashboard</b> e as <b>Curvas ABC</b>.",
  excluirItemIndireto:"A linha sai do total da aba e deixa de somar no <b>Coletor Total</b>, no <b>Prev x Real</b>, na <b>DRE</b>, no <b>Dashboard</b> e nas <b>Curvas ABC</b>. Não tem como desfazer.",
  novoColaboradorMoi:"O custo do colaborador (salário, encargos, adicionais, horas extras e alojamento × quantidade de cada mês) entra no <b>Custo M.O.I</b>, no <b>Resumo M.O.</b>, no item de mão de obra do <b>Coletor Total</b>, na <b>DRE</b>, no <b>Dashboard</b> e na <b>Curva ABC</b>.",
@@ -16244,7 +16228,7 @@ var ASSIST_IMPACTO={
  tioNovo:"A linha entra no saldo do <b>Take In / Take Out</b>. Se alguma linha da <b>DRE</b> estiver ligada ao Take In/Out, ela também muda.",
  abrirNovaContingencia:"A soma das contingências vira o Valor Unitário da linha <b>Contingência</b> do Custo Indireto. Com isso mudam o <b>Custo Indireto</b>, o <b>Coletor Total</b>, a <b>DRE</b>, o <b>Dashboard</b> e as <b>Curvas ABC</b>.",
  contgRedistribuir:"Muda a distribuição por mês da linha <b>Contingência</b> do Custo Indireto (o total não muda): o que já passou fica, e o saldo é dividido nos meses seguintes. Mudam os valores mensais do Custo Indireto, da DRE e dos gráficos mensais do Dashboard.",
- "inp:inp-razao":"Carrega as notas fiscais na aba <b>Razão</b> e no <b>Classificar Razão</b>. Os custos só mudam depois que as notas são classificadas e o <b>Real do Razão</b> é aplicado no Dashboard.",
+ "inp:inp-razao":"Carrega as notas fiscais na aba <b>Razão</b>. Os custos só mudam depois que as notas são classificadas e o <b>Real do Razão</b> é aplicado no Dashboard.",
  classificarLinhaRazao:"A nota passa a contar no Real da linha escolhida nos meses em que o Real do Razão já foi aplicado: mudam a aba de custo, o <b>Coletor Total</b>, o <b>Prev x Real</b>, a <b>DRE</b>, o <b>Dashboard</b> e o <b>Custo Incorrido</b> das Curvas ABC.",
  razaoLimparDados:"Apaga as notas importadas: o Real das abas de custo nos meses aplicados e o Custo Incorrido das Curvas ABC ficam sem as notas. Não tem como desfazer.",
  "inp:inp-efetivo":"Substitui <b>todos</b> os colaboradores da M.O.I e as funções da M.O.D pelos da planilha. Mudam o <b>Custo M.O.I</b>, o <b>Custo M.O.D</b>, o <b>Resumo M.O.</b>, as linhas do Custo Indireto com quantidade automática pelo efetivo (alimentação, EPI, exames...), o <b>Coletor Total</b>, a <b>DRE</b> e o <b>Dashboard</b>.",
@@ -16908,7 +16892,7 @@ function alAcharColetor(cod){
 }
 
 // ---------- 2. Notas sem classificacao (Razao) ----------
-// Mesmo criterio do filtro "Somente nao classificados" da aba Classificar Razao: linha sem classificacaoRazaoId.
+// Mesmo criterio do filtro "(Nao classificados)" da coluna Classificacao da aba Razao: linha sem classificacaoRazaoId.
 // Valor = custo dessas linhas com a mesma conta do Real do Razao (razaoMapaCusto): custo = -valor (debito vem negativo).
 function alCalcNf(out){
   var linhas=S.razaoDados;if(!linhas||!linhas.length)return;
@@ -16926,12 +16910,11 @@ function alCalcNf(out){
     texto:"Notas importadas na aba Razão que ainda não têm item de custo escolhido. "+(mtxt?"Competências: "+mtxt+". ":"")+
       (nAplic?"Atenção: "+nAplic+" delas são de meses com o Real do Razão já aplicado (até "+alMlbl(S.razaoRealAte)+") e ficam fora do custo até serem classificadas. ":"")+
       "Valor = soma do custo dessas notas (mesma conta do Real do Razão: débito entra como custo, crédito estorna).",
-    valor:Math.round(tot*100)/100,aba:25,achar:alAcharNf,msgNaoAchou:"Não encontrei linhas pendentes na tela (confira a pesquisa da aba)."});
+    valor:Math.round(tot*100)/100,aba:24,achar:alAcharNf,msgNaoAchou:"Não encontrei linhas pendentes na tela (confira os filtros da aba)."});
 }
 function alAcharNf(){
-  var st=document.getElementById("rzc-status");
-  if(st){st.value="pendente";if(typeof renderClassificarRazao==="function")renderClassificarRazao();}
-  return document.querySelector("#rzc-body tr.rzc-pendente");
+  if(typeof razaoFiltrarPendentes==="function")razaoFiltrarPendentes();
+  return document.querySelector("#razao-body tr[data-i]:not(.rz-ok)");
 }
 
 // ---------- 3. Meses sem Razao ----------
@@ -17483,7 +17466,7 @@ var AL_APRES={
   nf:{ico:"🧾",nome:"Notas sem classificação",cor:"#d97706",fundo:"#fffbeb",
     oque:"Notas fiscais importadas no Razão que ainda <b>não foram ligadas a uma linha de custo</b>.",
     porque:"Enquanto não forem classificadas, o valor delas não entra no Real das abas de custo, e o custo da obra fica menor do que é.",
-    fazer:"Abra <b>Classificar Razão</b> e escolha a linha de cada nota (dá para copiar e colar com Ctrl+C / Ctrl+V na aba Razão)."},
+    fazer:"Abra a aba <b>Razão</b> e escolha a linha de cada nota na coluna Classificação (dá para copiar e colar com Ctrl+C / Ctrl+V)."},
   mes:{ico:"📅",nome:"Meses sem Razão",cor:"#7c3aed",fundo:"#f5f3ff",
     oque:"Meses entre a primeira nota e o mês de análise que <b>não têm nenhuma nota</b> importada no Razão (o mês atual fica de fora, porque ainda está aberto).",
     porque:"Se o Real do Razão for aplicado nesse mês, o custo dele fica <b>zerado</b> nas abas de custo.",
