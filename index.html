@@ -1957,7 +1957,7 @@ td.col-inc{box-shadow:inset 0 0 0 9999px rgba(var(--pal-inc-rgb,47,111,94),.07)}
 
 <!-- ===== SEC 24: RAZAO ===== -->
 <div class="sec wrap" id="sec24">
-  <div class="ibox"><b>Raz&atilde;o</b> &mdash; importe a rela&ccedil;&atilde;o de notas fiscais e use os filtros de cada coluna no padr&atilde;o do Excel, com pesquisa e sele&ccedil;&atilde;o de v&aacute;rios valores.</div>
+  <div class="ibox"><b>Raz&atilde;o</b> &mdash; importe a rela&ccedil;&atilde;o de notas fiscais e use os filtros de cada coluna no padr&atilde;o do Excel, com pesquisa e sele&ccedil;&atilde;o de v&aacute;rios valores. Para classificar, clique na Classifica&ccedil;&atilde;o e comece a digitar para pesquisar.</div>
   <div class="box">
     <div class="bh" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
       <h3>Raz&atilde;o de Custos <span id="razao-cnt" class="razao-meta"></span></h3>
@@ -13443,6 +13443,64 @@ window.razaoRevisaoExportar=function(){
   var wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:8},{wch:11},{wch:14},{wch:38},{wch:60},{wch:14},{wch:45},{wch:10},{wch:34},{wch:60}];
   XLSX.utils.book_append_sheet(wb,ws,'Classificação automática');XLSX.writeFile(wb,'Razao_classificacao_automatica_'+new Date().toISOString().slice(0,10)+'.xlsx');
 };
+})();
+</script>
+
+<script id="razao-busca-classificacao-js">
+/* Rev80: busca digitando na Classificacao do Razao.
+   Com a Classificacao selecionada (clique uma vez), comece a digitar: abre uma caixa de pesquisa que procura
+   em qualquer parte do nome, do item EAP e do grupo, sem acento. Enter escolhe, setas navegam, Esc fecha.
+   Vale para a tabela do Razao e para a lista da Classificacao automatica (selects .rzc-select). */
+(function(){
+function nz(v){return String(v==null?'':v).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var pop=null,alvo=null,opts=[],lista=[],ativo=0;
+function fechar(voltarFoco){var s=alvo;if(pop){pop.remove();pop=null;}alvo=null;if(voltarFoco&&s)s.focus({preventScroll:true});}
+function escolher(o){var s=alvo;fechar(false);if(!s||!o)return;s.value=o.v;s.dispatchEvent(new Event('change',{bubbles:true}));s.focus({preventScroll:true});}
+function desenhar(){
+  var l=pop.querySelector('.rzb-lista'),q=pop.querySelector('input').value,g='',h='';
+  if(!lista.length){l.innerHTML='<div style="padding:10px;color:#64748b;font-size:12px">Nenhuma classificação encontrada para “'+esc(q)+'”.</div>';return;}
+  lista.forEach(function(o,k){
+    if(o.g!==g){g=o.g;h+='<div style="padding:4px 10px;background:#1f3f67;color:#fff;font-size:11px;font-weight:800;position:sticky;top:0">'+esc(g||'Classificação')+'</div>';}
+    h+='<div data-k="'+k+'" style="padding:5px 10px;font-size:12px;cursor:pointer;'+(k===ativo?'background:#dbeafe;color:#1e3a5f;font-weight:700':'color:#0f172a')+'">'+esc(o.t)+'</div>';
+  });
+  l.innerHTML=h;
+  var a=l.querySelector('[data-k="'+ativo+'"]');if(a)a.scrollIntoView({block:'nearest'});
+}
+function filtrar(){var ws=nz(pop.querySelector('input').value).split(/\s+/).filter(Boolean);lista=opts.filter(function(o){return ws.every(function(w){return o.k.indexOf(w)>=0;});});ativo=0;desenhar();}
+function abrir(sel,txt){
+  fechar(false);alvo=sel;opts=[];
+  Array.from(sel.options).forEach(function(o){if(!o.value)return;var g=(o.parentNode&&o.parentNode.tagName==='OPTGROUP')?o.parentNode.label:'';opts.push({v:o.value,t:o.text,g:g,k:nz(o.text+' '+g)});});
+  pop=document.createElement('div');pop.id='rz-busca-class';
+  var r=sel.getBoundingClientRect(),w=Math.max(r.width,420),alto=340,embaixo=innerHeight-r.bottom>alto+10||r.top<alto;
+  pop.style.cssText='position:fixed;z-index:10060;background:#fff;border:1px solid #94a3b8;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.28);display:flex;flex-direction:column;overflow:hidden;width:'+Math.min(w,innerWidth-16)+'px;left:'+Math.max(8,Math.min(r.left,innerWidth-w-8))+'px;'+(embaixo?'top:'+(r.bottom+2)+'px':'bottom:'+(innerHeight-r.top+2)+'px')+';max-height:'+alto+'px';
+  pop.innerHTML='<input type="text" autocomplete="off" placeholder="Digite parte do nome ou do item EAP..." style="border:none;border-bottom:1px solid #e2e8f0;padding:8px 10px;font-size:13px;outline:none">'+
+    '<div class="rzb-lista" style="overflow:auto;flex:1"></div>'+
+    '<div style="padding:4px 10px;font-size:10.5px;color:#64748b;border-top:1px solid #f1f5f9;background:#f8fafc">Enter escolhe · ↑ ↓ navegam · Esc fecha</div>';
+  document.body.appendChild(pop);
+  var inp=pop.querySelector('input');inp.value=txt||'';
+  inp.addEventListener('input',filtrar);
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='ArrowDown'){e.preventDefault();if(ativo<lista.length-1){ativo++;desenhar();}}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(ativo>0){ativo--;desenhar();}}
+    else if(e.key==='Enter'){e.preventDefault();e.stopPropagation();escolher(lista[ativo]);}
+    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();fechar(true);}
+    else if(e.key==='Tab'){fechar(false);}
+  });
+  pop.addEventListener('mousedown',function(e){var it=e.target.closest('[data-k]');e.preventDefault();if(it)escolher(lista[+it.getAttribute('data-k')]);});
+  filtrar();inp.focus();var fim=inp.value.length;inp.setSelectionRange(fim,fim);
+}
+/* Digitar com a Classificacao selecionada abre a busca (no lugar da busca nativa, que so acha pelo comeco e esquece o que foi digitado) */
+document.addEventListener('keydown',function(e){
+  var s=e.target;if(!s||s.tagName!=='SELECT'||!s.classList||!s.classList.contains('rzc-select'))return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  var k=e.key||'';if(k.length!==1&&k!=='F2')return;
+  e.preventDefault();e.stopPropagation();abrir(s,k.length===1&&k!==' '?k:'');
+},true);
+document.addEventListener('mousedown',function(e){if(pop&&!pop.contains(e.target))fechar(false);},true);
+window.addEventListener('resize',function(){fechar(false);});
+document.addEventListener('scroll',function(e){if(pop&&!pop.contains(e.target))fechar(false);},true);
+window.razaoBuscarClassificacao=abrir;
 })();
 </script>
 
