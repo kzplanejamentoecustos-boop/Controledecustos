@@ -13301,7 +13301,7 @@ var totAnt=(S.razaoDados||[]).filter(function(r){return r.classificacaoRazaoId;}
 (function(){
 function e(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function n(v){return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
-window.razaoItensClassificacao=function(){var out=[];(S.indiretoData||[]).forEach(function(it,idx){if(typeof normIndireto==='function')normIndireto(it);if(['Indireto','Servico','Material','Equipamento'].indexOf(it.categoria)<0||it.composicaoPai)return;var cat=(window.CAT_CFG&&CAT_CFG[it.categoria])?CAT_CFG[it.categoria].label:it.categoria;if(cat==='Indireto')cat='Custo Indireto';out.push({id:String(it.id!=null?it.id:idx),grupo:cat,txt:(it.descricao||'-')+(it.itemEAP?' | '+it.itemEAP:'')});});var ord={'Custo Indireto':1,'Servico':2,'Serviço':2,'Material':3,'Equipamento':4};return out.sort(function(a,b){return (ord[a.grupo]||99)-(ord[b.grupo]||99)||a.txt.localeCompare(b.txt,'pt-BR',{numeric:true});});};
+window.razaoItensClassificacao=function(){var out=[];(S.indiretoData||[]).forEach(function(it,idx){if(typeof normIndireto==='function')normIndireto(it);if(['Indireto','Servico','Material','Equipamento'].indexOf(it.categoria)<0||it.composicaoPai)return;var cat=(window.CAT_CFG&&CAT_CFG[it.categoria])?CAT_CFG[it.categoria].label:it.categoria;if(cat==='Indireto')cat='Custo Indireto';out.push({id:String(it.id!=null?it.id:idx),grupo:cat,txt:(it.descricao||'-')+(it.itemEAP?' | '+it.itemEAP:'')});});var ord={'Custo Indireto':1,'Servico':2,'Serviço':2,'Material':3,'Equipamento':4};/* Rev80: opcao especial - a nota conta como classificada, mas nao lanca valor em nenhuma linha de custo */return [{id:'__semclass',grupo:'Não lança custo',txt:'Mão de obra – apropriada no Custo M.O.'}].concat(out.sort(function(a,b){return (ord[a.grupo]||99)-(ord[b.grupo]||99)||a.txt.localeCompare(b.txt,'pt-BR',{numeric:true});}));};
 window.razaoOpcoesClassificacao=function(itens,selecionado){var html='<option value="">-- Selecione uma classificação --</option>',grupo='';itens.forEach(function(it){if(it.grupo!==grupo){if(grupo)html+='</optgroup>';grupo=it.grupo;html+='<optgroup label="'+e(grupo)+'">';}html+='<option value="'+e(it.id)+'" '+(String(selecionado||'')===String(it.id)?'selected':'')+'>'+e(it.txt)+'</option>';});if(grupo)html+='</optgroup>';return html;}
 window.renderClassificarRazao=function(){var tb=document.getElementById('rzc-body');if(!tb)return;var linhas=(S.razaoDados||[]),itens=razaoItensClassificacao(),bus=n((document.getElementById('rzc-busca')||{}).value||''),st=(document.getElementById('rzc-status')||{}).value||'',vis=[];linhas.forEach(function(r,i){if(!r._rid)r._rid='rz-'+i;var cls=!!r.classificacaoRazaoId;if(st==='pendente'&&cls)return;if(st==='classificado'&&!cls)return;var texto=[r.competencia,r.natureza,r.documento,r.gerador,r.valor,r.historico,r.centroCusto,r.classificacaoRazaoTexto].join(' ');if(bus&&n(texto).indexOf(bus)<0)return;vis.push({r:r,i:i});});tb.innerHTML=vis.length?vis.map(function(x){var r=x.r,opts=razaoOpcoesClassificacao(itens,r.classificacaoRazaoId);return '<tr class="'+(r.classificacaoRazaoId?'rzc-classificado':'rzc-pendente')+'"><td>'+e(r.competencia)+'</td><td>'+e(r.natureza)+'</td><td>'+e(r.documento)+'</td><td>'+e(r.gerador)+'</td><td>'+e(r.valor)+'</td><td>'+e(r.historico)+'</td><td>'+e(r.centroCusto)+'</td><td><select class="rzc-select" onchange="classificarLinhaRazao('+x.i+',this)">'+opts+'</select></td></tr>';}).join(''):'<tr><td colspan="8" style="padding:28px;text-align:center;color:#64748b">'+(linhas.length?'Nenhuma linha corresponde aos filtros.':'Importe primeiro o relatório na aba Razão.')+'</td></tr>';var cl=linhas.filter(function(r){return !!r.classificacaoRazaoId;}).length;document.getElementById('rzc-cnt').textContent='('+cl+' classificadas de '+linhas.length+')';};
 window.classificarLinhaRazao=function(i,sel){var r=(S.razaoDados||[])[i];if(!r)return;r.classificacaoRazaoId=sel.value||'';r.classificacaoRazaoTexto=sel.value?sel.options[sel.selectedIndex].text:'';var tr=sel.closest&&sel.closest('#razao-body tr');if(tr)tr.classList.toggle('rz-ok',!!sel.value);if(typeof razaoAtualizarContador==='function')razaoAtualizarContador();renderClassificarRazao();if(typeof razaoRealAtualizar==='function')razaoRealAtualizar();};
@@ -13330,10 +13330,21 @@ function base(){
   cache={lista:lista,sug:{}};return cache;
 }
 window.razaoSugestaoLimpar=function(){cache=null;};
+/* Regra fixa: historico 'MAO DE OBRA | - | <cargo>' (folha por cargo, inclusive hora extra) vai para 'Custo sem classificacao'.
+   Beneficios que tambem vem como MAO DE OBRA (cesta basica, plano de saude, seguro, vale transporte, refeicao etc.) ficam de fora. */
+var RZ_BENEFICIOS=/\b(CESTA|ASSISTENCIA|SEGURO|BOLSA|AJUDA DE CUSTO|AUXILIO|REFEICAO|ALIMENTACAO|TELEFONIA|VALE|EXAME|LOCACAO|ALUGUEL|PLANO|COMBUSTIVEL|TRANSPORTE|FARMACIA|UNIFORME|EPI|TREINAMENTO|HOSPEDAGEM|PASSAGEM|VIAGEM|ESTADIA|MORADIA)\b/;
+window.razaoRegraMaoObra=function(r){
+  var ps=nrm(r&&r.historico).split('|').map(function(s){return s.trim();});
+  if(ps[0]!=='MAO DE OBRA')return null;
+  var cargo=ps.slice(1).filter(function(s){return s&&s!=='-';}).pop()||'';
+  if(!cargo||RZ_BENEFICIOS.test(cargo))return null;
+  return {id:'__semclass',txt:'Mão de obra – apropriada no Custo M.O.',conf:'alta',motivo:'regra: mão de obra por cargo',exemplo:'Cargo: '+String(r.historico).split('|').pop().trim(),alternativa:''};
+};
 /* Devolve {id,txt,conf:'alta'|'media'|'baixa',motivo,exemplo} ou null. ignorarPropria=true serve para testar a regra nas notas ja classificadas. */
 window.razaoSugerirLinha=function(i,ignorarPropria){
   var b=base(),r=(S.razaoDados||[])[i];if(!r)return null;
   if(!ignorarPropria&&b.sug[i]!==undefined)return b.sug[i];
+  var mo=razaoRegraMaoObra(r);if(mo){if(!ignorarPropria)b.sug[i]=mo;return mo;}
   var p=partes(r),por={};
   b.lista.forEach(function(c){
     if(c.i===i)return;
